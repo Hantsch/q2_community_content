@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "packages": [
+    {
+      "kind": "engine",
+      "engine": "q2pro",
+      "id": "q2pro-nightly-win64",
+      "version": "r3834~601a8df8",
+      "sizeBytes": 2115832,
+      "sha256": "47e18f72f116512f97b42f4ba47c285ba5b60fe6839e380be23bab5eb8288f4b",
+      "url": "https://github.com/Hantsch/q2_community_content/releases/download/q2pro-nightly/q2pro-client_win64_x64.zip",
+      "mirrors": [
+        "https://github.com/q2pro/q2pro/releases/download/nightly/q2pro-client_win64_x64.zip"
+      ],
+      "contents": [
+        {
+          "from": ".",
+          "to": "root"
+        }
+      ],
+      "provenance": "Mirrored from upstream Q2PRO nightly (github.com/q2pro/q2pro, tag 'nightly', asset q2pro-client_win64_x64.zip) into Hantsch/q2_community_content so this pin stays immutable even if upstream overwrites the nightly asset. Verified live 2026-09-08, published upstream 2025-12-11. 32-bit client not offered."
+    }
+  ],
+  "pinned": {
+    "q2pro": "q2pro-nightly-win64"
+  }
+}

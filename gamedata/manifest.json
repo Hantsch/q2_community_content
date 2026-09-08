@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "packages": [
+    {
+      "kind": "gamedata",
+      "role": "demo",
+      "id": "q2-314-demo-x86",
+      "version": "3.14",
+      "sizeBytes": 39015499,
+      "sha256": "7ace5a43983f10d6bdc9d9b6e17a1032ba6223118d389bd170df89b945a04a1e",
+      "url": "https://deponie.yamagi.org/quake2/idstuff/q2-314-demo-x86.exe",
+      "mirrors": [
+        "https://tastyspleen.net/quake2/idstuff/q2-314-demo-x86.exe"
+      ],
+      "contents": [
+        {
+          "from": ".",
+          "to": "baseq2"
+        }
+      ],
+      "provenance": "Original id Software Quake II demo installer, mirrored by the Yamagi Quake II project (primary) and tastyspleen.net (mirror)."
+    },
+    {
+      "kind": "gamedata",
+      "role": "point-release",
+      "id": "q2-320-x86-full-ctf",
+      "version": "3.20",
+      "sizeBytes": 19267584,
+      "sha256": "f82197c8c8089202a4b3a85d8833b0c2e827a709d205c760369407c212488baa",
+      "url": "https://deponie.yamagi.org/quake2/idstuff/q2-3.20-x86-full-ctf.exe",
+      "mirrors": [
+        "https://tastyspleen.net/quake2/idstuff/q2-3.20-x86-full-ctf.exe"
+      ],
+      "contents": [
+        {
+          "from": ".",
+          "to": "baseq2"
+        }
+      ],
+      "provenance": "Original id Software Quake II 3.20 full + CTF point-release installer, mirrored by the Yamagi Quake II project (primary) and tastyspleen.net (mirror)."
+    }
+  ]
+}
