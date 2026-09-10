@@ -1,0 +1,105 @@
+{
+  "inspectedOn": "2026-09-10",
+  "sourceCommit": "8af268c795293406f6f7d4328bf0d4f225294d6e",
+  "archiveSha256": "a41c46f4732c05755091658fc3c27d3ff03e3f2048bbd6cec56882e5e346a7aa",
+  "executed": false,
+  "rebuilt": false,
+  "method": "Downloaded archive; SHA-256, 7za test/list/extraction, PE headers and static import tables. Does not enumerate runtime-loaded optional libraries.",
+  "files": [
+    {
+      "path": "r1q2.exe",
+      "sizeBytes": 1047552,
+      "sha256": "9619d3798f59eb5c92afac3555793d1d34bbd8a7fe99c16481ed27aa735ce9b4",
+      "machine": "x86",
+      "imports": [
+        "WINMM.dll",
+        "WSOCK32.dll",
+        "DSOUND.dll",
+        "DINPUT8.dll",
+        "KERNEL32.dll",
+        "USER32.dll",
+        "bcrypt.dll",
+        "VCRUNTIME140.dll",
+        "api-ms-win-crt-string-l1-1-0.dll",
+        "api-ms-win-crt-stdio-l1-1-0.dll",
+        "api-ms-win-crt-filesystem-l1-1-0.dll",
+        "api-ms-win-crt-convert-l1-1-0.dll",
+        "api-ms-win-crt-math-l1-1-0.dll",
+        "api-ms-win-crt-time-l1-1-0.dll",
+        "api-ms-win-crt-utility-l1-1-0.dll",
+        "api-ms-win-crt-heap-l1-1-0.dll",
+        "api-ms-win-crt-environment-l1-1-0.dll",
+        "api-ms-win-crt-runtime-l1-1-0.dll",
+        "api-ms-win-crt-locale-l1-1-0.dll",
+        "CRYPT32.dll",
+        "WS2_32.dll",
+        "IPHLPAPI.DLL",
+        "Secur32.dll",
+        "ADVAPI32.dll"
+      ]
+    },
+    {
+      "path": "ref_r1gl.dll",
+      "sizeBytes": 524288,
+      "sha256": "475cc4b1169efcef6cdce13e8465df242237c5afa6782b37c76f0db740b9c595",
+      "machine": "x86",
+      "imports": [
+        "KERNEL32.dll",
+        "USER32.dll",
+        "GDI32.dll",
+        "VCRUNTIME140.dll",
+        "api-ms-win-crt-string-l1-1-0.dll",
+        "api-ms-win-crt-heap-l1-1-0.dll",
+        "api-ms-win-crt-stdio-l1-1-0.dll",
+        "api-ms-win-crt-math-l1-1-0.dll",
+        "api-ms-win-crt-convert-l1-1-0.dll",
+        "api-ms-win-crt-utility-l1-1-0.dll",
+        "api-ms-win-crt-filesystem-l1-1-0.dll",
+        "api-ms-win-crt-runtime-l1-1-0.dll",
+        "api-ms-win-crt-environment-l1-1-0.dll"
+      ]
+    },
+    {
+      "path": "baseq2/gamex86.dll",
+      "sizeBytes": 348672,
+      "sha256": "acfc3534135fe6801ddcb26fc939cbc812637a248443d551023646fb9a26e9d0",
+      "machine": "x86",
+      "imports": [
+        "VCRUNTIME140.dll",
+        "api-ms-win-crt-utility-l1-1-0.dll",
+        "api-ms-win-crt-stdio-l1-1-0.dll",
+        "api-ms-win-crt-convert-l1-1-0.dll",
+        "api-ms-win-crt-math-l1-1-0.dll",
+        "api-ms-win-crt-string-l1-1-0.dll",
+        "api-ms-win-crt-heap-l1-1-0.dll",
+        "api-ms-win-crt-time-l1-1-0.dll",
+        "api-ms-win-crt-runtime-l1-1-0.dll",
+        "KERNEL32.dll"
+      ]
+    },
+    {
+      "path": "dedicated.exe",
+      "sizeBytes": 290304,
+      "sha256": "8be4d6537e64635dcfb481949eeb7039b0ef64c301996f490e46573590735b41",
+      "machine": "x86",
+      "imports": [
+        "WINMM.dll",
+        "WSOCK32.dll",
+        "KERNEL32.dll",
+        "USER32.dll",
+        "ADVAPI32.dll",
+        "VCRUNTIME140.dll",
+        "api-ms-win-crt-string-l1-1-0.dll",
+        "api-ms-win-crt-utility-l1-1-0.dll",
+        "api-ms-win-crt-stdio-l1-1-0.dll",
+        "api-ms-win-crt-convert-l1-1-0.dll",
+        "api-ms-win-crt-heap-l1-1-0.dll",
+        "api-ms-win-crt-time-l1-1-0.dll",
+        "api-ms-win-crt-filesystem-l1-1-0.dll",
+        "api-ms-win-crt-math-l1-1-0.dll",
+        "api-ms-win-crt-runtime-l1-1-0.dll",
+        "api-ms-win-crt-locale-l1-1-0.dll"
+      ]
+    }
+  ]
+}

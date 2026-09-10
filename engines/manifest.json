@@ -19,9 +19,37 @@
         }
       ],
       "provenance": "Mirrored from upstream Q2PRO nightly (github.com/q2pro/q2pro, tag 'nightly', asset q2pro-client_win64_x64.zip) into Hantsch/q2_community_content so this pin stays immutable even if upstream overwrites the nightly asset. Verified live 2026-09-08, published upstream 2025-12-11. 32-bit client not offered."
+    },
+    {
+      "kind": "engine",
+      "engine": "r1q2",
+      "id": "r1q2-b8012-msvs2022-win32",
+      "version": "b8012-msvs2022",
+      "sizeBytes": 751580,
+      "sha256": "a41c46f4732c05755091658fc3c27d3ff03e3f2048bbd6cec56882e5e346a7aa",
+      "url": "https://github.com/Hantsch/q2_community_content/releases/download/r1q2-b8012-msvs2022/R1Q2-b8012-msvs2022.7z",
+      "mirrors": [
+        "https://github.com/vic7or777/R1Q2-MSVC/releases/download/b8012_fix/R1Q2-b8012-msvs2022.7z"
+      ],
+      "contents": [
+        {
+          "from": "r1q2.exe",
+          "to": "root"
+        },
+        {
+          "from": "ref_r1gl.dll",
+          "to": "root"
+        },
+        {
+          "from": "baseq2/gamex86.dll",
+          "to": "baseq2"
+        }
+      ],
+      "provenance": "Prepared 2026-09-10 from vic7or777/R1Q2-MSVC release b8012_fix (2025-07-28), source commit 8af268c795293406f6f7d4328bf0d4f225294d6e. Original archive downloaded and SHA-256 verified, all four PE files are x86. Community URL reserved, not yet published. See engines/r1q2/README.md for release preparation, external-source notices, and runtime prerequisites."
     }
   ],
   "pinned": {
-    "q2pro": "q2pro-nightly-win64"
+    "q2pro": "q2pro-nightly-win64",
+    "r1q2": "r1q2-b8012-msvs2022-win32"
   }
 }
