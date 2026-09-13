@@ -55,3 +55,6 @@ docs/
 
 - `research/` — background research notes (e.g. licensing, permission requests) that are
   not part of the AI Scrum workflow; left as-is by this index.
+- [docs/handoffs/q2-launcher-content-repo-checker.md](handoffs/q2-launcher-content-repo-checker.md) —
+  handoff spec for story 004: the launcher's content-repo checker needs to accept `studio/`;
+  addressed to whoever next touches `q2-launcher`.

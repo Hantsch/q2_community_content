@@ -21,7 +21,7 @@ Nothing about news content changes. This sprint is the ground the rest stands on
 - [x] 001 — Studio scaffold with typecheck, lint and unit tests
 - [x] 002 — End-to-end harness for the studio surface
 - [x] 003 — Repository boundary between published surface and local tooling
-- [ ] 004 — The launcher's content-repo checker accepts `studio/`
+- [x] 004 — The launcher's content-repo checker accepts `studio/`
 
 ## Notes
 
@@ -34,3 +34,6 @@ Nothing about news content changes. This sprint is the ground the rest stands on
   That needs an answer in the clarification round, before the story is refined.
 - The launcher checker will fail from the moment 001 lands until 004 is done. That is expected, and
   it is the reason 004 is in this sprint rather than a later one.
+- 004 was handed to the launcher's own backlog as a written spec rather than implemented as a
+  q2-launcher code change from this sprint; see
+  `docs/handoffs/q2-launcher-content-repo-checker.md`.

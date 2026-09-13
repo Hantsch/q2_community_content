@@ -15,3 +15,7 @@ second roadmap.
 - 003 — Repository boundary between published surface and local tooling · S01 · Re-scoped
   `README.md` and added an `AGENTS.md` section to distinguish the published surface from
   `studio/` as local tooling, with a new `studio/tests/boundary.test.ts` guarding the wording.
+- 004 — The launcher's content-repo checker accepts `studio/` · S01 · Wrote a handoff spec
+  (`docs/handoffs/q2-launcher-content-repo-checker.md`, R1–R7) for `q2-launcher`'s own backlog
+  instead of changing that repository, restating AC1–AC6 and the `EXPECTED_HEAD` stale-pin
+  replacement, proven here by `studio/tests/launcher-handoff.test.ts`.

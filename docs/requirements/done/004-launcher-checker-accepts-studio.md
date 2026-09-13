@@ -1,7 +1,7 @@
 ---
 id: 004
 title: The launcher's content-repo checker accepts studio/
-status: ready # draft -> ready -> in-progress -> done
+status: done # draft -> ready -> in-progress -> done
 created: 2026-09-13
 ---
 
@@ -23,17 +23,17 @@ Concept: [Q2 Content Studio](../concepts/content-studio.md) — section 9.
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — With `studio/` present in this repository, `node scripts/check-content-repo.mjs` in
+- [x] **AC1** — With `studio/` present in this repository, `node scripts/check-content-repo.mjs` in
       the launcher checkout passes.
-- [ ] **AC2** — The checker treats `studio/` as an expected top-level entry with a stated reason,
+- [x] **AC2** — The checker treats `studio/` as an expected top-level entry with a stated reason,
       not as an unexplained exception.
-- [ ] **AC3** — An unexpected new top-level directory still fails the check — the layout assertion
+- [x] **AC3** — An unexpected new top-level directory still fails the check — the layout assertion
       is loosened for `studio/` only, not removed.
-- [ ] **AC4** — The existing guarantees are unchanged: `news/` byte-identity against the launcher
+- [x] **AC4** — The existing guarantees are unchanged: `news/` byte-identity against the launcher
       fixture, the reserved-directory READMEs, and the root README's required sections.
-- [ ] **AC5** — The script still prints one skip line and exits 0 when this checkout does not exist
+- [x] **AC5** — The script still prints one skip line and exits 0 when this checkout does not exist
       on the machine.
-- [ ] **AC6** — The script remains read-only: it writes nothing in either repository.
+- [x] **AC6** — The script remains read-only: it writes nothing in either repository.
 
 ## Decisions (Sprint)
 
@@ -164,4 +164,51 @@ proven only as faithfully-restated requirements in the handoff spec; the tests a
 
 ## Done
 
-<Filled by `/build 004`.>
+Shipped the written handoff spec this story planned instead of a `q2-launcher` code change, per
+the Decisions section. `docs/handoffs/q2-launcher-content-repo-checker.md` documents the checker's
+five check groups today, the two refine findings (no allow-list in `checkLayout()`; the actual
+failures come from `checkGitState()`, not layout), and restates AC1–AC6 as `R1`–`R6` plus `R7` (the
+`EXPECTED_HEAD`/branch/tag stale-pin replacement). Made it discoverable via one bullet in
+`docs/README.md` under `## Project-specific` and a `## Notes` line plus a ticked checklist entry in
+`docs/sprints/S01/sprint.md`. `studio/tests/launcher-handoff.test.ts` asserts the spec carries every
+requirement and is linked from the docs index.
+
+Commit message: `004: add q2-launcher content-repo checker handoff spec`
+
+Decisions:
+- Requirement text for R1–R7 goes beyond a one-line restatement of each AC, adding the "why"
+  (refine findings, sprint-branch reasoning) so the spec is actionable by an implementer who has
+  not read this story — this is additive detail, not a changed condition; the reviewer confirmed
+  no AC condition was added or dropped.
+- The one initially-failing assertion in D1 (docs-index link, owned by D2) was expected and
+  resolved once D2 landed; no separate fix cycle was needed.
+
+Verification:
+- `npm run build`: green.
+- `npm run test`: green, 5 files / 23 tests passed (one lint-driven fix applied after the initial
+  green run: an unnecessary `!` type assertion in `launcher-handoff.test.ts:26`, removed; re-ran
+  test afterward, still 23/23 green).
+- `npm run lint`: green (after the fix above).
+- `npm run typecheck`: green.
+- `npm run e2e`: not run — this story is documentation-only, maps no criterion to the UI surface,
+  and the profile's e2e gate only applies to criteria describing something a user does through the
+  studio surface.
+- Clean-agent review: PASS. No functional or scope-creep findings; one process-bookkeeping note
+  (this Done section / status / file move were still pending at review time) which this step now
+  closes.
+- AC → test mapping, as verified:
+  - AC1 → `launcher-handoff.test.ts` › "the spec requires the checker to pass with studio/
+    present" — passed.
+  - AC2 → › "the spec requires studio/ to be an expected entry with a stated reason" — passed.
+  - AC3 → › "the spec requires an unexpected top-level directory to still fail" — passed.
+  - AC4 → › "the spec keeps news byte-identity, reserved READMEs and root README sections" —
+    passed.
+  - AC5 → › "the spec keeps the skip line and exit 0 when the checkout is absent" — passed.
+  - AC6 → › "the spec keeps the checker read-only" — passed.
+  - Spec completeness (R7 + docs-index link) → › "the spec exists, covers R1-R7 and is linked
+    from the docs index" — passed.
+  - manual residue: the ACs are only truly green once the launcher-side change lands and
+    `node scripts/check-content-repo.mjs` passes in the `q2-launcher` checkout — that run lives in
+    another repository this story deliberately does not modify. Carried forward via the handoff
+    spec, not held open here.
+- No open points or blockers.
