@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "id": "r1q2-in-the-bootstrap-wizard",
+      "file": "2026-09-10-r1q2-in-the-bootstrap-wizard.md",
+      "order": 10
+    },
+    {
+      "id": "the-community-content-repository",
+      "file": "2026-09-10-the-community-content-repository.md",
+      "order": 20
+    },
+    {
+      "id": "how-news-reaches-the-launcher",
+      "file": "2026-09-10-how-news-reaches-the-launcher.md",
+      "order": 30
+    },
+    {
+      "id": "welcome-to-the-community",
+      "file": "2026-09-12-welcome-to-the-community.md",
+      "order": 40
+    }
+  ]
+}
