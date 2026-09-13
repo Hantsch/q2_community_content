@@ -1,0 +1,9 @@
+{
+  "tech-rules-version": "2.0.0",
+  "groups": ["all", "react"],
+  "files": {
+    ".claude/skills/karpathy/SKILL.md": "d840f5a155f9e1e03a55b100d3476b40a62a7875",
+    ".claude/skills/frontend-guidelines/SKILL.md": "51822b425302743f885f3e06c0ee6c30921df1a4",
+    ".claude/skills/design-tokens/SKILL.md": "4b26fe79026160bb43ce19d4b9f37c65ae7f62b6"
+  }
+}
