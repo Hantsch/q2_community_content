@@ -1,6 +1,6 @@
 ---
 sprint: S01
-status: in-progress # planned | in-progress | done
+status: done # planned | in-progress | done
 branch: sprint/S01
 milestone: M1 — Foundation
 ---

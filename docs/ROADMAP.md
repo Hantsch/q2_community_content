@@ -7,15 +7,18 @@ links to it. Maintained by `/sprint`, `/concept` and `/roadmap`; the rules are i
 
 ## Where we stand
 
-- AI Scrum and the tech-rules house rules are installed; no sprint has run yet.
-- The [Content Studio concept](concepts/content-studio.md) is drafted (6 open points) and v1 is cut
-  into 7 sprints / 30 stories (S01–S07, 001–030), all `draft`.
-- This repository still has no toolchain: every verify command in `.claude/ai-scrum.md` is `none`
-  until story 001 lands, which is why the harness is that story's first deliverable.
-- Next step: `/sprint S01`, starting with the clarification round on 001 (where the package manifest
-  lives) and 004 (whether the cross-repo change is implemented from here).
-- Waiting on the user: the launcher-side change in story 004, and the `index.json` formatting policy
-  that blocks story 024.
+- Sprint S01 is done: `studio/` exists as a real npm workspace with typecheck, lint, unit-test and
+  Playwright e2e commands, and `README.md`/`AGENTS.md` state the published-surface-vs-tooling
+  boundary. Every verify command in `.claude/ai-scrum.md` is now real; `e2e` is a Chromium-only
+  Playwright suite.
+- Story 004 was handed to the `q2-launcher` repository's own backlog rather than implemented here;
+  its handoff spec is at [docs/handoffs/q2-launcher-content-repo-checker.md](handoffs/
+  q2-launcher-content-repo-checker.md) — see `sprints/S01/testplan.md` for the one manual-residue
+  check once that lands.
+- Next step: `/sprint S02` — the launcher mirror (contract and rendering copied verbatim,
+  hash-locked and drift-checked).
+- Waiting on the user: the launcher-side change from story 004's handoff spec, and the
+  `index.json` formatting policy that blocks story 024.
 
 ## Phase overview
 
@@ -29,7 +32,7 @@ Concept: [Q2 Content Studio](concepts/content-studio.md).
 
 | M | Milestone | Status | Sprints | Note |
 | --- | --- | --- | --- | --- |
-| M1 | Foundation | planned | [S01](sprints/S01/sprint.md) | The studio starts and the repository gains its first verification harness. |
+| M1 | Foundation | done 2026-09-13 | [S01 review](sprints/S01/review.md) | Story 004 handed to `q2-launcher`'s backlog as a handoff spec, not implemented here. |
 | M2 | The launcher mirror | planned | [S02](sprints/S02/sprint.md) | Contract and rendering copied verbatim from the launcher, hash-locked and drift-checked. |
 | M3 | Validation | planned | [S03](sprints/S03/sprint.md) | `npm run validate` states what the launcher will really do with each entry. |
 | M4 | The studio shows the repository | planned | [S04](sprints/S04/sprint.md) | Library and validation panel, driven by a content-type registry. |
@@ -50,7 +53,11 @@ Ideas and concepts that need a decision before they become work. One line each.
 
 ## Follow-ups worth doing
 
-Nothing yet — sprint reviews fill this section.
+- Pin a Node version for the studio toolchain (`.nvmrc` or CI floor) — the default on the dev
+  machine (v20.20.2) is below `engines.node: ">=22"`. [S01 review](sprints/S01/review.md)
+- The launcher's own docs are stale in three places (a hand-copied README snapshot, the
+  `home-screen.md` layout block, both missing `studio/`) — worth a launcher-side fix alongside
+  story 004's handoff. [S01 review](sprints/S01/review.md)
 
 ## History
 
