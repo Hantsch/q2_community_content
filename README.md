@@ -2,9 +2,12 @@
 
 Community content for [Q2 Launcher](https://github.com/Hantsch/q2-launcher): the news feed shown
 on the launcher's home screen, plus engine and gamedata packages the launcher's download module
-fetches. This repository is content only — it is fetched over the network by installed copies of
-the launcher, it is never a code dependency, and it carries no CSS, HTML, colours or layout of its
-own (see "Content only" below).
+fetches. This repository splits into two groups. The published surface — `news/`, `engines/`,
+`gamedata/`, and the reserved `packs/`, `mods/`, `config_templates/` — is content only: it is
+fetched over the network by installed copies of the launcher, it is never a code dependency, and
+it carries no presentation of its own (see "Content only" below). `studio/` is local tooling: it
+runs on the contributor's machine to author and validate content, and it is never fetched by the
+launcher.
 
 Nothing here is fetched by push — pushing to this repository does not reach every launcher
 instantly. The launcher polls on its own schedule and caches what it last saw.
@@ -24,7 +27,11 @@ engines/             engine packages the launcher's download module can install
   manifest.json
 gamedata/            game-data packages (demo, point-release, ...) the download module can install
   manifest.json
+studio/              local authoring and validation tool — never fetched by the launcher
 ```
+
+`news/`, `engines/`, `gamedata/`, `packs/`, `mods/` and `config_templates/` are the published
+surface the launcher fetches; `studio/` is local tooling for contributors and is never fetched.
 
 `engines/manifest.json` and `gamedata/manifest.json` each list downloadable packages (id, version,
 size, checksum, source URL and mirrors) that the launcher's download module reads to offer engine
@@ -185,9 +192,10 @@ between two existing ones without renumbering everything else.
 ### Content only
 
 A contributor supplies **content only**: title, body text, an image file, button labels and URLs,
-and the visibility/order fields above. Nothing under `news/` may contain CSS, HTML, colours, fonts
-or any other layout or presentation value — the launcher owns all of that. If a slide looks wrong,
-that is a launcher change, not a content change.
+and the visibility/order fields above. Nothing under the published surface (`news/`, `engines/`,
+`gamedata/`, `packs/`, `mods/`, `config_templates/`) may contain CSS, HTML, colours, fonts or any
+other layout or presentation value — the launcher owns all of that. If a slide looks wrong, that
+is a launcher change, not a content change.
 
 ### Dropped entries
 

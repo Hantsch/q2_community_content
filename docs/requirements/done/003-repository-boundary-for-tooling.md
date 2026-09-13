@@ -1,7 +1,7 @@
 ---
 id: 003
 title: Repository boundary between published surface and local tooling
-status: ready # draft -> ready -> in-progress -> done
+status: done # draft -> ready -> in-progress -> done
 created: 2026-09-13
 ---
 
@@ -21,19 +21,19 @@ Concept: [Q2 Content Studio](../concepts/content-studio.md) — CS-3.
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — `README.md` distinguishes the **published surface** (`news/`, `engines/`,
+- [x] **AC1** — `README.md` distinguishes the **published surface** (`news/`, `engines/`,
       `gamedata/`, `packs/`, `mods/`, `config_templates/`) from **local tooling**, and names
       `studio/` as tooling the launcher never fetches.
-- [ ] **AC2** — `README.md`'s top-level layout block lists `studio/` with a one-line description.
-- [ ] **AC3** — The "Content only" section states its rule as applying to the published surface,
+- [x] **AC2** — `README.md`'s top-level layout block lists `studio/` with a one-line description.
+- [x] **AC3** — The "Content only" section states its rule as applying to the published surface,
       and no sentence remains claiming the repository as a whole carries no CSS, HTML, colours or
       layout.
-- [ ] **AC4** — The contributor-facing rule is unchanged in substance: a contributor supplies
+- [x] **AC4** — The contributor-facing rule is unchanged in substance: a contributor supplies
       title, body, image, button labels and URLs, and the visibility/order fields — nothing under
       the published surface may carry presentation.
-- [ ] **AC5** — A test asserts the boundary statements are present in `README.md`, so a later edit
+- [x] **AC5** — A test asserts the boundary statements are present in `README.md`, so a later edit
       cannot silently remove them.
-- [ ] **AC6** — No part of the news contract (schema, template fields, button rules, order,
+- [x] **AC6** — No part of the news contract (schema, template fields, button rules, order,
       visibility, dropped-entry behaviour) is changed by this story.
 
 ## Decisions (Sprint)
@@ -168,4 +168,51 @@ already builds 001 first.
 
 ## Done
 
-<Filled by `/build 003`.>
+**Summary:** `README.md`'s intro, top-level layout block and `### Content only` section now
+distinguish the published surface (`news/`, `engines/`, `gamedata/`, `packs/`, `mods/`,
+`config_templates/`) from `studio/` as local tooling the launcher never fetches; the old
+repository-wide "carries no CSS, HTML, colours or layout of its own" claim is gone, and the
+launcher-checker phrase "content only" is kept verbatim. `AGENTS.md` gained a `# Repository
+boundary` section carrying the same two-part statement; `CLAUDE.md` was verified (already states
+it) and left unedited. `studio/tests/boundary.test.ts` (new, 6 tests) holds all three files and the
+news contract to this boundary going forward.
+
+**Commit message:** `003: distinguish published surface from studio/ tooling in README/AGENTS`
+
+**Verification:**
+- `npm run build` — pass.
+- `npm run test` — 4 test files, 14 tests, all pass (includes new `boundary.test.ts`, 6 tests).
+- `npm run lint` — pass (two `@typescript-eslint/no-unnecessary-type-assertion` findings and one
+  Prettier formatting warning in the new test file were fixed during verification).
+- `npm run typecheck` — pass.
+- `npm run e2e` — not run; this story has no user-facing/UI acceptance criterion (documentation
+  only), so nothing maps to the e2e gate per the profile's `ui-acceptance-required` rule.
+- Code review (clean agent, default tier): **PASS**. All six ACs individually verified PASS with
+  file:line evidence; all six named tests judged to genuinely fail on a broken implementation; no
+  weakened/disabled checks; no scope creep (only `README.md`, `AGENTS.md`,
+  `studio/tests/boundary.test.ts` touched; `CLAUDE.md` and the published surface confirmed
+  untouched); no CLAUDE.md guardrail violations.
+
+**AC → test mapping (verified):**
+- AC1 → `boundary.test.ts` › "the README distinguishes the published surface from local tooling
+  and names studio/ as never fetched" — passed.
+- AC2 → `boundary.test.ts` › "the top-level layout block lists studio/ with a description" —
+  passed.
+- AC3 → `boundary.test.ts` › "no repository-wide content-only claim remains in the README" —
+  passed.
+- AC4 → `boundary.test.ts` › "the contributor-facing rule still lists title, body, image, button
+  labels and URLs and the visibility/order fields" — passed.
+- AC5 → `boundary.test.ts` › "the boundary statement is present in README.md, AGENTS.md and
+  CLAUDE.md" — passed.
+- AC6 → `boundary.test.ts` › "the news contract is unchanged" — passed.
+
+No manual residue. No open blockers.
+
+**Decisions (build-time, undocumented until now):**
+- Fixed two ESLint `no-unnecessary-type-assertion` errors and one Prettier formatting issue in
+  `studio/tests/boundary.test.ts` post-delegation (removed two unneeded `!` non-null assertions;
+  ran `prettier --write`) — mechanical lint/format fixes, no behaviour change, not worth a review
+  cycle.
+- `e2e` intentionally skipped: the profile's `ui-acceptance-required` gate only applies to criteria
+  describing something a user does through the app surface; all six ACs here are about repository
+  documentation and a Node-side test, so nothing in this story maps to the Playwright harness.

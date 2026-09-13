@@ -12,3 +12,6 @@ second roadmap.
 - 002 — End-to-end harness for the studio surface · S01 · Added a Playwright (chromium-only) e2e
   harness with a localhost-only guard and a nested negative-run proof, and flipped
   `.claude/ai-scrum.md` to `e2e: npm run e2e` / `ui-acceptance-required: true`.
+- 003 — Repository boundary between published surface and local tooling · S01 · Re-scoped
+  `README.md` and added an `AGENTS.md` section to distinguish the published surface from
+  `studio/` as local tooling, with a new `studio/tests/boundary.test.ts` guarding the wording.
