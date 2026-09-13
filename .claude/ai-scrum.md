@@ -22,10 +22,10 @@ project: q2_community_content
 Commands the build step runs before a story may be called done. Use `none` when a
 step does not exist in this project.
 
-build: none
-test: none
-lint: none
-typecheck: none
+build: npm run build
+test: npm run test
+lint: npm run lint
+typecheck: npm run typecheck
 e2e: none
 <!--
   `e2e` is the acceptance gate for user-facing stories: an acceptance criterion that
@@ -34,10 +34,6 @@ e2e: none
   `none` means the project has no such harness yet — see `ui-acceptance-required` below
   for what the workflow then does instead.
 -->
-
-<!-- This is a content-only repository (news/engine/gamedata packages for q2-launcher) —
-     no build/test/lint tooling exists yet. Rerun /ai-scrum:setup once code and a
-     verification harness are added. -->
 
 ## Conventions
 

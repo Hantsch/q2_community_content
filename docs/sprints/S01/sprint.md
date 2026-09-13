@@ -18,7 +18,7 @@ Nothing about news content changes. This sprint is the ground the rest stands on
 
 ## Stories (in build order)
 
-- [ ] 001 — Studio scaffold with typecheck, lint and unit tests
+- [x] 001 — Studio scaffold with typecheck, lint and unit tests
 - [ ] 002 — End-to-end harness for the studio surface
 - [ ] 003 — Repository boundary between published surface and local tooling
 - [ ] 004 — The launcher's content-repo checker accepts `studio/`

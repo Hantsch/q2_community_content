@@ -1,7 +1,7 @@
 ---
 id: 001
 title: Studio scaffold with typecheck, lint and unit tests
-status: ready # draft -> ready -> in-progress -> done
+status: done # draft -> ready -> in-progress -> done
 created: 2026-09-13
 ---
 
@@ -19,17 +19,17 @@ Concept: [Q2 Content Studio](../concepts/content-studio.md) — CS-1, CS-2, CS-4
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — After `npm install`, `npm run studio` starts a dev server and serves a page whose
+- [x] **AC1** — After `npm install`, `npm run studio` starts a dev server and serves a page whose
       title names the Content Studio; the command prints the URL it is reachable at.
-- [ ] **AC2** — `npm run typecheck` type-checks the studio sources and exits 0 on a clean tree.
-- [ ] **AC3** — `npm run lint` checks the studio sources with ESLint and Prettier and exits 0 on a
+- [x] **AC2** — `npm run typecheck` type-checks the studio sources and exits 0 on a clean tree.
+- [x] **AC3** — `npm run lint` checks the studio sources with ESLint and Prettier and exits 0 on a
       clean tree.
-- [ ] **AC4** — `npm run test` runs Vitest and exits 0, with at least one test that asserts real
+- [x] **AC4** — `npm run test` runs Vitest and exits 0, with at least one test that asserts real
       behaviour rather than `expect(true)`.
-- [ ] **AC5** — `.claude/ai-scrum.md` records the real commands under `## Verify` for `build`,
+- [x] **AC5** — `.claude/ai-scrum.md` records the real commands under `## Verify` for `build`,
       `test`, `lint` and `typecheck`, replacing the `none` entries.
-- [ ] **AC6** — `node_modules/` and build output are git-ignored; every studio source file is not.
-- [ ] **AC7** — Nothing under the published surface (`news/`, `engines/`, `gamedata/`, `packs/`,
+- [x] **AC6** — `node_modules/` and build output are git-ignored; every studio source file is not.
+- [x] **AC7** — Nothing under the published surface (`news/`, `engines/`, `gamedata/`, `packs/`,
       `mods/`, `config_templates/`) is added, moved or modified by this story.
 
 ## Decisions (Sprint)
@@ -126,7 +126,7 @@ last so the contract test sees the final state. Nothing outside `studio/`, `.git
 
 ## Deliverables
 
-- **D1 — Workspace root and git hygiene.**
+- [x] **D1 — Workspace root and git hygiene.**
   Files: `package.json` (root, new), `studio/package.json` (new), `.gitignore` (new),
   `package-lock.json` (generated, committed).
   Root manifest: `private: true`, `workspaces: ["studio"]`, scripts `studio`, `typecheck`, `lint`,
@@ -136,7 +136,7 @@ last so the contract test sees the final state. Nothing outside `studio/`, `.git
   Acceptance: `npm install` at the clone root succeeds, `npm run studio` resolves to the studio's
   `dev` script, and `git status` shows no `node_modules` entry.
 
-- **D2 — Vite + React app shell (AC1's subject).**
+- [x] **D2 — Vite + React app shell (AC1's subject).**
   Files: `studio/index.html`, `studio/vite.config.ts`, `studio/src/main.tsx`, `studio/src/App.tsx`,
   `studio/src/pages/studio/StudioPage.tsx`, `studio/src/styles/index.css`.
   Mirror for the Vite/React wiring: `q2-launcher/electron.vite.config.ts` (renderer section) and
@@ -144,20 +144,20 @@ last so the contract test sees the final state. Nothing outside `studio/`, `.git
   Acceptance: `npm run studio` starts, prints a local URL, and that URL serves a page titled
   "Q2 Content Studio" with a visible heading. No colour values anywhere in the shell.
 
-- **D3 — TypeScript project and `typecheck` (AC2).**
+- [x] **D3 — TypeScript project and `typecheck` (AC2).**
   Files: `studio/tsconfig.json`, `studio/tsconfig.node.json`, `studio/package.json` (script).
   Mirror: `q2-launcher/tsconfig.web.json` for the compiler options, minus its Electron paths.
   Acceptance: `npm run typecheck` exits 0 against D2's sources and fails on an introduced type
   error.
 
-- **D4 — ESLint + Prettier and `lint` (AC3).**
+- [x] **D4 — ESLint + Prettier and `lint` (AC3).**
   Files: `studio/eslint.config.js`, `studio/.prettierrc.json`, `studio/.prettierignore`,
   `studio/package.json` (script + dev dependencies).
   Mirror: `q2-launcher/.prettierrc.json`, verbatim.
   Acceptance: `npm run lint` exits 0 on the clean tree, flags an unused variable, and flags a
   mis-formatted file.
 
-- **D5 — Vitest harness and the first two real tests (AC4, and AC1's proof).**
+- [x] **D5 — Vitest harness and the first two real tests (AC4, and AC1's proof).**
   Files: `studio/vitest.config.ts`, `studio/src/pages/studio/StudioPage.test.tsx`,
   `studio/tests/dev-server.test.ts`, `studio/package.json` (script).
   Mirror: `q2-launcher/vitest.config.ts` for the config and the per-file jsdom convention.
@@ -165,7 +165,7 @@ last so the contract test sees the final state. Nothing outside `studio/`, `.git
   (jsdom, `@testing-library/react`); the dev-server test boots Vite, asserts a resolved local URL
   and the served `<title>`, and closes the server in `afterAll` so the run terminates.
 
-- **D6 — Profile update and repository-contract test (AC5, AC6, AC7).**
+- [x] **D6 — Profile update and repository-contract test (AC5, AC6, AC7).**
   Files: `.claude/ai-scrum.md` (the `## Verify` block and the stale note under it),
   `studio/tests/repo-contract.test.ts`.
   Acceptance: the profile names the four real commands; the contract test asserts (a) no `none`
@@ -214,4 +214,51 @@ deliverable and a named automated check. No manual residue.
 
 ## Done
 
-<Filled by `/build 001`.>
+Built the `studio/` npm workspace end to end: an npm-workspaces root manifest with passthrough
+scripts, a Vite + React 19 app shell serving a "Q2 Content Studio" page, a strict TypeScript
+project, a flat ESLint config plus a Prettier config mirrored from the launcher, and a Vitest
+harness with a real dev-server boot test and a rendered-component test. `.claude/ai-scrum.md`'s
+`## Verify` block now names the four real commands, and a repository-contract test locks in the
+git-hygiene and published-surface guarantees so a later story can't quietly regress them.
+
+Commit message: `001: scaffold studio workspace with typecheck/lint/test harness`
+
+### Decisions
+
+- ESLint/Prettier dev-dependency versions (eslint ^10.10.0, @eslint/js ^10.0.1,
+  typescript-eslint ^8.70.0, eslint-plugin-react-hooks ^7.1.1, eslint-config-prettier ^10.1.8)
+  were not pinned exact like the runtime/build deps — the story's pinning decision covers only
+  the versions that mirror the launcher (React/Vite/TS/Vitest/Tailwind); ESLint tooling is new
+  to this project, so current stable `^` ranges were used instead.
+- `studio/package.json` declares `engines.node: ">=22"`; this dev machine's default Node is
+  v20.20.2, which cannot run jsdom 30/Vitest 4 here (jsdom 30 requires Node ^22.22.2 || ^24.15.0
+  || >=26). All verification in this story was run under Node v26.1.0 (available locally via
+  nvm, invoked directly from its install directory since the nvm-for-Windows symlink step
+  requires elevation this sandbox doesn't have). No `.nvmrc`/CI Node-version pin was added — out
+  of scope for this story's deliverables; worth a follow-up if a CI runner is added later.
+- AC1 is proven at dev-server level (`studio/tests/dev-server.test.ts`), not through a browser —
+  the profile records `e2e: none` and `ui-acceptance-required: false` at the time of this story;
+  story 002 (this sprint) adds the Playwright proof of the same page. This gap is named in
+  `## Acceptance Tests` above, not silently left as a manual step.
+
+### Verification
+
+- `npm run build`, `npm run test` (5 tests / 3 files), `npm run lint`, `npm run typecheck` all
+  exit 0 (run under Node v26.1.0).
+- AC1 → `studio/tests/dev-server.test.ts` — boots a real Vite server, asserts a resolved local
+  URL, fetches it and asserts the served `<title>Q2 Content Studio</title>`. Passed.
+- AC2 → `npm run typecheck` exits 0; `studio/tests/repo-contract.test.ts` asserts the script is
+  real. Passed.
+- AC3 → `npm run lint` exits 0; same repo-contract assertion for `lint`. Passed.
+- AC4 → `npm run test` exits 0; `studio/src/pages/studio/StudioPage.test.tsx` renders the real
+  component and asserts real heading/body text via `@testing-library/react`. Passed.
+- AC5 → `studio/tests/repo-contract.test.ts` asserts `.claude/ai-scrum.md`'s `## Verify` block
+  has no `none` left for build/test/lint/typecheck. Passed.
+- AC6 → same file asserts `node_modules/` and `studio/dist/` are git-ignored and every
+  `studio/src/` file is tracked. Passed; also confirmed live with `git check-ignore -v`.
+- AC7 → same file diffs the published surface against the `feature/studio` merge-base (plus
+  untracked-file check) and asserts it is empty. Passed; confirmed live and via a
+  create/verify-fail/revert sanity check during D6.
+- No manual residue — every criterion has a passing automated test.
+- Clean-agent code review: **PASS**, no findings (scope, test quality, guardrails, and
+  correctness all checked; see review agent's report for the full breakdown).

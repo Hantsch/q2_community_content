@@ -1,0 +1,13 @@
+{
+  "private": true,
+  "workspaces": [
+    "studio"
+  ],
+  "scripts": {
+    "studio": "npm run dev --workspace studio",
+    "build": "npm run build --workspace studio",
+    "typecheck": "npm run typecheck --workspace studio",
+    "lint": "npm run lint --workspace studio",
+    "test": "npm run test --workspace studio"
+  }
+}
