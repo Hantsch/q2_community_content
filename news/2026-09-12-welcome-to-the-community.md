@@ -1,7 +1,7 @@
 ---
 template: cover
 title: Welcome to the Quake II community
-image: cover-community-welcome.png
+image: img/cover-community-welcome.png
 order: 10
 visibleFrom: 2026-09-12T00:00:00Z
 buttons:
