@@ -67,7 +67,7 @@ changelog-path: none
 
 ## Branching
 
-branch-base: main <!-- branch a sprint is cut from -->
+branch-base: feature/studio <!-- branch a sprint is cut from -->
 sprint-branch-pattern: sprint/{id}
 auto-commit-per-story: true <!-- /sprint commits once per story ON THE SPRINT BRANCH only -->
 protected-branches: main <!-- never commit here, never push, never merge -->
