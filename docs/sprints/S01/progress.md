@@ -10,3 +10,13 @@
 2026-09-13T17:47:49+02:00 001 D5 Vitest harness and first two real tests done
 2026-09-13T17:47:53+02:00 001 D6 Profile update and repository-contract test started
 2026-09-13T17:58:13+02:00 001 D6 Profile update and repository-contract test done
+2026-09-13T18:13:29+02:00 002 D1 Playwright runner, config and scripts started
+2026-09-13T18:18:30+02:00 002 D1 Playwright runner, config and scripts done
+2026-09-13T18:18:41+02:00 002 D2 The shell spec through a real browser started
+2026-09-13T18:19:28+02:00 002 D2 The shell spec through a real browser done
+2026-09-13T18:19:35+02:00 002 D3 Localhost-only fixture and its spec started
+2026-09-13T18:20:32+02:00 002 D3 Localhost-only fixture and its spec done
+2026-09-13T18:20:40+02:00 002 D4 Negative harness proof started
+2026-09-13T18:30:58+02:00 002 D4 Negative harness proof done
+2026-09-13T18:31:05+02:00 002 D5 Profile, contributor doc and contract assertions started
+2026-09-13T18:32:19+02:00 002 D5 Profile, contributor doc and contract assertions done

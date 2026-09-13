@@ -109,4 +109,68 @@ describe('repository contract', () => {
 
     expect(untrackedInPublishedSurface).toEqual([])
   })
+
+  it('the profile records the e2e command and requires UI acceptance', () => {
+    const profile = readRepoFile('.claude/ai-scrum.md')
+
+    const verifySection = profile.split('## Verify')[1]?.split(/\n## /)[0]
+    expect(verifySection).toBeDefined()
+    const e2eLine = verifySection
+      .split('\n')
+      .find((candidate) => candidate.trim().startsWith('e2e:'))
+    expect(e2eLine, 'expected an "e2e:" line in the Verify block').toBeDefined()
+    const e2eValue = e2eLine!.slice(e2eLine!.indexOf(':') + 1).trim()
+    expect(e2eValue).toBe('npm run e2e')
+
+    const acceptanceSection = profile.split('## Acceptance')[1]?.split(/\n## /)[0]
+    expect(acceptanceSection).toBeDefined()
+    const uiAcceptanceLine = acceptanceSection
+      .split('\n')
+      .find((candidate) => candidate.trim().startsWith('ui-acceptance-required:'))
+    expect(
+      uiAcceptanceLine,
+      'expected a "ui-acceptance-required:" line in the Acceptance block',
+    ).toBeDefined()
+    const uiAcceptanceValue = uiAcceptanceLine!.slice(uiAcceptanceLine!.indexOf(':') + 1).trim()
+    expect(uiAcceptanceValue).toBe('true')
+
+    expect(profile).not.toContain('No user-facing surface lives in this repository yet')
+  })
+
+  it('studio/README.md documents install, browser install and the e2e run', () => {
+    const readme = readRepoFile('studio/README.md')
+    expect(readme.length).toBeGreaterThan(0)
+
+    expect(readme).toContain('npm install')
+    expect(readme).toContain('npm run e2e:install')
+    expect(readme).toContain('npm run e2e')
+
+    const installIndex = readme.indexOf('npm install')
+    const e2eInstallIndex = readme.indexOf('npm run e2e:install')
+    const e2eIndex = readme.indexOf('npm run e2e', e2eInstallIndex + 'npm run e2e:install'.length)
+
+    expect(installIndex).toBeGreaterThanOrEqual(0)
+    expect(e2eInstallIndex).toBeGreaterThan(installIndex)
+    expect(e2eIndex).toBeGreaterThan(e2eInstallIndex)
+  })
+
+  it('the manifests expose e2e and e2e:install', () => {
+    const studioManifest = JSON.parse(readRepoFile('studio/package.json')) as {
+      scripts?: Record<string, string>
+    }
+    const studioScripts = studioManifest.scripts ?? {}
+    expect(typeof studioScripts.e2e).toBe('string')
+    expect(studioScripts.e2e.length).toBeGreaterThan(0)
+    expect(typeof studioScripts['e2e:install']).toBe('string')
+    expect(studioScripts['e2e:install'].length).toBeGreaterThan(0)
+
+    const rootManifest = JSON.parse(readRepoFile('package.json')) as {
+      scripts?: Record<string, string>
+    }
+    const rootScripts = rootManifest.scripts ?? {}
+    expect(typeof rootScripts.e2e).toBe('string')
+    expect(rootScripts.e2e.length).toBeGreaterThan(0)
+    expect(typeof rootScripts['e2e:install']).toBe('string')
+    expect(rootScripts['e2e:install'].length).toBeGreaterThan(0)
+  })
 })

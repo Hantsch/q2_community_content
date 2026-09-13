@@ -9,3 +9,6 @@ second roadmap.
 - 001 — Studio scaffold with typecheck, lint and unit tests · S01 · Delivered the `studio/` npm
   workspace (Vite + React shell, TypeScript, ESLint/Prettier, Vitest) and wired the real
   build/test/lint/typecheck commands into `.claude/ai-scrum.md`.
+- 002 — End-to-end harness for the studio surface · S01 · Added a Playwright (chromium-only) e2e
+  harness with a localhost-only guard and a nested negative-run proof, and flipped
+  `.claude/ai-scrum.md` to `e2e: npm run e2e` / `ui-acceptance-required: true`.

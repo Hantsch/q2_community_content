@@ -17,6 +17,12 @@ export default tseslint.config(
         tsconfigRootDir: import.meta.dirname,
       },
     },
+  },
+  {
+    // React rules belong to the app source only. The tooling trees (config files, Playwright
+    // specs) are plain Node modules, and `rules-of-hooks` misreads Playwright's `use` callback
+    // there as a React hook.
+    files: ['src/**/*.{ts,tsx}'],
     plugins: {
       'react-hooks': reactHooks,
     },

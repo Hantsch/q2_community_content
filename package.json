@@ -8,6 +8,8 @@
     "build": "npm run build --workspace studio",
     "typecheck": "npm run typecheck --workspace studio",
     "lint": "npm run lint --workspace studio",
-    "test": "npm run test --workspace studio"
+    "test": "npm run test --workspace studio",
+    "e2e": "npm run e2e --workspace studio",
+    "e2e:install": "npm run e2e:install --workspace studio"
   }
 }

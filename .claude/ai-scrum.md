@@ -26,7 +26,7 @@ build: npm run build
 test: npm run test
 lint: npm run lint
 typecheck: npm run typecheck
-e2e: none
+e2e: npm run e2e
 <!--
   `e2e` is the acceptance gate for user-facing stories: an acceptance criterion that
   describes something the user does is proven here, through the real surface. It is a
@@ -87,7 +87,7 @@ ac-tests-required: true
           itself does. Use this for throwaway or spike projects.
 -->
 
-ui-acceptance-required: false
+ui-acceptance-required: true
 <!--
   true  = a criterion that describes something the USER does is proven through the
           real surface — the `e2e` command from `## Verify`. A console command, a
@@ -100,9 +100,6 @@ ui-acceptance-required: false
           sprint review. It never quietly becomes a manual step.
   false = for a library, CLI, mod or service without a user-facing surface.
 -->
-
-<!-- No user-facing surface lives in this repository yet (the q2-launcher UI is a
-     separate repo). Revisit once a preview/validation surface is set up here. -->
 
 manual-residue-allowed: true
 <!--

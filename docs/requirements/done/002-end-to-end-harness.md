@@ -1,7 +1,7 @@
 ---
 id: 002
 title: End-to-end harness for the studio surface
-status: ready # draft -> ready -> in-progress -> done
+status: done # draft -> ready -> in-progress -> done
 created: 2026-09-13
 ---
 
@@ -20,17 +20,17 @@ Concept: [Q2 Content Studio](../concepts/content-studio.md) — CS-4.
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — `npm run e2e` starts the studio, drives it with Playwright and exits 0 on a clean
+- [x] **AC1** — `npm run e2e` starts the studio, drives it with Playwright and exits 0 on a clean
       tree.
-- [ ] **AC2** — At least one e2e test opens the studio in a real browser and asserts on a visible
+- [x] **AC2** — At least one e2e test opens the studio in a real browser and asserts on a visible
       element of the shell, not on the served HTML string.
-- [ ] **AC3** — The e2e run reaches nothing beyond localhost — no network access is required to
+- [x] **AC3** — The e2e run reaches nothing beyond localhost — no network access is required to
       run it.
-- [ ] **AC4** — A broken studio (the dev server fails to start, or the asserted element is absent)
+- [x] **AC4** — A broken studio (the dev server fails to start, or the asserted element is absent)
       makes `npm run e2e` exit non-zero with a message naming what was expected.
-- [ ] **AC5** — `.claude/ai-scrum.md` records the e2e command under `## Verify` and sets
+- [x] **AC5** — `.claude/ai-scrum.md` records the e2e command under `## Verify` and sets
       `ui-acceptance-required: true`, with the stale "no user-facing surface" note removed.
-- [ ] **AC6** — Getting from a fresh clone to a passing e2e run is documented in one place,
+- [x] **AC6** — Getting from a fresh clone to a passing e2e run is documented in one place,
       including the browser-install step.
 
 ## Decisions (Sprint)
@@ -116,7 +116,7 @@ touched; the root `README.md` belongs to story 003 and stays untouched here.
 
 ## Deliverables
 
-- **D1 — Playwright runner, config and scripts (AC1's command).**
+- [x] **D1 — Playwright runner, config and scripts (AC1's command).**
   Files: `studio/package.json` (dev dependency + `e2e`, `e2e:install` scripts), `package.json`
   (root passthroughs, mirroring the `test`/`lint` entries story 001 writes), `.gitignore`,
   `studio/playwright.config.ts` (new).
@@ -125,20 +125,20 @@ touched; the root `README.md` belongs to story 003 and stays untouched here.
   dev server itself, runs the (initially empty-then-D2) suite and exits 0; `git status` shows no
   `studio/test-results` entry after a run.
 
-- **D2 — The shell spec through a real browser (AC1, AC2), plus its test.**
+- [x] **D2 — The shell spec through a real browser (AC1, AC2), plus its test.**
   Files: `studio/e2e/studio-shell.spec.ts` (new).
   Acceptance: the spec navigates to `baseURL`, asserts `page.title()` names the Content Studio and
   that `getByRole('heading', …)` from story 001's `StudioPage` is visible; it fails if the heading
   is removed. No assertion touches the raw HTML response.
 
-- **D3 — Localhost-only fixture and its spec (AC3).**
+- [x] **D3 — Localhost-only fixture and its spec (AC3).**
   Files: `studio/e2e/fixtures/localhost-only.ts` (new), `studio/e2e/localhost-only.spec.ts` (new),
   `studio/e2e/studio-shell.spec.ts` (import `test` from the fixture).
   Acceptance: loading the studio records zero aborted external requests; a deliberate
   `page.goto('https://example.com')` inside the fixture's scope is aborted and reported, proving
   the guard actually fires.
 
-- **D4 — Negative harness proof (AC4).**
+- [x] **D4 — Negative harness proof (AC4).**
   Files: `studio/e2e/harness/negative.config.ts` (new), `studio/e2e/harness/fixtures/
   missing-element.spec.ts` (new), `studio/e2e/harness/fixtures/server.spec.ts` (new),
   `studio/e2e/harness/negative-run.spec.ts` (new), `studio/playwright.config.ts` (a second
@@ -147,7 +147,7 @@ touched; the root `README.md` belongs to story 003 and stays untouched here.
   heading text, the failed-server run's output names the server/URL it waited for. The nested runs
   use their own config and cannot re-enter the real suite.
 
-- **D5 — Profile, contributor doc and contract assertions (AC5, AC6).**
+- [x] **D5 — Profile, contributor doc and contract assertions (AC5, AC6).**
   Files: `.claude/ai-scrum.md`, `studio/README.md` (new), `studio/tests/repo-contract.test.ts`
   (extended, from story 001's D6).
   Acceptance: the profile's `## Verify` records `e2e: npm run e2e`, `ui-acceptance-required: true`
@@ -192,4 +192,61 @@ second story of the sprint for that reason.
 
 ## Done
 
-<Filled by `/build 002`.>
+Playwright (`@playwright/test` 1.62.1, chromium only) is now the studio's e2e harness: a
+`studio/playwright.config.ts` that starts the dev server itself on `127.0.0.1:5173`, a real-browser
+shell spec, a localhost-only guard fixture every spec inherits, and a nested-run negative harness
+that proves a broken studio fails loudly. The profile is flipped (`e2e: npm run e2e`,
+`ui-acceptance-required: true`), `studio/README.md` documents the fresh-clone path, and
+`studio/tests/repo-contract.test.ts` guards all of it against silent regression.
+
+**Commit message:** `002: add Playwright e2e harness and flip ui-acceptance-required`
+
+**Decisions (Sprint, made during build, not user-answered):**
+- Vite's default `localhost` bind resolved to `::1` only on this Windows machine, so the
+  `webServer` command was changed to `npm run dev -- --port 5173 --strictPort --host 127.0.0.1`
+  (not the bare `--port 5173 --strictPort` from the plan) — otherwise `baseURL:
+  'http://127.0.0.1:5173'` could never reach it.
+- The negative-harness config runs its nested dev server on port `5199`, not `5173` — the outer
+  run's real server already holds `5173` while the nested run happens, and `reuseExistingServer:
+  false` would either abort on "port in use" (wrong-reason failure) or, with `true`, spuriously
+  reuse the healthy server and pass the broken-server test for the wrong reason.
+- Playwright 1.62's webServer-timeout error does not itself name the URL, so
+  `negative.config.ts` logs the harness URL at config-load time and the test asserts on
+  `config.webServer` plus that URL together, so the log line alone can never look like the
+  expected failure text.
+- `npx` was avoided for spawning the nested Playwright CLI (a `.cmd` shim on Windows needs a
+  shell); spawned instead via `process.execPath` + `require.resolve('@playwright/test/cli')`.
+- Removed `--pass-with-no-tests` from the `e2e` script once real specs existed (D1 needed it
+  transiently against an empty suite) — code review flagged that leaving it in would let a
+  silently-broken test-discovery pattern still exit 0, which is exactly the kind of false green
+  AC4 exists to catch.
+- D4 also fixed lint fallout left by D1/D3 (Playwright/e2e files were outside every tsconfig
+  `project`, and ESLint's `react-hooks` rule misfired on Playwright's `use` fixture callback):
+  `studio/tsconfig.node.json` now includes `playwright.config.ts` and `e2e/**/*.ts`,
+  `studio/.prettierignore` ignores `test-results/`, and `studio/eslint.config.js` scopes
+  `react-hooks` to `src/**` only. Reviewed and confirmed as legitimate scope corrections, not
+  weakenings.
+
+**Verification:**
+- `npm run build`, `npm run test` (8/8 passed), `npm run lint`, `npm run typecheck` — all green.
+- `npm run e2e` — 6/6 passed, exit 0, run repeatedly with no leaked port/process state.
+- AC1 → `studio/e2e/studio-shell.spec.ts` › "the studio shell opens at the dev server URL" (passed)
+  + `studio/tests/repo-contract.test.ts` › "the manifests expose e2e and e2e:install" (passed).
+- AC2 → `studio/e2e/studio-shell.spec.ts` › "the shell heading is visible in the browser" (passed,
+  `getByRole` against the rendered DOM).
+- AC3 → `studio/e2e/localhost-only.spec.ts` › "the studio run requests nothing beyond localhost"
+  and › "an external request is aborted and reported" (both passed; the guard was confirmed to
+  actually intercept and abort a real external `fetch`, not a no-op).
+- AC4 → `studio/e2e/harness/negative-run.spec.ts` › "a missing shell element fails the run and
+  names what was expected" and › "a dev server that cannot start fails the run" (both passed;
+  nested runs use their own config and cannot re-enter the real suite).
+- AC5, AC6 → `studio/tests/repo-contract.test.ts` › "the profile records the e2e command and
+  requires UI acceptance" and › "studio/README.md documents install, browser install and the e2e
+  run" (both passed).
+- No manual residue.
+- Clean-agent review: PASS. Two findings, both handled: (1) stale `--pass-with-no-tests` flag —
+  fixed (removed, re-verified green); (2) `negative-run.spec.ts` imports `test` from the
+  localhost-only fixture without using the `page` fixture in either test — left as-is, since
+  every e2e spec importing from the shared fixture is the story's own decision, and this D's
+  tests do no page navigation so the guard is inert rather than wrong.
+- No open blockers.
