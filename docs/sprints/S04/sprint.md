@@ -1,6 +1,6 @@
 ---
 sprint: S04
-status: in-progress # planned | in-progress | done
+status: done # planned | in-progress | done
 branch: sprint/S04 # set by /sprint
 milestone: M4 — The studio shows the repository
 ---
