@@ -20,8 +20,8 @@ export interface ValidationPayload {
   schemaVersion: number
   mirror: MirrorProvenance
   entries: EntryVerdict[]
-  /** Story 013's field, consumed here as optional and empty until that story lands (Decisions
-   * (Sprint)). */
+  /** Story 013's repository-level findings, verbatim off the report the caller hands in (story 017
+   * D1's `buildValidationSnapshot()` puts them there); empty when the caller has none. */
   repositoryFindings: unknown[]
   summary: ValidationSummary
 }

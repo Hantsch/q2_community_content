@@ -45,4 +45,22 @@
   --color-muted: rgb(100 116 139);
   --color-muted-soft: rgb(241 245 249);
   --color-muted-border: rgb(226 232 240);
+
+  /*
+   * Story 017 D3: three more roles for `SeverityBadge` (`FindingSeverity` -
+   * `studio/src/report/report-types.ts`). `error` reuses the dropped triad's red - a dropped entry
+   * and an error finding are the same severity of trouble, so a second red would say nothing new.
+   * `warning`/`info` are new triads on the same soft-fill/border/text pattern.
+   */
+  --color-severity-error: rgb(220 38 38);
+  --color-severity-error-soft: rgb(254 226 226);
+  --color-severity-error-border: rgb(254 202 202);
+
+  --color-severity-warning: rgb(180 83 9);
+  --color-severity-warning-soft: rgb(254 243 199);
+  --color-severity-warning-border: rgb(253 230 138);
+
+  --color-severity-info: rgb(37 99 235);
+  --color-severity-info-soft: rgb(219 234 254);
+  --color-severity-info-border: rgb(191 219 254);
 }

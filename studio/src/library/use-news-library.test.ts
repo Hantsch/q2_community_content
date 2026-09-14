@@ -5,7 +5,7 @@
  * `ContentTypeSource` standing in for the bridge — loading first, then a resolved model without
  * ever throwing, plus `thumbnailUrlFor`'s two outcomes.
  */
-import { renderHook, waitFor } from '@testing-library/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import type { ContentRepoDocument, ContentRepoRead } from '../content-repo/read-content-repo'
@@ -40,7 +40,12 @@ const UNREADABLE_READ: ContentRepoRead = {
   drafts: [],
   images: [],
   findings: [
-    { code: 'index-missing', severity: 'error', message: 'news/index.json is missing.', path: 'news/index.json' },
+    {
+      code: 'index-missing',
+      severity: 'error',
+      message: 'news/index.json is missing.',
+      path: 'news/index.json',
+    },
   ],
 }
 
@@ -53,11 +58,36 @@ function newsDescriptorFor(read: ContentRepoRead): ContentTypeDescriptor {
   return descriptor
 }
 
+/** Builds a `news` descriptor whose source counts every `read()` call — story 017 D5's `refresh()`
+ * must trigger a genuine second read, not just a client-side re-render. */
+function countingNewsDescriptorFor(read: ContentRepoRead): {
+  descriptor: ContentTypeDescriptor
+  readCount: () => number
+} {
+  let calls = 0
+  const source: ContentTypeSource = {
+    read: () => {
+      calls += 1
+      return Promise.resolve(read)
+    },
+  }
+  const descriptor = createContentTypeDescriptors(source).find((entry) => entry.id === 'news')
+  if (!descriptor) throw new Error('news descriptor missing from createContentTypeDescriptors()')
+  return { descriptor, readCount: () => calls }
+}
+
 describe('useNewsLibrary', () => {
   it('starts loading, then resolves a populated model', async () => {
     const read = readFromTree(
       buildNewsTreeFixture([
-        { id: 'welcome', template: 'text', title: 'Welcome', body: 'Body', order: '10', image: 'cover.png' },
+        {
+          id: 'welcome',
+          template: 'text',
+          title: 'Welcome',
+          body: 'Body',
+          order: '10',
+          image: 'cover.png',
+        },
       ]),
     )
     const descriptor = newsDescriptorFor(read)
@@ -128,5 +158,47 @@ describe('useNewsLibrary', () => {
 
     expect(() => result.current.thumbnailUrlFor(dotPrefixed)).not.toThrow()
     expect(result.current.thumbnailUrlFor(dotPrefixed)).toBeUndefined()
+  })
+
+  it('exposes the report and repository findings the model was folded from', async () => {
+    const read = readFromTree(
+      buildNewsTreeFixture([
+        {
+          id: 'welcome',
+          template: 'text',
+          title: 'Welcome',
+          body: 'Body',
+          order: '10',
+          image: 'cover.png',
+        },
+      ]),
+    )
+    const descriptor = newsDescriptorFor(read)
+
+    const { result } = renderHook(() => useNewsLibrary(descriptor, NOW))
+
+    expect(result.current.report).toBeNull()
+    expect(result.current.repositoryFindings).toBeNull()
+
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    expect(result.current.report?.entries).toHaveLength(1)
+    expect(result.current.report?.entries[0]?.id).toBe('welcome')
+    expect(result.current.repositoryFindings).toEqual([])
+  })
+
+  it('refresh() re-reads through the descriptor rather than re-rendering stale data', async () => {
+    const read = readFromTree(buildNewsTreeFixture([]))
+    const { descriptor, readCount } = countingNewsDescriptorFor(read)
+
+    const { result } = renderHook(() => useNewsLibrary(descriptor, NOW))
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(readCount()).toBe(1)
+
+    act(() => {
+      result.current.refresh()
+    })
+
+    await waitFor(() => expect(readCount()).toBe(2))
   })
 })

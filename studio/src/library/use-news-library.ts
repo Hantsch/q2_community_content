@@ -14,19 +14,32 @@
  * (`descriptor.ts`) — a failed read comes back as a well-formed `ContentSourceRead` with error
  * findings, which `buildLibraryModel` already turns into the `unreadable` state.
  */
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { ContentTypeDescriptor } from '../content-types/descriptor'
 import { newsImageUrl } from '../mirror-runtime/newsImageUrl'
+import type { ContentReport } from '../report/report-types'
+import type { RepositoryFinding } from '../report/repository-findings'
 import { buildLibraryModel } from './library-model'
 import type { LibraryModel, LibraryRow } from './library-types'
 
 export interface UseNewsLibraryResult {
   readonly loading: boolean
   readonly model: LibraryModel | null
+  /** Story 017 D5: the same `ContentReport` the hook already builds internally to fold into
+   * `model`, exposed as-is so the validation panel can build its own view model
+   * (`buildPanelModel`) from the SAME read, rather than triggering a second bridge fetch. `null`
+   * while loading or when the descriptor has no `reader`/`validators` bound. */
+  readonly report: ContentReport | null
+  /** Story 017 D5: story 013's repository-level findings from the same read, alongside `report`
+   * for the same reason. */
+  readonly repositoryFindings: readonly RepositoryFinding[] | null
   /** Resolves `row.image` to a bridge URL, or `undefined` when the row declares no image. D3
    * deliberately leaves this resolution to the caller (`LibraryEntryRow.tsx`'s header comment) so
    * the model (D1) stays pure and this browser-URL concern lives in exactly one place. */
   readonly thumbnailUrlFor: (row: LibraryRow) => string | undefined
+  /** Story 017 D5: re-runs the same read-and-derive effect on demand, e.g. for a "re-check"
+   * control — a real re-read through the bridge, not a client-side re-render of stale data. */
+  readonly refresh: () => void
 }
 
 /** `row.image` is the declared reference exactly as authored (e.g. `img/picture.png`, per
@@ -70,10 +83,17 @@ export function useNewsLibrary(
     descriptor: ContentTypeDescriptor
     loading: boolean
     model: LibraryModel | null
-  }>({ descriptor, loading: true, model: null })
+    report: ContentReport | null
+    repositoryFindings: readonly RepositoryFinding[] | null
+  }>({ descriptor, loading: true, model: null, report: null, repositoryFindings: null })
+
+  // Story 017 D5: a simple incrementing counter, included in the effect's dependency array below,
+  // is the least invasive way to let a caller trigger a real re-read on demand without restructuring
+  // this hook's existing `[descriptor]`-keyed effect.
+  const [refreshNonce, setRefreshNonce] = useState(0)
 
   if (state.descriptor !== descriptor) {
-    setState({ descriptor, loading: true, model: null })
+    setState({ descriptor, loading: true, model: null, report: null, repositoryFindings: null })
   }
 
   useEffect(() => {
@@ -85,20 +105,34 @@ export function useNewsLibrary(
     // "nothing reliable to list" signal `buildLibraryModel` already gives an absent read. Resolved
     // through a microtask, like the real read below, so `setState` never runs synchronously inside
     // the effect body itself.
-    const result: Promise<LibraryModel> =
+    const result: Promise<{
+      model: LibraryModel
+      report: ContentReport | null
+      repositoryFindings: readonly RepositoryFinding[] | null
+    }> =
       !reader || !validators
-        ? Promise.resolve(
-            buildLibraryModel({ read: undefined, report: undefined, repositoryFindings: undefined }),
-          )
+        ? Promise.resolve({
+            model: buildLibraryModel({
+              read: undefined,
+              report: undefined,
+              repositoryFindings: undefined,
+            }),
+            report: null,
+            repositoryFindings: null,
+          })
         : reader().then((read) => {
             const report = validators.buildReport(read, now())
             const repositoryFindings = validators.collectFindings(read)
-            return buildLibraryModel({ read, report, repositoryFindings })
+            return {
+              model: buildLibraryModel({ read, report, repositoryFindings }),
+              report,
+              repositoryFindings,
+            }
           })
 
-    void result.then((model) => {
+    void result.then(({ model, report, repositoryFindings }) => {
       if (cancelled) return
-      setState({ descriptor, loading: false, model })
+      setState({ descriptor, loading: false, model, report, repositoryFindings })
     })
 
     return () => {
@@ -106,9 +140,21 @@ export function useNewsLibrary(
     }
     // `now` is a clock factory the caller may pass inline; it is read once per descriptor read, not
     // tracked as a dependency, matching `ContentTypeValidators.buildReport`'s own "caller's now" but
-    // never-reactive contract.
+    // never-reactive contract. `refreshNonce` has no meaning of its own — it exists only so
+    // `refresh()` can force this effect to run again for the same descriptor.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [descriptor])
+  }, [descriptor, refreshNonce])
 
-  return { loading: state.loading, model: state.model, thumbnailUrlFor }
+  const refresh = useCallback(() => {
+    setRefreshNonce((nonce) => nonce + 1)
+  }, [])
+
+  return {
+    loading: state.loading,
+    model: state.model,
+    report: state.report,
+    repositoryFindings: state.repositoryFindings,
+    thumbnailUrlFor,
+    refresh,
+  }
 }

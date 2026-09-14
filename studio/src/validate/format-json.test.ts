@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { ContentReport, EntryVerdict } from '../report/report-types'
+import type { RepositoryFinding } from '../report/repository-findings'
 import type { MirrorProvenance } from '../mirror/provenance'
 import { toValidationPayload, VALIDATE_SCHEMA_VERSION } from './format-json'
 import { summarise } from './summary'
@@ -128,7 +129,7 @@ describe('toValidationPayload', () => {
     ])
   })
 
-  it('carries repositoryFindings as an empty array today, since story 013 has not landed', () => {
+  it('carries repositoryFindings as an empty array when the report has none', () => {
     const mirror = buildMirror()
     const report = buildReport([])
     const summary = summarise(report)
@@ -136,6 +137,34 @@ describe('toValidationPayload', () => {
     const payload = toValidationPayload({ mirror, report, summary })
 
     expect(payload.repositoryFindings).toEqual([])
+  })
+
+  it("carries the report's repository findings verbatim, and counts them in the summary", () => {
+    // Story 017 D1: the CLI now hands in story 013's real findings, so the payload must carry them
+    // unchanged (no reshaping, no re-grading) and the summary count must agree with the list.
+    const mirror = buildMirror()
+    const repositoryFindings: readonly RepositoryFinding[] = [
+      {
+        kind: 'orphan-image',
+        severity: 'info',
+        message: "news/img/orphan.png is not referenced by any entry's declared image",
+        file: 'news/img/orphan.png',
+      },
+      {
+        kind: 'missing-document',
+        severity: 'error',
+        message: 'news/gone.md is named by the index but missing on disk',
+        file: 'news/gone.md',
+      },
+    ]
+    const report = { ...buildReport(buildEntries()), repositoryFindings }
+    const summary = summarise(report)
+
+    const payload = toValidationPayload({ mirror, report, summary })
+
+    expect(payload.repositoryFindings).toEqual(repositoryFindings)
+    expect(payload.summary.repositoryFindings).toBe(2)
+    expect(JSON.parse(JSON.stringify(payload))).toEqual(payload)
   })
 
   it('the payload carries the same facts as the text output, via the shared ValidationSummary', () => {

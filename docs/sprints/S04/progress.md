@@ -28,3 +28,14 @@
 - 2026-09-14 18:53 · 016 · D5 Shell wiring and e2e spec · started
 - 2026-09-14 19:02 · 016 · D5 Shell wiring and e2e spec · done
 - 2026-09-14 19:07 · 016 · story complete, moved to done/ · done
+- 2026-09-14 19:09 · 017 · D1 Shared validation snapshot, and the CLI on top of it · started
+- 2026-09-14 19:24 · 017 · D1 Shared validation snapshot, and the CLI on top of it · done
+- 2026-09-14 19:24 · 017 · D2 Panel view model · started
+- 2026-09-14 19:28 · 017 · D2 Panel view model · done
+- 2026-09-14 19:28 · 017 · D3 The panel component · started
+- 2026-09-14 19:33 · 017 · D3 The panel component · done
+- 2026-09-14 19:33 · 017 · D4 Mirror provenance in the panel · started
+- 2026-09-14 19:36 · 017 · D4 Mirror provenance in the panel · done
+- 2026-09-14 19:36 · 017 · D5 Wiring, selection jump, and the agreement test · started
+- 2026-09-14 19:51 · 017 · D5 Wiring, selection jump, and the agreement test · done
+- 2026-09-14 19:51 · 017 · story complete, moved to done/ · done

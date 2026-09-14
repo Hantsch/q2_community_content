@@ -3,8 +3,8 @@
  *
  * Aggregates and formats only - every count here is read straight off story 011's `ContentReport`,
  * never recomputed by re-checking the launcher's own rules. `repositoryFindings` belongs to story
- * 013, which has not landed yet; until it does, the field is optional and counts as 0 when absent
- * (Decisions (Sprint)).
+ * 013 and is supplied by story 017's `buildValidationSnapshot()`; the field stays optional, so a
+ * caller holding a bare report still gets 0 rather than a wrong count (Decisions (Sprint)).
  */
 import type { ContentReport } from '../report/report-types'
 
@@ -19,7 +19,8 @@ export interface ValidationSummary {
 }
 
 /** Rolls up story 011's report into the four AC7 counts. `repositoryFindings` reads an optional
- * field story 013 will add later; today's `ContentReport` never has it, so absence counts as 0. */
+ * field story 011's own `ContentReport` never carries: callers that have story 013's findings
+ * (`buildValidationSnapshot()`) pass them in on the report; absence still counts as 0. */
 export function summarise(report: ContentReport & { repositoryFindings?: readonly unknown[] }): ValidationSummary {
   return {
     deliveredAsDeclared: report.summary.deliveredAsDeclared,

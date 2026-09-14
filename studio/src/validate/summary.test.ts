@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { ContentReport, EntryVerdict, ReportSummary } from '../report/report-types'
+import type { RepositoryFinding } from '../report/repository-findings'
 import { exitCodeFor, summarise } from './summary'
 
 /** A minimal `ContentReport` for the counts this module reads - `entries` only needs a length,
@@ -59,6 +60,37 @@ describe('summarise', () => {
       repositoryFindings: 2,
       total: 5,
     })
+  })
+
+  it('real repository findings on the report produce a non-zero count', () => {
+    // Story 017 D1: `buildValidationSnapshot()` now always supplies story 013's actual findings on
+    // the report it summarises, so the non-zero path is exercised with the real `RepositoryFinding`
+    // shape rather than only with placeholder values.
+    const repositoryFindings: readonly RepositoryFinding[] = [
+      {
+        kind: 'draft',
+        severity: 'info',
+        message: 'news/unreleased.md is not named by any news/index.json row (draft)',
+        file: 'news/unreleased.md',
+      },
+      {
+        kind: 'duplicate-id',
+        severity: 'error',
+        message: 'id "shared" is already used by first.md, which is kept',
+        id: 'shared',
+        file: 'second.md',
+      },
+    ]
+    const report = buildReport({ entryCount: 2, repositoryFindings })
+
+    const summary = summarise(report)
+
+    expect(summary.repositoryFindings).toBe(2)
+    // Repository findings are counted, never graded: an `error`-severity one does not by itself
+    // fail the run (only dropped entries do, AC3) - asserting that here pins story 012's exit-code
+    // contract now that the CLI actually feeds real findings through.
+    expect(exitCodeFor(summary)).toBe(0)
+    expect(exitCodeFor(summary, { strict: true })).toBe(0)
   })
 
   it('an absent repositoryFindings field counts as 0', () => {

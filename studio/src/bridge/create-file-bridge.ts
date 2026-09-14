@@ -22,6 +22,7 @@ import { extname } from 'node:path'
 import { URL } from 'node:url'
 
 import { readContentRepo } from '../content-repo/read-content-repo'
+import { readMirrorProvenance } from '../mirror/read-provenance'
 import { NEWS_IMAGE_URL_PREFIX } from '../mirror-runtime/newsImageUrl'
 import { BRIDGE_PREFIX, type BridgeErrorResponse, type BridgeFileResponse } from './bridge-protocol'
 import { resolveBridgePath } from './resolve-bridge-path'
@@ -248,6 +249,16 @@ export function createFileBridge({
 
       const body: BridgeFileResponse = { path: requestPath, text }
       sendJson(res, 200, body, method)
+      return
+    }
+
+    if (route === 'provenance') {
+      // No query parameter is ever read here — story 017 D4. Any `path`/`type`/other query string
+      // present on the request is simply ignored, not rejected, so this route answers the same
+      // `MirrorProvenance` for `repoRoot` on every request and reads no path from the request at
+      // all, matching this file's own repoRoot/directories discipline (see the header comment).
+      const provenance = readMirrorProvenance(repoRoot)
+      sendJson(res, 200, provenance, method)
       return
     }
 

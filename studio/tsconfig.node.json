@@ -20,6 +20,22 @@
       "@shared/*": ["./src/launcher-core/src/shared/*"]
     },
 
+    // The same merged-directory trick `tsconfig.json` documents at length, needed here for the same
+    // reason: story 017 D1 puts `scripts/validate.ts` on story 013's `collectRepositoryFindings()`,
+    // so this Node-side program now reaches `src/contract/launcher-safe-names.ts` and, through it,
+    // mirrored modules whose `./harness`, `./fetch-image` and `../../../lib/renderer-source` imports
+    // name launcher files this repository deliberately does not mirror. `rootDirs` lets those three
+    // relative imports fall through to the studio-owned stand-ins in `src/mirror-runtime/` without
+    // hand-editing the mirror - exactly as the browser program already does. (The runtime arm for a
+    // `tsx`-run script is `scripts/mirror-boundary-hooks.ts`; Vite's is `launcherBoundary.ts`.)
+    "rootDirs": [
+      "./src/launcher-core/src/renderer/src/modules/home",
+      "./src/launcher-core/src/main/modules/home/news",
+      "./src/launcher-core/src/main/modules/home/images",
+      "./src/launcher-core/src/main/lib",
+      "./src/mirror-runtime"
+    ],
+
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,

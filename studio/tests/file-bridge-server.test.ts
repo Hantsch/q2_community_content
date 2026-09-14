@@ -27,10 +27,12 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, test } from 'vite
 import type {
   BridgeErrorResponse,
   BridgeFileResponse,
+  BridgeProvenanceResponse,
   BridgeReadResponse,
 } from '../src/bridge/bridge-protocol'
 import { createFileBridge } from '../src/bridge/create-file-bridge'
 import { readContentRepo } from '../src/content-repo/read-content-repo'
+import { readMirrorProvenance } from '../src/mirror/read-provenance'
 import { createGitFixture, type GitFixture } from './git-fixture'
 
 const okFixtureRoot = fileURLToPath(new URL('./fixtures/content-repo/ok', import.meta.url))
@@ -178,6 +180,29 @@ describe('file bridge over the ok fixture', () => {
 
     const declared = await fetch(`${bridge.baseUrl}/__studio/fs/read?type=news`)
     expect(declared.status).toBe(200)
+  })
+
+  test('the provenance route returns the same MirrorProvenance readMirrorProvenance would', async () => {
+    const response = await fetch(`${bridge.baseUrl}/__studio/fs/provenance`)
+    expect(response.status).toBe(200)
+    const body = await asJson<BridgeProvenanceResponse>(response)
+
+    const expected = readMirrorProvenance(okFixtureRoot)
+    expect(body).toEqual(expected)
+  })
+
+  test('the provenance route ignores any query string, proving it reads no path from the request', async () => {
+    const plain = await fetch(`${bridge.baseUrl}/__studio/fs/provenance`)
+    const plainBody = await asJson<BridgeProvenanceResponse>(plain)
+
+    const withPathLikeQuery = await fetch(
+      `${bridge.baseUrl}/__studio/fs/provenance?path=../../../etc/passwd&type=news`,
+    )
+    expect(withPathLikeQuery.status).toBe(200)
+    const withQueryBody = await asJson<BridgeProvenanceResponse>(withPathLikeQuery)
+
+    expect(withQueryBody).toEqual(plainBody)
+    expect(withQueryBody).toEqual(readMirrorProvenance(okFixtureRoot))
   })
 
   test('a repoRoot/root query parameter anywhere is ignored', async () => {

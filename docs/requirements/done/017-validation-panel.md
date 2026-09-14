@@ -1,7 +1,7 @@
 ---
 id: 017
 title: Validation panel in the studio
-status: ready # draft -> ready -> in-progress -> done
+status: done # draft -> ready -> in-progress -> done
 created: 2026-09-13
 ---
 
@@ -18,18 +18,18 @@ Concept: [Q2 Content Studio](../concepts/content-studio.md) — CS-11, CS-13.
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — The panel shows the selected entry's verdict: declared form, delivered form, and
+- [x] **AC1** — The panel shows the selected entry's verdict: declared form, delivered form, and
       every finding attached to it.
-- [ ] **AC2** — A fallback is shown with the rule that caused it and the field to fix — the missing
+- [x] **AC2** — A fallback is shown with the rule that caused it and the field to fix — the missing
       image path, the rejected button URL.
-- [ ] **AC3** — Repository-level findings from story 013 are shown in one place, separate from the
+- [x] **AC3** — Repository-level findings from story 013 are shown in one place, separate from the
       selected entry's own findings.
-- [ ] **AC4** — Every finding names the file it concerns.
-- [ ] **AC5** — A repository with no findings shows an explicit all-clear state, not an empty area
+- [x] **AC4** — Every finding names the file it concerns.
+- [x] **AC5** — A repository with no findings shows an explicit all-clear state, not an empty area
       that could equally mean "not checked yet".
-- [ ] **AC6** — The panel distinguishes severities visually, and the distinction survives being read
+- [x] **AC6** — The panel distinguishes severities visually, and the distinction survives being read
       without colour.
-- [ ] **AC7** — The panel's verdicts and the `validate` command's verdicts agree for the same
+- [x] **AC7** — The panel's verdicts and the `validate` command's verdicts agree for the same
       repository state, proven by a test rather than by inspection.
 
 ## Open Questions
@@ -175,14 +175,15 @@ Concept: [Q2 Content Studio](../concepts/content-studio.md) — CS-11, CS-13.
 
 ## Acceptance Tests
 
-- AC1 → e2e `studio/e2e/validation-panel.spec.ts` › "the panel shows the selected entry's declared
-  and delivered form with its findings" (D5)
-- AC2 → e2e `studio/e2e/validation-panel.spec.ts` › "a missing image names the rule and the field to
-  fix" (D5) **and** unit `studio/src/validate/panel-model.test.ts` › "a rejected button URL names the
-  button's url field and the reason" (D2) — the repository the dev server serves carries no fallback
-  entry, so the button case is proven over a fixture.
-- AC3 → e2e `studio/e2e/validation-panel.spec.ts` › "repository-level findings are listed in their
-  own region, separate from the entry's findings" (D5) **and** component
+- AC1 → e2e `studio/e2e/validation-panel.spec.ts` › "AC1: the panel shows the selected entry
+  declared and delivered form with its findings" (D5)
+- AC2 → e2e `studio/e2e/validation-panel.spec.ts` › "AC2: a missing image names the rule and the
+  field to fix" (D5) **and** unit `studio/src/validate/panel-model.test.ts` › the rejected-button
+  cases asserting `field: 'url'` for `button-host-not-allowed`/`button-invalid`/`button-cap` (D2) —
+  the repository the dev server serves carries no fallback entry, so the button case is proven over
+  a fixture.
+- AC3 → e2e `studio/e2e/validation-panel.spec.ts` › "AC3: repository-level findings are listed in
+  their own region, separate from the entry findings" (D5) **and** component
   `studio/src/organisms/ValidationPanel.test.tsx` › "entry findings and repository findings never
   mix" (D3)
 - AC4 → unit `studio/src/validate/panel-model.test.ts` › "every finding view names a file, falling
@@ -192,15 +193,83 @@ Concept: [Q2 Content Studio](../concepts/content-studio.md) — CS-11, CS-13.
   findings, so e2e cannot reach this state.
 - AC6 → component `studio/src/organisms/SeverityBadge.test.tsx` › "every severity is readable as
   text and glyph without colour" (D3)
-- AC7 → e2e `studio/e2e/validation-panel.spec.ts` › "the panel and npm run validate --json agree for
-  the same repository" (D5, over D1's shared composition)
+- AC7 → e2e `studio/e2e/validation-panel.spec.ts` › "AC7: the panel and npm run validate --json
+  agree for the same repository" (D5, over D1's shared composition) — spawns the real CLI via
+  `execFileSync`, parses its JSON, and compares against the rendered panel for every real entry.
 - Sprint decisions: the clickable jump → e2e `studio/e2e/validation-panel.spec.ts` › "clicking a
-  finding selects its entry" (D5); draft versus live → component test in D3; mirror provenance →
-  unit plus component tests in D4.
+  finding selects its entry" (D5); the re-check control → e2e same file › "a re-check control
+  re-reads through the bridge" (D5); draft versus live → component test in
+  `ValidationPanel.test.tsx` (D3); mirror provenance → unit `provenance-client.test.ts` plus
+  component tests in `ValidationPanel.test.tsx` (D4).
 
 Coverage gate: AC1 → D5, AC2 → D2 + D5, AC3 → D3 + D5, AC4 → D2, AC5 → D3, AC6 → D3, AC7 → D1 + D5.
 Every criterion has a deliverable and a named test; no manual residue.
 
 ## Done
 
-<Filled by `/build 017`.>
+**Summary.** Built the validation panel end to end: a shared `buildValidationSnapshot()` composition
+now backs both `npm run validate` and the browser (D1), a pure view model reshapes the report plus
+story 013's repository findings for one selection (D2), a presentational `ValidationPanel` +
+`SeverityBadge` render entry/repository findings, the all-clear state and a draft notice with
+text+glyph severities (D3), mirror provenance reaches the browser through a new confined bridge route
+(D4), and `StudioPage` wires the panel beside the library with a working finding→entry jump and a
+re-check control that genuinely re-reads through the bridge, proven end to end by an e2e spec that
+shells out to the real CLI and compares its JSON against the rendered panel (D5).
+
+**Commit message.**
+```
+017: validation panel in the studio
+```
+
+**Verification.**
+- `npm run build` (studio) — pass.
+- `npm run typecheck` (studio) — pass.
+- `npx eslint .` (studio) — pass (clean, no findings).
+- `npm run test` (studio, `vitest run`) — 316 passed, 4 failed; the 4 failures
+  (`tests/mirror-set.test.ts`, `tests/drift-provenance.test.ts`, `tests/mirrorDrift.test.ts`,
+  `tests/launcher-core-unmodified.test.ts`) are a pre-existing CRLF line-ending mismatch in the
+  `launcher-core/` mirror on this Windows checkout, confirmed identical (same 4 failures, same
+  tests) on a `git stash` of every change this story made — not caused by this story.
+- `npm run e2e` (studio, Playwright) — 29 passed, 0 failed, including all 6 new
+  `validation-panel.spec.ts` specs and every pre-existing spec (015/016) untouched by the rewiring
+  of `use-news-library.ts`/`StudioPage.tsx`.
+- `npm run lint` (studio, `eslint . && prettier --check .`) — ESLint clean; Prettier reports the
+  same pre-existing CRLF formatting mismatch across ~170 files repo-wide (confirmed pre-existing via
+  `git stash`), none of them touched by this story beyond normal LF edits.
+- Clean-agent review: **PASS**, no blocking findings. Two non-blocking observations noted and
+  accepted as-is: `ValidationPayload.repositoryFindings` stays typed `unknown[]` rather than
+  `RepositoryFinding[]` (pass-through is verified by test, just loosely typed); `useNewsLibrary()`'s
+  `refresh()` does not flip `loading` back to `true` while re-fetching (harmless for this story's
+  criteria, worth revisiting if a future story adds a loading indicator to the re-check flow).
+- AC → test mapping, as verified in the review and by direct test runs: AC1 e2e pass, AC2 e2e +
+  unit pass, AC3 e2e + component pass, AC4 unit pass, AC5 component pass, AC6 component pass, AC7
+  e2e pass (genuinely executes `scripts/validate.ts --json` and compares). No manual residue.
+
+**Decisions.**
+- D1 needed an unplanned Node-side module-resolution hook (`studio/scripts/mirror-boundary-hooks.ts`
+  + a `rootDirs` addition in `studio/tsconfig.node.json`) to make `collectRepositoryFindings()`
+  reachable from the CLI at all: wiring it in pulled `contract/launcher-safe-names.ts` into a Node
+  graph for the first time, and its mirrored `resolve-feed-images.ts` imports two launcher files
+  that previously only resolved through the Vite dev-server's own `launcherBoundary.ts` plugin arm.
+  The new hook redirects exactly the same two relative imports to the same studio-owned stubs,
+  registered by `validate.ts` itself so every invocation works with no caller change, and never
+  touches `studio/src/launcher-core/` itself (confirmed empty diff there) — reviewed and accepted as
+  the minimal fix for a real gap, not scope creep.
+- The panel's "fine, but a draft nobody will see" requirement (Decisions (Sprint)) cannot be met by
+  `panel-model.ts` alone: a draft is never in `ContentReport.entries`, so `buildPanelModel()`
+  correctly returns `entry: undefined` for a draft selection. `ValidationPanel` closes this gap by
+  also accepting an optional `selectedRow?: LibraryRow` (story 016) and rendering a distinct draft
+  notice when `panelModel.entry` is undefined but the selected row's `status === 'draft'` — reviewed
+  and confirmed sound (draft ids and index-declared entry ids live in different id spaces).
+- `panel-model.ts`'s `field` derivation (AC2) is a flat `kind → field` lookup
+  (`declared-image-missing` → `image`; the three per-button pipeline kinds → `url`) rather than a
+  per-button cross-reference into `EntryVerdict.buttons`, since all three button kinds mean the same
+  field regardless of which button they concern.
+- `status` on a panel entry reuses story 016's `LibraryStatus` vocabulary and `dropped > visibility`
+  precedence, reproduced locally in `panel-model.ts` rather than imported (those helpers are not
+  exported from `library-model.ts`, and this deliverable was scoped to not touch story 016's files).
+- The browser side continues to derive `ContentReport`/`RepositoryFinding[]` via
+  `descriptor.validators` (`content-types/descriptors.ts`, story 014) rather than calling
+  `buildValidationSnapshot()` a second time in the browser; both paths call the same underlying
+  `buildNewsReport`/`toRepositoryScan`/`collectRepositoryFindings` functions on the same adaptation,
+  so AC7's agreement holds without a second snapshot round-trip or a duplicate bridge read.

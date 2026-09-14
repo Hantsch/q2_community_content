@@ -4,13 +4,24 @@
  * prints either a plain-text verdict (default) or a single JSON document (`--json`). Read-only:
  * this command never writes anywhere and never calls `process.exit` — only `process.exitCode`.
  */
+import { register } from 'node:module'
+
 import { readMirrorProvenance } from '../src/mirror/read-provenance'
 import { readContentRepo } from '../src/content-repo/read-content-repo'
-import { buildNewsReport } from '../src/report/build-news-report'
-import { exitCodeFor, summarise } from '../src/validate/summary'
+import { exitCodeFor } from '../src/validate/summary'
 import { formatValidationText } from '../src/validate/format-text'
 import { toValidationPayload } from '../src/validate/format-json'
 import { resolveRepoRoot } from './sync-launcher'
+
+// Story 017 D1: `buildValidationSnapshot` reaches story 013's `collectRepositoryFindings()`, and so
+// `contract/launcher-safe-names.ts`, whose mirrored module graph contains two imports that only
+// resolve through a studio-owned stub. Vite and `tsc` each have their own arm of that boundary;
+// plain Node has none, so this CLI installs it itself (see `mirror-boundary-hooks.ts`). The hook
+// must be registered *before* the module graph it serves is loaded, which is why this one import is
+// dynamic while every other import above stays static - none of those reaches the mirror's
+// unresolvable files, so nothing else needs to wait for the hook.
+register('./mirror-boundary-hooks.ts', import.meta.url)
+const { buildValidationSnapshot } = await import('../src/validate/build-validation-snapshot')
 
 const USAGE = 'usage: npm run validate [-- --json] [-- --strict]'
 
@@ -71,21 +82,24 @@ function main(): void {
   const mirror = readMirrorProvenance(repoRoot.value)
   const contentRepo = readContentRepo({ repoRoot: repoRoot.value })
 
-  const documents = Object.fromEntries(
-    Object.entries(contentRepo.documents).map(([file, document]) => [file, document.text]),
-  )
-  const images = contentRepo.images.map((image) => ({ name: image.name, size: image.bytes }))
-
-  const report = buildNewsReport({
-    index: contentRepo.index.value,
-    documents,
+  // One shared composition for every validation surface (story 017, D1) - the CLI derives nothing
+  // of its own here, it only prints what the snapshot says.
+  const { report, repositoryFindings, summary } = buildValidationSnapshot({
+    read: contentRepo,
+    mirror,
     now: new Date(),
-    images,
   })
-  const summary = summarise(report)
 
   if (json) {
-    console.log(JSON.stringify(toValidationPayload({ mirror, report, summary })))
+    // `toValidationPayload` reads the repository findings off the report object it is handed (the
+    // optional field `summarise` already accepts), so they are spread on here rather than passed as
+    // a fourth argument - no signature of story 012's changes.
+    const payload = toValidationPayload({
+      mirror,
+      report: { ...report, repositoryFindings },
+      summary,
+    })
+    console.log(JSON.stringify(payload))
   } else {
     for (const line of formatValidationText({ mirror, report, summary })) {
       console.log(line)
