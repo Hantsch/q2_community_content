@@ -22,8 +22,17 @@ const studioRoot = fileURLToPath(new URL('..', import.meta.url))
 
 const SCAN_ROOTS = ['src', 'tests']
 
-/** The boundary module: allowed to import the mirror, so it is out of the import check only. */
-const BOUNDARY_MODULE = 'src/contract/launcher-contract.ts'
+/**
+ * The boundary modules: allowed to import the mirror, so they are out of the import check only.
+ * `launcher-contract.ts` is the browser-safe data contract; story 013 D5 adds
+ * `launcher-safe-names.ts` as a second, deliberately separate door for the mirrored safe-name
+ * rules, whose module graph reaches `node:crypto`/`node:fs` and must not become reachable from the
+ * app bundle. Both are exempted individually in `eslint.config.js` too.
+ */
+const BOUNDARY_MODULES = [
+  'src/contract/launcher-contract.ts',
+  'src/contract/launcher-safe-names.ts',
+]
 
 /**
  * Story 008 D2 (`eslint.config.js`'s `no-restricted-imports` exemption): a second, narrower
@@ -158,7 +167,7 @@ describe('contract single source', () => {
   it('only the boundary module imports the mirror', () => {
     const findings: string[] = []
     for (const file of codeFiles()) {
-      if (file === BOUNDARY_MODULE || file.startsWith(BOUNDARY_DIRECTORY)) continue
+      if (BOUNDARY_MODULES.includes(file) || file.startsWith(BOUNDARY_DIRECTORY)) continue
       for (const specifier of importSpecifiers(read(file))) {
         if (reachesMirror(specifier)) findings.push(`${file}: ${specifier}`)
       }
@@ -166,7 +175,7 @@ describe('contract single source', () => {
 
     expect(
       findings,
-      `only ${BOUNDARY_MODULE} or ${BOUNDARY_DIRECTORY}** may import the mirror`,
+      `only ${BOUNDARY_MODULES.join(', ')} or ${BOUNDARY_DIRECTORY}** may import the mirror`,
     ).toEqual([])
   })
 })

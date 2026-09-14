@@ -32,3 +32,18 @@
 - 2026-09-14 13:01 · 012 · D5 Headless proof · started
 - 2026-09-14 13:02 · 012 · D5 Headless proof · done
 - 2026-09-14 13:07 · 012 · story complete, moved to done/ · done
+- 2026-09-14 13:08 · 013 · D1 Finding model and scan adapter · started
+- 2026-09-14 13:09 · 013 · D1 Finding model and scan adapter · done
+- 2026-09-14 13:09 · 013 · D2 Duplicate ids and order collisions · started
+- 2026-09-14 13:15 · 013 · D2 Duplicate ids and order collisions · done
+- 2026-09-14 13:15 · 013 · D3 Drafts and unreferenced images · started
+- 2026-09-14 13:18 · 013 · D3 Drafts and unreferenced images · done
+- 2026-09-14 13:18 · 013 · D4 Index/document consistency · started
+- 2026-09-14 13:21 · 013 · D4 Index/document consistency · done
+- 2026-09-14 13:21 · 013 · D5 Mirror safe-name rule and open a door · started
+- 2026-09-14 13:44 · 013 · D5 Mirror safe-name rule and open a door · done
+- 2026-09-14 13:44 · 013 · D6 Safe-name findings · started
+- 2026-09-14 13:51 · 013 · D6 Safe-name findings · done
+- 2026-09-14 13:56 · 013 · review-fix cycle 1 (AC5 order-collision positions via filterAndSortSlides) · started
+- 2026-09-14 13:59 · 013 · review-fix cycle 1 (AC5 order-collision positions via filterAndSortSlides) · done
+- 2026-09-14 14:01 · 013 · story complete, moved to done/ · done

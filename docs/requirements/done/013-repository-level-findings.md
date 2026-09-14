@@ -1,7 +1,7 @@
 ---
 id: 013
 title: Repository-level findings across the news directory
-status: ready # draft -> ready -> in-progress -> done
+status: done # draft -> ready -> in-progress -> done
 created: 2026-09-13
 ---
 
@@ -19,19 +19,19 @@ Concept: [Q2 Content Studio](../concepts/content-studio.md) — CS-13, section 7
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — Two index rows sharing an `id` are reported, naming which one the launcher keeps and
+- [x] **AC1** — Two index rows sharing an `id` are reported, naming which one the launcher keeps and
       which it discards.
-- [ ] **AC2** — A `.md` file in `news/` with no row in `index.json` is reported as a draft — a
+- [x] **AC2** — A `.md` file in `news/` with no row in `index.json` is reported as a draft — a
       state, explicitly not an error.
-- [ ] **AC3** — An image under `news/img/` that no entry references is reported, with the note that
+- [x] **AC3** — An image under `news/img/` that no entry references is reported, with the note that
       the launcher never fetches it.
-- [ ] **AC4** — A file name that the launcher's safe-name rule would refuse is reported together
+- [x] **AC4** — A file name that the launcher's safe-name rule would refuse is reported together
       with the rule it breaks.
-- [ ] **AC5** — Two entries sharing an `order` value are reported with the order they will end up
+- [x] **AC5** — Two entries sharing an `order` value are reported with the order they will end up
       in.
-- [ ] **AC6** — An index row whose `file` names a document that does not exist is reported, and so
+- [x] **AC6** — An index row whose `file` names a document that does not exist is reported, and so
       is a document whose frontmatter `order` disagrees with its index row's `order`.
-- [ ] **AC7** — Files under `news/_templates/` — including its example images — are never reported
+- [x] **AC7** — Files under `news/_templates/` — including its example images — are never reported
       as orphans or drafts.
 
 ## Open Questions
@@ -169,31 +169,31 @@ lists; this story neither imports nor is imported by 011.
 
 ## Deliverables
 
-- **D1 — Finding model and scan adapter.** `RepositoryFinding`/`RepositoryFindingKind`/severity,
+- [x] **D1 — Finding model and scan adapter.** `RepositoryFinding`/`RepositoryFindingKind`/severity,
   the `RepositoryScan` input type, `collectRepositoryFindings()` returning an empty list, and
   `toRepositoryScan()` against story 010's reader (a documented TODO import if 010 has not landed —
   the type is the contract either way). Mirror the union style of `studio/scripts/drift.ts:18-40`.
   Plus its test in `studio/src/report/repository-findings.test.ts`: the repository's real `news/`
   tree produces no `error` finding.
   Files: `studio/src/report/repository-findings.ts`, `studio/src/report/repository-findings.test.ts`.
-- **D2 — Duplicate ids and order collisions (AC1, AC5).** Duplicate `id` names the kept row and each
+- [x] **D2 — Duplicate ids and order collisions (AC1, AC5).** Duplicate `id` names the kept row and each
   discarded one; order collision names the colliding rows and the positions they actually take,
   read from the mirrored pipeline's resolved feed (`studio/src/contract/launcher-contract.ts`),
   not computed here. Plus its tests in `studio/src/report/repository-findings.test.ts`.
   Files: `studio/src/report/repository-findings.ts`, `studio/src/report/repository-findings.test.ts`,
   `studio/tests/fixtures/repository-findings/` (fixture builder).
-- **D3 — Drafts and unreferenced images (AC2, AC3, AC7).** `.md` without an index row → `info`
+- [x] **D3 — Drafts and unreferenced images (AC2, AC3, AC7).** `.md` without an index row → `info`
   draft; file in `news/img/` no entry references → `info` orphan carrying the "never fetched" note;
   `news/_templates/` files, example images included, appear in neither. Plus its tests in the same
   test file.
   Files: `studio/src/report/repository-findings.ts`, `studio/src/report/repository-findings.test.ts`,
   `studio/tests/fixtures/repository-findings/`.
-- **D4 — Index/document consistency (AC6).** Missing document lifted from the reader's own finding
+- [x] **D4 — Index/document consistency (AC6).** Missing document lifted from the reader's own finding
   into the repository list; frontmatter `order` disagreeing with the row's `order` reported as a
   `warning` naming both values. Plus its tests in the same test file.
   Files: `studio/src/report/repository-findings.ts`, `studio/src/report/repository-findings.test.ts`,
   `studio/tests/fixtures/repository-findings/`.
-- **D5 — Mirror the safe-name rule and open a door to it.** No findings yet; this D only makes the
+- [x] **D5 — Mirror the safe-name rule and open a door to it.** No findings yet; this D only makes the
   launcher's own predicates callable from studio code.
   1. Add the eight entries listed in Decisions to `launcherCoreManifest` under a new
     `// Safe names` group, following the existing `entry('src/...')` style of
@@ -217,7 +217,7 @@ lists; this story neither imports nor is imported by 011.
   `studio/tsconfig.json`, `studio/eslint.config.js`, `studio/src/mirror-runtime/harness.ts`,
   `studio/src/contract/launcher-safe-names.ts`, `studio/src/contract/launcher-safe-names.test.ts`,
   plus the mirrored files the sync writes under `studio/src/launcher-core/`.
-- **D6 — Safe-name findings (AC4).** One `unsafe-name` kind, severity `error`, whose `detail` names
+- [x] **D6 — Safe-name findings (AC4).** One `unsafe-name` kind, severity `error`, whose `detail` names
   the broken rule in words (document rule / path-segment rule / extension allowlist) and the
   offending name — never the regex. Applies `isSafeNewsDocumentName()` to index `file` values and to
   every `.md` in `news/`, and `isSafeDeclaredImagePath()` plus the `SAFE_NEWS_IMAGE_EXTENSIONS`
@@ -266,4 +266,113 @@ No manual residue.
 
 ## Done
 
-<Filled by `/build 013`.>
+Added `studio/src/report/repository-findings.ts`, a pure module with `collectRepositoryFindings()`
+over a `RepositoryScan` (built from story 010's reader plus the mirrored pipeline's resolved and
+delivered feeds via `toRepositoryScan()`): duplicate-`id` and order-collision findings (AC1, AC5),
+drafts and unreferenced images (AC2, AC3, AC7), missing-document and frontmatter/index order
+mismatches (AC6), and unsafe-name findings for the launcher's safe-name rule (AC4). Opened a second,
+narrow mirror door, `studio/src/contract/launcher-safe-names.ts`, re-exporting exactly
+`isSafeNewsDocumentName`, `isSafeDeclaredImagePath` and `SAFE_NEWS_IMAGE_EXTENSIONS` from the
+launcher's own mirrored source — no rule is reimplemented in studio code.
+
+Commit message:
+
+```
+013: report repository-level findings across the news directory
+```
+
+Verification:
+- `npm run build --workspace studio` — green.
+- `npm run typecheck --workspace studio` — green, no errors.
+- `npm run test --workspace studio` — 189 passed, 4 failed. The 4 failures
+  (`tests/mirror-set.test.ts`, `tests/mirrorDrift.test.ts` on `Button.tsx`, `cn.ts`,
+  `config-syntax.css`, `controls-grid.css`) are the same pre-existing Windows-checkout
+  (`core.autocrlf=true`) mirror-hash drift documented in stories 010/011/012's own Done sections —
+  confirmed via `git status`/`git diff` that none of those four files were touched by this story.
+- `npm run lint --workspace studio` — `eslint .` clean, including the story's own new files;
+  `prettier --check .` fails on the same ~79 pre-existing repo-wide files (CRLF vs. LF,
+  `core.autocrlf=true`), confirmed pre-existing; every file this story authored is Prettier-clean.
+- `npm run check:drift --workspace studio` — reports the same 4 pre-existing files above as
+  out-of-sync; the 19 files this story added or extended the manifest with are all in sync
+  (23 mirrored files total, was 15 before this story).
+- `e2e` — not run: this story has no user-facing surface (core logic only); the terminal surface is
+  story 012's `npm run validate`, tested there. Per the profile's own rule for criteria without a
+  surface.
+- Clean-agent review (default tier, per Model Hints): first pass **FAIL** — one confirmed defect:
+  `collectOrderCollisionFindings` echoed each entry's own raw `order` value (read from the mirrored
+  `resolveFeed()`, which is deliberately unsorted/untied) instead of the actual delivered
+  position/ranking from `filterAndSortSlides()`, and its AC5 test was tautological (would pass
+  against the old, defective behaviour). Fixed in one review-fix cycle: `RepositoryScan` gained a
+  `deliveredFeed` field computed via the mirrored `filterAndSortSlides()`, and the finding now names
+  which of two colliding entries is actually delivered first (or, if a tied entry is filtered out by
+  its visibility window, marks it "not delivered, so not ranked" rather than falsely ranking it). The
+  AC5 test was reworked to assert on the delivered ranking, which the old logic could not satisfy.
+  Re-review: **PASS** — confirmed the fix calls the mirrored `filterAndSortSlides()` rather than
+  re-implementing a sort (preserving "classifies, does not decide"), confirmed the test is no longer
+  tautological, and found no scope creep. One review-fix cycle used.
+
+AC → test mapping, as verified (test names unchanged from the story's own mapping, only the AC5
+test's body was strengthened during the fix cycle):
+- AC1 → `repository-findings.test.ts` › "two rows sharing an id name the kept row and the discarded
+  one" — passed.
+- AC2 → same file › "an unindexed .md is reported as a draft, with info severity and no error" —
+  passed.
+- AC3 → same file › "an image no entry references is reported once, noting the launcher never
+  fetches it" — passed.
+- AC4 → same file › "an unsafe file name is reported with the rule it breaks, one case per rule",
+  backed by `launcher-safe-names.test.ts` › "the safe-name door exposes the launcher's own
+  predicates" — both passed.
+- AC5 → same file › "two entries sharing an order are reported with the positions they end up in" —
+  passed, and now genuinely proves the criterion (see review-fix above).
+- AC6 → same file › "a row naming a missing document, and a frontmatter order disagreeing with its
+  row, are both reported" — passed.
+- AC7 → same file › "news/_templates files and their example images are neither drafts nor
+  orphans" — passed.
+- No manual residue.
+
+Decisions (this build, beyond the story's own `## Decisions (Sprint)`):
+- **The mirror set for AC4 ended up six mirrored files plus two studio-owned stub redirects, not
+  eight mirrored files as the Decisions section sketched.** Verified against the real launcher
+  checkout (`C:\development\Hantsch\q2-launcher`, same commit already in the lock file): the eight
+  files are NOT import-closed the way the Decisions section asserted. `images/fetch-image.ts` does
+  `await import('electron')` inside an exported-but-unused (from studio's perspective)
+  `electronDecodeImage`, and `lib/renderer-source.ts` fails this repository's browser `tsc` lib
+  settings (`Buffer` is not assignable to DOM's `BodyInit` under `lib: ["DOM"]`, unlike under the
+  launcher's own Node-only `tsc` settings). Both are used by `resolve-feed-images.ts` (which defines
+  `isSafeDeclaredImagePath`) only through named imports (`fetchImage`, `RENDERER_ORIGIN`,
+  `NEWS_IMAGE_PATH_PREFIX`) that `isSafeDeclaredImagePath` itself never calls. Rather than mirror
+  either file verbatim (which would put a real `import('electron')` under
+  `studio/src/launcher-core/`, or a file that fails `typecheck`), both imports were redirected with
+  the exact mechanism this story's own Decisions section already prescribes for `news/harness.ts`
+  and story 008 established for `../client`: a `rootDirs` entry plus (since these are real value
+  imports, not type-only) a `launcherBoundaryPlugin()` `resolveId` matcher, pointing at studio-owned
+  stubs (`studio/src/mirror-runtime/fetchImageStub.ts`, `rendererSourceStub.ts`) that restate the
+  handful of type aliases/constants the importing code needs and never execute real logic. Mirrored
+  6 of 8: `feed-fetcher.ts`, `content-repo.ts`, `images/paths.ts`, `fs-utils.ts`, `image-cache.ts`,
+  `resolve-feed-images.ts`. All three required symbols (`isSafeNewsDocumentName`,
+  `isSafeDeclaredImagePath`, `SAFE_NEWS_IMAGE_EXTENSIONS`) are re-exported from
+  `studio/src/contract/launcher-safe-names.ts` as planned. No launcher source was edited; no rule was
+  reimplemented. Grep-verified: no `import`/`from 'electron'`/`import('electron')` anywhere under
+  `studio/src/launcher-core/`.
+- **`RepositoryScan` grew two fields beyond D1's original sketch**, both added by later deliverables
+  as D1 itself invited: `resolvedFeed` (D2, from the mirrored `resolveFeed()`) and `deliveredFeed`
+  (added during the AC5 review-fix cycle, from the mirrored `filterAndSortSlides()`, computed with
+  `new Date()` since a repository-level scan has no caller-supplied clock the way story 011's
+  `buildNewsReport` does).
+- **`RepositoryScan.findings` (story 010's reader findings) was renamed to `readerFindings`** during
+  D4, to avoid ambiguity with the module's own `RepositoryFinding[]` — a naming clarification, not a
+  behaviour change; `toRepositoryScan()` is the only place the rename touches the real reader's
+  shape.
+- **Out of scope, flagged rather than fixed:** per story 012's own Done section, `repositoryFindings`
+  in `studio/src/validate/` (`summary.ts`, `format-json.ts`) is still typed as an ad-hoc
+  `ContentReport & { repositoryFindings?: readonly unknown[] }` add-on, always `0`/`[]` in practice
+  today. Wiring this story's real `RepositoryFinding[]` into the CLI so `npm run validate`'s
+  `repositoryFindings` count (012 AC7) reflects real data is not covered by any deliverable or
+  acceptance criterion of this story — no AC here describes CLI behaviour, and 012's own AC7 test
+  only asserts the count degrades gracefully in the field's absence. Doing it anyway would be scope
+  creep against this story's own plan ("Nothing outside `studio/src/report/`... is touched" plus
+  D5's explicit file list). Left as a genuine, named gap for a follow-up story to wire
+  `collectRepositoryFindings()`'s output into `validate.ts`.
+- The pre-existing 4-file mirror-hash drift and the repo-wide Prettier/CRLF failures are
+  environmental (this Windows checkout), pre-date this story (documented identically in stories
+  010/011/012), and are out of scope for it.

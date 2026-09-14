@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
-import { dirname, join, relative, resolve } from 'node:path'
+import { basename, dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { describe, expect, it } from 'vitest'
@@ -73,6 +73,26 @@ function resolvesToAMirroredFile(importerPath: string, specifier: string): boole
   return candidates.some((suffix) => existsSync(`${target}${suffix}`))
 }
 
+/**
+ * The relative specifiers a source imports with `import type`. TypeScript erases those entirely, so
+ * they emit no runtime import: the boundary plugin has nothing to redirect, and `tsconfig.json`'s
+ * `rootDirs` merge with this directory is the whole mechanism. Story 013 D5's `./harness` is the
+ * case - `news/harness.ts` reaches `electron` and is deliberately not mirrored, so only the
+ * `NewsSource` type it declares is restated in `harness.ts` next to this file.
+ *
+ * A mixed clause (`import { a, type B } from './x'`) is not matched, and rightly so: it keeps its
+ * runtime import and still needs a real target.
+ */
+function typeOnlySpecifiers(source: string): Set<string> {
+  const pattern = /import\s+type\s+[^'"]*?\bfrom\s+['"](\.[^'"]*)['"]/g
+  return new Set([...source.matchAll(pattern)].map((match) => match[1]))
+}
+
+/** The `rootDirs` counterpart such an erased import falls through to, which has to actually exist. */
+function resolvesToAMirrorRuntimeStub(specifier: string): boolean {
+  return existsSync(join(here, `${basename(specifier)}.ts`))
+}
+
 describe('the launcher IPC boundary', () => {
   it('stubs exactly the bindings the mirrored SlideButtons imports from the home client', () => {
     const clauses = clientImportClauses(readFileSync(slideButtonsPath, 'utf8'))
@@ -101,6 +121,29 @@ describe('the launcher IPC boundary', () => {
     expect(resolveLauncherBoundary('../client.js', slideButtonsPath)).toBe(stub)
   })
 
+  it('redirects the mirrored image resolver’s two unmirrorable imports to the studio stubs', () => {
+    // Story 013 D5: `resolve-feed-images.ts` carries `isSafeDeclaredImagePath()` and is mirrored,
+    // but two of its imports are not - `images/fetch-image.ts` reaches `electron`, and
+    // `lib/renderer-source.ts` does not type-check under this repository's browser `lib`.
+    const resolveFeedImagesPath = resolve(
+      mirrorRoot,
+      'src/main/modules/home/images/resolve-feed-images.ts',
+    )
+
+    const fetchImageStub = resolve(here, 'fetchImageStub.ts')
+    expect(resolveLauncherBoundary('./fetch-image', resolveFeedImagesPath)).toBe(fetchImageStub)
+    expect(resolveLauncherBoundary('./fetch-image.js', resolveFeedImagesPath)).toBe(fetchImageStub)
+
+    const rendererSourceStub = resolve(here, 'rendererSourceStub.ts')
+    expect(resolveLauncherBoundary('../../../lib/renderer-source', resolveFeedImagesPath)).toBe(
+      rendererSourceStub,
+    )
+
+    // The same specifiers from anywhere else in the mirror name different modules, and stay untouched.
+    expect(resolveLauncherBoundary('./fetch-image', slideButtonsPath)).toBeNull()
+    expect(resolveLauncherBoundary('../../../lib/renderer-source', slideButtonsPath)).toBeNull()
+  })
+
   it('leaves every other importer, specifier and module id alone', () => {
     const outsideMirror = resolve(here, 'mirrorCheck.tsx')
     const siblingDirectory = resolve(
@@ -125,15 +168,18 @@ describe('the launcher IPC boundary', () => {
   })
 
   it('has no mirrored file importing outside the mirrored set', () => {
-    const unresolved = mirroredSourceFiles(mirrorRoot).flatMap((filePath) =>
-      relativeSpecifiers(readFileSync(filePath, 'utf8'))
+    const unresolved = mirroredSourceFiles(mirrorRoot).flatMap((filePath) => {
+      const source = readFileSync(filePath, 'utf8')
+      const typeOnly = typeOnlySpecifiers(source)
+      return relativeSpecifiers(source)
         .filter(
           (specifier) =>
             resolveLauncherBoundary(specifier, filePath) === null &&
-            !resolvesToAMirroredFile(filePath, specifier),
+            !resolvesToAMirroredFile(filePath, specifier) &&
+            !(typeOnly.has(specifier) && resolvesToAMirrorRuntimeStub(specifier)),
         )
-        .map((specifier) => `${relative(mirrorRoot, filePath)} -> ${specifier}`),
-    )
+        .map((specifier) => `${relative(mirrorRoot, filePath)} -> ${specifier}`)
+    })
 
     expect(unresolved).toEqual([])
   })

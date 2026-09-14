@@ -6,7 +6,7 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
-    "types": ["vite/client"],
+    "types": ["vite/client", "node"],
     "paths": {
       "@shared/*": ["./src/launcher-core/src/shared/*"]
     },
@@ -20,7 +20,29 @@
     // (which re-exports `homeClientStub.ts`) instead - without ever hand-editing the mirror.
     // Story 008 D3 statically imports the mirrored slide templates (and so, transitively,
     // `SlideButtons.tsx`) from `src/mirror-runtime/`, which is what makes this reachable by `tsc`.
-    "rootDirs": ["./src/launcher-core/src/renderer/src/modules/home", "./src/mirror-runtime"],
+    // The third and fourth entries are story 013 D5 and the same merge, one directory over each:
+    //   - the mirrored `news/feed-fetcher.ts` does `import type { NewsSource } from './harness'`,
+    //     and `news/harness.ts` is deliberately not mirrored (it reaches `electron` through
+    //     `lib/ui-harness.ts`), so `./harness` falls through to `src/mirror-runtime/harness.ts`.
+    //     That one needs no Vite counterpart - it is an `import type`, so it is erased and emits no
+    //     runtime import.
+    //   - the mirrored `images/resolve-feed-images.ts` imports `fetchImage` from `./fetch-image`
+    //     and two constants from `../../../lib/renderer-source`, and neither of those two launcher
+    //     files is mirrored either (`fetch-image.ts` does `await import('electron')`;
+    //     `renderer-source.ts` builds a `Response` from a Node `Buffer`, which the `lib` above
+    //     rejects - see `scripts/launcher-core.manifest.ts`). So they fall through to
+    //     `src/mirror-runtime/fetch-image.ts` and `src/mirror-runtime/renderer-source.ts`, which
+    //     re-export the stubs next to them. Unlike `./harness`, these two bind values rather than
+    //     just types, so each also has a Vite counterpart in `launcherBoundary.ts` - `tsc` alone
+    //     would not be enough. Note `rootDirs` substitutes on the *resolved* path, which is why
+    //     `lib` is listed as its own root and `images` is not enough for the second import.
+    "rootDirs": [
+      "./src/launcher-core/src/renderer/src/modules/home",
+      "./src/launcher-core/src/main/modules/home/news",
+      "./src/launcher-core/src/main/modules/home/images",
+      "./src/launcher-core/src/main/lib",
+      "./src/mirror-runtime"
+    ],
 
     "strict": true,
     "noUnusedLocals": true,

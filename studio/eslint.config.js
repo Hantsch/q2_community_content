@@ -24,11 +24,19 @@ export default tseslint.config(
     // narrower door for the mirrored *rendering* set: `src/mirror-runtime/**` is the boundary
     // that renders the mirrored slide components with their own styles, so it is exempt here too
     // rather than left to the top-level `ignores` - a re-sync of either slice still only ever
-    // touches one import zone. Everything else in `src/` and `tests/` goes through one of those
-    // two doors. The mirror itself is exempt as well - it imports its own modules and its own
+    // touches one import zone. Story 013 adds a third: `src/contract/launcher-safe-names.ts`, the
+    // door onto the mirrored *safe-name* rules, kept apart from `launcher-contract.ts` because that
+    // slice reaches `node:fs`/`node:crypto` and must never become reachable from the browser
+    // contract the studio app imports. Everything else in `src/` and `tests/` goes through one of
+    // those doors. The mirror itself is exempt as well - it imports its own modules and its own
     // `@shared/*` alias.
     files: ['src/**/*.{ts,tsx}', 'tests/**/*.ts'],
-    ignores: ['src/launcher-core/**', 'src/contract/launcher-contract.ts', 'src/mirror-runtime/**'],
+    ignores: [
+      'src/launcher-core/**',
+      'src/contract/launcher-contract.ts',
+      'src/contract/launcher-safe-names.ts',
+      'src/mirror-runtime/**',
+    ],
     rules: {
       'no-restricted-imports': [
         'error',

@@ -2,9 +2,39 @@
   "schemaVersion": 1,
   "launcher": {
     "commit": "a41b3acab4bd3a089f8a04594fff81556fbd6f8a",
-    "syncedAt": "2026-09-14T07:46:38.089Z"
+    "syncedAt": "2026-09-14T11:40:03.323Z"
   },
   "files": [
+    {
+      "source": "src/main/lib/content-repo.ts",
+      "mirror": "studio/src/launcher-core/src/main/lib/content-repo.ts",
+      "sha256": "a85b54b8dc95b1224dd8bef9b07497139d4518f9e315e35aaae683316ba41e08"
+    },
+    {
+      "source": "src/main/lib/fs-utils.ts",
+      "mirror": "studio/src/launcher-core/src/main/lib/fs-utils.ts",
+      "sha256": "496dbc2570dc7d0a9b72f9d893b5a57f9336dffece71302c57d66e5f0df7a174"
+    },
+    {
+      "source": "src/main/modules/home/images/image-cache.ts",
+      "mirror": "studio/src/launcher-core/src/main/modules/home/images/image-cache.ts",
+      "sha256": "a59068752301c8db4dc4b106b81bd63440db33ec227baeb38e9763adebf72f2a"
+    },
+    {
+      "source": "src/main/modules/home/images/paths.ts",
+      "mirror": "studio/src/launcher-core/src/main/modules/home/images/paths.ts",
+      "sha256": "c9509dfd592491c45226dbe89b32f1e5f3f9c615a423ad00796c9d0e2cb2a277"
+    },
+    {
+      "source": "src/main/modules/home/images/resolve-feed-images.ts",
+      "mirror": "studio/src/launcher-core/src/main/modules/home/images/resolve-feed-images.ts",
+      "sha256": "26219f659cc9fadd89188a776f526a1739efde9b111999ea75c79f6b1fece55c"
+    },
+    {
+      "source": "src/main/modules/home/news/feed-fetcher.ts",
+      "mirror": "studio/src/launcher-core/src/main/modules/home/news/feed-fetcher.ts",
+      "sha256": "1cb7d7a3641f785e159b88b1d6270a0c232436eaa4d1ef3a97fd902d41490f60"
+    },
     {
       "source": "src/main/modules/home/news/feed-pipeline.ts",
       "mirror": "studio/src/launcher-core/src/main/modules/home/news/feed-pipeline.ts",
