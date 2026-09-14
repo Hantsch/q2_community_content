@@ -28,6 +28,25 @@ inside `studio/`; a checkout that is missing a declared file or has uncommitted 
 aborts with a single error and writes nothing. Running it again against the same checkout
 changes nothing. Like the rest of `studio/`, it is local tooling — the launcher never fetches it.
 
+## The contract boundary
+
+`studio/src/contract/launcher-contract.ts` is the only studio file allowed to import from
+`src/launcher-core/` or the `@shared/*` alias. It re-exports the pipeline functions (`buildFeed`,
+`resolveFeed`, `filterAndSortSlides`), the contract types, and the rule constants; everything else
+in `studio/` reaches the contract through it, never directly.
+
+The `@shared/*` alias (`tsconfig.json` `paths`, `vite.config.ts`/`vitest.config.ts`
+`resolve.alias`) maps to `src/launcher-core/src/shared/*`, which is what lets the mirrored
+`feed-pipeline.ts`'s own `@shared/modules/home` import resolve unmodified. This mapping exists
+purely so the mirror compiles with zero edits to its contents, per `CLAUDE.md`'s "mirrored, never
+hand-edited" rule; it is not a general-purpose alias for studio's own code.
+
+An eslint `no-restricted-imports` zone plus a guard test
+(`studio/tests/contract-single-source.test.ts`) enforce that nothing outside
+`launcher-contract.ts` imports the mirror or the alias, and that no contract rule (button host
+allowlist, three-button cap, image-fallback rule, drop rules) is re-implemented anywhere else in
+`studio/src`/`studio/tests`, so a later re-sync only ever touches one import site.
+
 ## Checking the launcher mirror for drift
 
 `npm run check:drift` (from the repository root or from `studio/`) re-hashes every mirrored file

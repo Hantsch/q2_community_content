@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "launcher": {
+    "commit": "a41b3acab4bd3a089f8a04594fff81556fbd6f8a",
+    "syncedAt": "2026-09-14T07:13:37.717Z"
+  },
+  "files": [
+    {
+      "source": "src/main/modules/home/news/feed-pipeline.ts",
+      "mirror": "studio/src/launcher-core/src/main/modules/home/news/feed-pipeline.ts",
+      "sha256": "6e2b9016ef786c9ae0ecd15da65c1a2ac3c513257ce945cf671f27f781def406"
+    },
+    {
+      "source": "src/main/modules/home/news/frontmatter.ts",
+      "mirror": "studio/src/launcher-core/src/main/modules/home/news/frontmatter.ts",
+      "sha256": "0bc6a88fd5f696c4a33dac87a893ca024e192101258d2106864b83eb29f5c7b0"
+    },
+    {
+      "source": "src/renderer/src/modules/home/components/resolveSlideTemplate.ts",
+      "mirror": "studio/src/launcher-core/src/renderer/src/modules/home/components/resolveSlideTemplate.ts",
+      "sha256": "4a7270f4f03bb711b069dc2447a9b23be94f8e2aa395942392e145e14243ad1c"
+    },
+    {
+      "source": "src/renderer/src/modules/home/components/SlideBanner.tsx",
+      "mirror": "studio/src/launcher-core/src/renderer/src/modules/home/components/SlideBanner.tsx",
+      "sha256": "36f65de634c02cb48c3d956660175320c201301612dd7e935833deecd6f090c0"
+    },
+    {
+      "source": "src/renderer/src/modules/home/components/SlideButtons.tsx",
+      "mirror": "studio/src/launcher-core/src/renderer/src/modules/home/components/SlideButtons.tsx",
+      "sha256": "1b0ef40e7664ba0aa316fc2f51448064f2b5304d0db5d099cf580f34fb9d1f78"
+    },
+    {
+      "source": "src/renderer/src/modules/home/components/SlideCover.tsx",
+      "mirror": "studio/src/launcher-core/src/renderer/src/modules/home/components/SlideCover.tsx",
+      "sha256": "a5c98eedcb4490fee6b8b479bf42c4c14b3c20954e46bea769c32f933c03d340"
+    },
+    {
+      "source": "src/renderer/src/modules/home/components/SlideSplit.tsx",
+      "mirror": "studio/src/launcher-core/src/renderer/src/modules/home/components/SlideSplit.tsx",
+      "sha256": "88205e8f27ac5fca5b1b203409e60565bac9caf499db0a237d4495a5834b7cb5"
+    },
+    {
+      "source": "src/renderer/src/modules/home/components/SlideText.tsx",
+      "mirror": "studio/src/launcher-core/src/renderer/src/modules/home/components/SlideText.tsx",
+      "sha256": "8def3e75d2e83e7dc7ef9d16673f1f6f433ea1842a25045944bdd0b213a7f27e"
+    },
+    {
+      "source": "src/renderer/src/styles/home-hero.css",
+      "mirror": "studio/src/launcher-core/src/renderer/src/styles/home-hero.css",
+      "sha256": "f8ab40956a0210202c680bc06f96794d22d1d43f59eb41709bd2037b57bb569e"
+    },
+    {
+      "source": "src/renderer/src/styles/index.css",
+      "mirror": "studio/src/launcher-core/src/renderer/src/styles/index.css",
+      "sha256": "ce072842602664bd14f7634718c7056d332dfe6808a6f5822ab4ad225bcb4d6b"
+    },
+    {
+      "source": "src/shared/modules/home.ts",
+      "mirror": "studio/src/launcher-core/src/shared/modules/home.ts",
+      "sha256": "23a42eb6776e626979d35737453afb5341614710112fc8af871c2d900a9cf2b3"
+    }
+  ]
+}

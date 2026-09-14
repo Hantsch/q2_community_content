@@ -30,3 +30,9 @@ second roadmap.
   checkout when given one, skips that comparison with one explanatory line otherwise, stays
   read-only in both repositories, and prints a kind-specific remedy on failure; proven by real-CLI
   integration tests against synthetic git fixtures.
+- 007 — The mirrored news contract runs unmodified in the studio · S02 · Wired the studio
+  toolchain (zod pin, `@shared/*` alias) and a single boundary module
+  (`studio/src/contract/launcher-contract.ts`) so `buildFeed` from `studio/src/launcher-core/`
+  runs unmodified over the repo's real `news/` tree and over drop/fallback fixtures, guarded by an
+  eslint zone plus a scanning test proving no contract rule is re-implemented anywhere else;
+  `npm run check:drift` stays green.

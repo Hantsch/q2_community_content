@@ -1,0 +1,352 @@
+/* ==========================================================================
+   Home news hero — slide templates
+   --------------------------------------------------------------------------
+   Style layer for the three fixed slide renderers the news carousel picks
+   between (story 083 D2: `SlideSplit`, `SlideBanner`, `SlideText`). Mirrors
+   `controls-grid.css`'s structure: every value here reads a token, nothing
+   is hardcoded, and the prefix (`home-hero-`) scopes the classes to this
+   module the same way `ctrl-` scopes the Controls tab's.
+
+   Contributors fill frontmatter fields only (concept `docs/concepts/home-screen.md`
+   §9's "no CSS, no HTML, no colours, no layout values in the feed") — these
+   classes are the launcher's own, fixed for every slide regardless of its
+   content, and are never read from or written by feed data.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   The carousel shell (story 083 D3)
+   --------------------------------------------------------------------------
+   The hero's height (320px) and its closing rule are Tailwind utilities on the
+   component (`h-80 shrink-0 border-b`); what lives here is everything the
+   utilities cannot express - the stage/controls stacking, the 44px control hit
+   areas and the slide-change animation.
+
+   Nothing here re-implements reduced motion: the enter animation reads
+   `--dur-base`, which `:root[data-motion='reduced']` in `styles/index.css`
+   already zeroes, *and* `NewsHero` withholds `.home-hero-frame-enter`
+   entirely under reduced motion. The timer is stopped in JavaScript, because
+   no stylesheet can stop one.
+   -------------------------------------------------------------------------- */
+
+.home-hero {
+  /* One number for the control bar's height, inherited by the stage that has
+     to keep clear of it - the two cannot drift apart. */
+  --home-hero-controls-h: 44px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Sits above the control bar rather than under it, so a slide's own buttons
+   can never end up beneath the dots. */
+.home-hero-stage {
+  position: absolute;
+  inset: 0 0 var(--home-hero-controls-h) 0;
+}
+
+.home-hero-frame {
+  height: 100%;
+}
+
+.home-hero-frame-enter {
+  animation: home-hero-frame-in var(--dur-base) var(--ease-out-quart) both;
+}
+
+@keyframes home-hero-frame-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.home-hero-controls {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: flex;
+  height: var(--home-hero-controls-h);
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.home-hero-dots {
+  display: flex;
+  align-items: center;
+}
+
+/* Every hero control - dot, prev, next, pause - is one 44px square. A 320px
+   hero has the room, so no touch-target deviation is needed here (unlike the
+   dense Controls/Settings grids); the visual mark inside stays small. */
+.home-hero-ctl {
+  display: inline-flex;
+  height: 44px;
+  width: 44px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--color-ink-dim);
+  transition: color var(--dur-fast) var(--ease-out-quart);
+}
+
+.home-hero-ctl:hover {
+  color: var(--color-ink);
+}
+
+.home-hero-dot-mark {
+  height: 6px;
+  width: 6px;
+  border-radius: 9999px;
+  background: var(--color-line-strong);
+  transition:
+    background-color var(--dur-fast) var(--ease-out-quart),
+    box-shadow var(--dur-fast) var(--ease-out-quart);
+}
+
+.home-hero-ctl:hover .home-hero-dot-mark {
+  background: var(--color-ink-muted);
+}
+
+/* The current slide is marked by more than colour: the dot grows a ring. */
+.home-hero-ctl[aria-current='true'] .home-hero-dot-mark {
+  background: var(--color-flame-500);
+  box-shadow: 0 0 0 3px var(--color-flame-900);
+}
+
+.home-hero-counter {
+  padding: 0 6px;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink-dim);
+}
+
+.home-hero-slide {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  padding: 16px;
+  gap: 16px;
+  box-sizing: border-box;
+}
+
+/* `split`: image pane beside a title/body/buttons pane. */
+.home-hero-slide-split {
+  flex-direction: row;
+  align-items: stretch;
+}
+
+/* `banner`: image strip above a title/body/buttons pane. */
+.home-hero-slide-banner {
+  flex-direction: column;
+}
+
+/* `text`: no image slot at all — also the fallback layout for `split`/`banner`
+   data missing its image, or an unrecognised template value. */
+.home-hero-slide-text {
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* `cover`: full-bleed image behind a scrim, with the content pane sitting on top of it instead of
+   beside or above it (story 095 D2). `position: relative` is what lets the absolutely-positioned
+   image/scrim below fill this slide rather than the whole hero stage. */
+.home-hero-slide-cover {
+  position: relative;
+}
+
+.home-hero-cover-image {
+  position: absolute;
+  inset: 0;
+  /* Story 095 D3 found this the hard way: `inset: 0` alone does NOT stretch a *replaced* element.
+     An absolutely positioned `<img>` with `width/height: auto` resolves to its intrinsic size/ratio
+     and then resolves the over-constrained insets by alignment, so the image rendered as a
+     top-aligned 4:1 strip across only the upper ~78% of the slide and `object-fit: cover` never had
+     anything to crop. The two explicit 100%s are what make the box the slide's box. */
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Keeps the image's subject visible on the right, under where the scrim is lightest, while the
+     content pane (left, see below) sits over the gradient's darkest side. */
+  object-position: 100% 50%;
+}
+
+/* Left-to-right scrim so the title/body/buttons pane stays readable over an arbitrary feed image -
+   darkest behind the content on the left, fading to transparent toward the image's visible right
+   side. Tokens only, no raw hex/rgb, consistent with `color-mix`'s use elsewhere in this app for a
+   token-derived alpha (e.g. `dashboard.css`, `controls-grid.css`).
+
+   The stops are not a taste decision - they are what story 095 D3's pixel probe measured as
+   necessary. Over a deliberately near-white image, `--color-ink-dim` body text needs the scrim to
+   still be ~83% opaque where the content pane ends, which is at most 46% of the slide's width (45%
+   plus the slide's 16px padding). So the scrim holds ~92% across that whole span and only then
+   fades, reaching fully transparent at 82% - leaving the right ~18% of the image, the part `cover`
+   guarantees to keep visible at every width, entirely untouched. A thinner scrim measured 1.2:1
+   behind the body. */
+.home-hero-cover-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    var(--color-panel) 0%,
+    color-mix(in srgb, var(--color-panel) 92%, transparent) 48%,
+    transparent 82%
+  );
+}
+
+/* Both the image and the scrim sit behind the content pane, and both stay below the stale chip
+   (`z-index: 1`) so it never disappears under a busy cover image. */
+.home-hero-slide-cover .home-hero-cover-image,
+.home-hero-slide-cover .home-hero-cover-scrim {
+  z-index: 0;
+}
+
+/* `flex-grow: 0` is load-bearing: `.home-hero-content` is `flex: 1 1 auto`, and as the slide's only
+   flex item it grew straight past its declared `width: 45%` to the full content width (clamped only
+   by `max-width`), which story 095 D3 measured as a 560px column inside an 854px slide. The width
+   the story decided on is also the width the documented safe zone and the scrim above are measured
+   against, so it has to be the width that is actually used. */
+.home-hero-slide-cover .home-hero-content {
+  position: relative;
+  flex-grow: 0;
+  width: 45%;
+  max-width: 560px;
+  /* The 560px cap is what keeps the column readable, but on a wide window it also leaves it
+     stranded against the very left edge of a 2000px+ hero, with the whole middle empty. So the
+     column slides inward as the hero grows past the app's default width: nothing below ~1200px of
+     slide (i.e. the 1280px default window and every narrower one) moves at all, and the shift tops
+     out at 160px - far short of the 48% mark where the scrim above starts to fade, so the contrast
+     floor `scripts/flows/news-cover-template.mjs` measures is untouched. */
+  margin-left: clamp(0px, (100% - 1200px) * 0.1, 160px);
+}
+
+.home-hero-media {
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-line);
+  background: var(--color-raised);
+}
+
+.home-hero-slide-split .home-hero-media {
+  width: 45%;
+}
+
+.home-hero-slide-banner .home-hero-media {
+  height: 45%;
+}
+
+.home-hero-media img {
+  display: block;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+
+.home-hero-content {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Story 084 D5: `split`/`banner` without a resolved `imageUrl` drop their media column/strip
+   entirely rather than leaving it empty or showing a broken `<img>` - this is what the text
+   column takes on instead, so it fills the width (or, for `banner`, the height) the image would
+   otherwise have used. The hero's own height never depends on this (`home-hero-frame` is 100% of
+   a fixed-height ancestor), so nothing here needs to touch it. */
+.home-hero-content-full {
+  width: 100%;
+}
+
+.home-hero-slide-banner .home-hero-content-full {
+  height: 100%;
+}
+
+.home-hero-title {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+
+.home-hero-body {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--color-ink-dim);
+  /* Plain text only (no markdown, concept §6.2) — clamped so a long body never
+     pushes the buttons row out of the fixed 320px hero (concept §7). */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+}
+
+.home-hero-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Story 083 D4: the welcome slide's first-steps list. Plain markers, not the feed's own
+   `home-hero-body` clamp - onboarding text is short and fixed, never feed-supplied. */
+.home-hero-welcome-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 1.25em;
+  list-style: decimal;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--color-ink-dim);
+}
+
+/* The stale chip + refresh button (story 083 D4, AC7): a corner overlay, never a toast or dialog -
+   it sits inside the hero's own stage, above whichever slide/welcome content is showing. */
+.home-hero-stale {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.home-hero-stale-chip {
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel);
+  padding: 3px 8px;
+  font-size: 0.6875rem;
+  color: var(--color-ink-dim);
+}
+
+/* Story 083 D4/AC7 Decisions: refresh is a hero control like the others (dots/prev/next/pause) -
+   44px-minimum pointer hit area, small visual mark (the chip) inside it. */
+.home-hero-stale-refresh {
+  display: inline-flex;
+  height: 44px;
+  min-width: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-line-strong);
+  background: var(--color-raised);
+  padding: 3px 8px;
+  font-size: 0.6875rem;
+  color: var(--color-ink);
+  transition: background-color var(--dur-fast) var(--ease-out-quart);
+}
+
+.home-hero-stale-refresh:hover {
+  background: var(--color-hover);
+}

@@ -10,3 +10,13 @@
 - 2026-09-14 09:06 · 006 · D2 Launcher comparison and skip path · done
 - 2026-09-14 09:06 · 006 · D3 CLI, wording and wiring · started
 - 2026-09-14 09:08 · 006 · D3 CLI, wording and wiring · done
+- 2026-09-14 09:14 · 007 · D1 mirror compiles and lints · started
+- 2026-09-14 09:19 · 007 · D1 mirror compiles and lints · done
+- 2026-09-14 09:19 · 007 · D2 boundary module and real feed · started
+- 2026-09-14 09:23 · 007 · D2 boundary module and real feed · done
+- 2026-09-14 09:23 · 007 · D3 verdicts on fixtures · started
+- 2026-09-14 09:24 · 007 · D3 verdicts on fixtures · done
+- 2026-09-14 09:24 · 007 · D4 no second home for a contract rule · started
+- 2026-09-14 09:31 · 007 · D4 no second home for a contract rule · done
+- 2026-09-14 09:31 · 007 · D5 drift still green, boundary written down · started
+- 2026-09-14 09:33 · 007 · D5 drift still green, boundary written down · done

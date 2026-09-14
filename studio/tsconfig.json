@@ -1,5 +1,10 @@
 {
   "include": ["src/**/*.ts", "src/**/*.tsx"],
+  // The renderer slice of the mirror (D2-D5 territory, not this deliverable) imports launcher
+  // modules that sit outside the manifest (`components/ui/Button`, the home IPC `client`) and
+  // are not mirrored here. Excluded from typecheck rather than hand-edited, per the "mirror
+  // is never hand-edited" rule.
+  "exclude": ["src/launcher-core/src/renderer/**"],
   "compilerOptions": {
     "target": "ES2022",
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
@@ -7,6 +12,9 @@
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "types": ["vite/client"],
+    "paths": {
+      "@shared/*": ["./src/launcher-core/src/shared/*"]
+    },
 
     "strict": true,
     "noUnusedLocals": true,

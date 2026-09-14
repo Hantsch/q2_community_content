@@ -1,0 +1,266 @@
+@import 'tailwindcss';
+
+/*
+  Imported INTO the `components` layer, which matters more than it looks.
+
+  Tailwind v4 declares `@layer theme, base, components, utilities`. CSS gives
+  unlayered rules higher priority than layered ones regardless of specificity, so
+  an unlayered `.panel-raised { position: relative }` silently beat every Tailwind
+  utility - `fixed`, `text-[9px]`, `border-x-0` and so on all lost. Putting these
+  classes in `components` restores the expected order: utilities win.
+*/
+@import './surfaces.css' layer(components);
+@import './controls-grid.css' layer(components);
+@import './config-syntax.css' layer(components);
+@import './home-hero.css' layer(components);
+@import './dashboard.css' layer(components);
+
+/*
+  Sources are listed explicitly rather than relying on auto-detection, because
+  the renderer root is a subdirectory of the repo and electron-vite builds it
+  with its own root.
+*/
+@source '../**/*.{ts,tsx}';
+
+/* ==========================================================================
+   Design tokens - "Quake II, industrial, modern"
+   --------------------------------------------------------------------------
+   The mood is Strogg machinery: near-black steel, rust, and the amber of the
+   Quake II logo and lava. Green is the secondary voice (HUD readouts, status),
+   never a surface.
+
+   Contrast ratios below are computed against --color-base (#0e0f11) unless
+   noted. Everything used for text meets WCAG AA (4.5:1); the primary text and
+   accents clear AAA (7:1).
+   ========================================================================== */
+
+@theme {
+  /* --- surfaces (dark to light) ----------------------------------------- */
+  --color-void: #08080a; /* behind everything; window edges, scrim base */
+  --color-base: #0e0f11; /* app background */
+  --color-panel: #15161a; /* cards, rails, bars */
+  --color-raised: #1c1e23; /* popovers, dialogs, inputs */
+  --color-hover: #23262c; /* hover state of any surface */
+  --color-active: #2b2f36; /* pressed / selected surface */
+  --color-line: #292c33; /* hairline borders */
+  --color-line-strong: #3b404a; /* emphasised borders, dividers */
+
+  /* --- ink -------------------------------------------------------------- */
+  --color-ink: #f2efea; /* 17.0:1  primary text (warm white, not pure) */
+  --color-ink-dim: #a9a49c; /* 8.4:1   secondary text */
+  --color-ink-muted: #7c7770; /*  4.9:1  tertiary text, still AA */
+  --color-ink-faint: #565149; /*  2.6:1  decorative only - never body text */
+
+  /* --- flame: the Quake II amber, our primary accent -------------------- */
+  --color-flame-100: #ffe6c7;
+  --color-flame-200: #ffd0a0;
+  --color-flame-300: #ffb765;
+  --color-flame-400: #ff9e3d;
+  --color-flame-500: #ff8a1f; /* 8.2:1  primary accent */
+  --color-flame-600: #e0700c;
+  --color-flame-700: #b4550a;
+  --color-flame-800: #7d3a08;
+  --color-flame-900: #4a2205;
+  /* Text placed on a flame-500 fill. 8.0:1 against #ff8a1f. */
+  --color-flame-ink: #1a0f02;
+
+  /* --- strogg: HUD green, for status and telemetry ---------------------- */
+  --color-strogg-200: #cffab9;
+  --color-strogg-300: #a9f58c;
+  --color-strogg-500: #79e356; /* 11.8:1 */
+  --color-strogg-700: #3e9a26;
+  --color-strogg-900: #1d4f11;
+
+  /* --- rust: structural warmth, borders and gradients ------------------- */
+  --color-rust-400: #b06438;
+  --color-rust-500: #8a4a24;
+  --color-rust-700: #5a2e15;
+  --color-rust-900: #331808;
+
+  /* --- semantics -------------------------------------------------------- */
+  --color-success: #79e356; /* 11.8:1 */
+  --color-warning: #f5b32b; /* 10.5:1 */
+  --color-danger: #ff5a52; /*  6.4:1 */
+  --color-info: #6ab7ff; /*  8.0:1 */
+
+  /* --- config syntax highlighting (story 024) ---------------------------
+     One semantic token per kind `tokenizeConfigText` can emit, so
+     `config-syntax.css` never names a ramp step directly. Each derives from
+     an existing ramp value rather than introducing a hue: the ratios in the
+     comments are the referenced value's, all AA or better against
+     --color-base. `text` is plain ink and `space` has no colour, so the
+     kinds with no visual treatment of their own are absent by design. */
+  --color-cfg-comment: var(--color-ink-muted); /*  4.9:1  recedes; also italic */
+  --color-cfg-command: var(--color-flame-400); /*  9.6:1  also semibold */
+  --color-cfg-plus-command: var(--color-strogg-500); /* 11.8:1  also semibold */
+  /* bind's key argument: the same family as `bind` itself, a step paler. */
+  --color-cfg-key: var(--color-flame-200); /* 13.4:1 */
+  --color-cfg-cvar: var(--color-info); /*  8.0:1 */
+  /* The warning amber borrowed purely as a hue - the furthest step from
+     flame-400/flame-200 that the palette has. Nothing about a number is a
+     warning; no status meaning travels with it. */
+  --color-cfg-number: var(--color-warning); /* 10.5:1 */
+  /* Paler than plusCommand's green, and never weighted, so the two greens
+     stay apart where an alias body sits next to a `+`-command. */
+  --color-cfg-string: var(--color-strogg-300); /* 14.6:1 */
+  --color-cfg-separator: var(--color-ink-muted); /*  4.9:1  a bare `;` */
+  --color-cfg-text: var(--color-ink); /* 17.0:1  an unclassified word reads as ordinary text */
+
+  /* --- typography ------------------------------------------------------- */
+  /* Oswald: condensed, industrial, all-caps signage. Display only. */
+  --font-display: 'Oswald Variable', 'Oswald', 'Arial Narrow', system-ui, sans-serif;
+  /* Inter: the workhorse. Everything readable. */
+  --font-sans: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* JetBrains Mono: paths, versions, byte counts - anything that must align. */
+  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
+
+  /* --- geometry: sharp, machined, never rounded ------------------------- */
+  --radius-xs: 1px;
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
+  --radius-xl: 6px;
+
+  /* --- motion ----------------------------------------------------------- */
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+
+  /* --- elevation -------------------------------------------------------- */
+  --shadow-panel: 0 1px 0 rgb(255 255 255 / 0.03) inset, 0 10px 30px rgb(0 0 0 / 0.45);
+  --shadow-popover: 0 1px 0 rgb(255 255 255 / 0.04) inset, 0 18px 50px rgb(0 0 0 / 0.65);
+  --shadow-flame: 0 0 0 1px rgb(255 138 31 / 0.35), 0 0 24px rgb(255 138 31 / 0.22);
+}
+
+/* Non-token custom properties: used by handwritten CSS, not by utilities. */
+:root {
+  --titlebar-h: 68px;
+  --rail-w: 76px;
+  --actionbar-h: 96px;
+
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 360ms;
+
+  /* Procedural film grain. No binary assets anywhere in this project. */
+  --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Users who ask the OS for less motion get none of ours. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-base: 0ms;
+    --dur-slow: 0ms;
+  }
+}
+
+/*
+  The launcher's own setting overrides the OS in both directions. Higher
+  specificity than the media query above, so order does not matter.
+*/
+:root[data-motion='reduced'] {
+  --dur-fast: 0ms;
+  --dur-base: 0ms;
+  --dur-slow: 0ms;
+}
+
+:root[data-motion='full'] {
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 360ms;
+}
+
+@layer base {
+  * {
+    /* Sharp edges everywhere unless a component opts in. */
+    border-color: var(--color-line);
+  }
+
+  /*
+    Story 028 root cause: `scrollbar-gutter: stable` used to sit in the `*`
+    rule above (to stop the layout jump navigating Overview <-> Settings), but
+    `stable` applies to every scroll container and `overflow: hidden` counts as
+    one - including every <svg> root (UA default) and every `truncate` span.
+    Chromium then reserves the 10px scrollbar width inside them: icons below
+    ~16px painted nothing at all, and clipped cells lost 10px of content width,
+    app-wide. The gutter now lives only on the full-height view scrollers that
+    actually flip between overflowing and not (see `scrollbar-gutter-stable`
+    on each view's `overflow-y-auto` root).
+  */
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    margin: 0;
+    overflow: hidden; /* The shell scrolls its own panes, never the window. */
+  }
+
+  body {
+    background-color: var(--color-base);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    /* This is an app, not a document. */
+    user-select: none;
+    cursor: default;
+  }
+
+  /* Opt back in where selecting text is the point. */
+  input,
+  textarea,
+  [data-selectable] {
+    user-select: text;
+    cursor: text;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    margin: 0;
+  }
+
+  /* One focus ring for the whole app: amber, offset, never removed. */
+  :focus-visible {
+    outline: 2px solid var(--color-flame-500);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  button {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: none;
+    cursor: default;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-void);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-line-strong);
+    border: 2px solid var(--color-void);
+    border-radius: 0;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-rust-500);
+  }
+}

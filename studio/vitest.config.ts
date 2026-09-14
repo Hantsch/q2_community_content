@@ -1,8 +1,15 @@
+import path from 'node:path'
+
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      '@shared': path.resolve(import.meta.dirname, 'src/launcher-core/src/shared'),
+    },
+  },
   test: {
     environment: 'node',
     // Tests that render components need a DOM and opt in per file with a

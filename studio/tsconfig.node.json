@@ -12,6 +12,9 @@
     "lib": ["ES2023"],
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "paths": {
+      "@shared/*": ["./src/launcher-core/src/shared/*"]
+    },
 
     "strict": true,
     "noUnusedLocals": true,
