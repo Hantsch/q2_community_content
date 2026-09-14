@@ -1,0 +1,6 @@
+﻿- 2026-09-14 08:37 · 005 · D1 Manifest, lock format, git fixture helper · started
+- 2026-09-14 08:39 · 005 · D1 Manifest, lock format, git fixture helper · done
+- 2026-09-14 08:39 · 005 · D2 Preflight against a launcher checkout · started
+- 2026-09-14 08:42 · 005 · D2 Preflight against a launcher checkout · done
+- 2026-09-14 08:42 · 005 · D3 sync:launcher command, wired and documented · started
+- 2026-09-14 08:51 · 005 · D3 sync:launcher command, wired and documented · done

@@ -15,6 +15,19 @@ From a fresh clone, run the following from the repository root, in this order:
 3. `npm run e2e` — runs the end-to-end test suite. This starts the dev server itself;
    there is no separate `npm run dev` step to run first.
 
+## Syncing the launcher mirror
+
+`studio/src/launcher-core/` is a verbatim copy of contract and rendering source from the
+`q2-launcher` repository — per `CLAUDE.md` it is mirrored, never hand-edited. Refresh it with
+`npm run sync:launcher -- --launcher <path to a q2-launcher checkout>` (from the repository
+root or from `studio/`). The command copies the files declared in
+`studio/scripts/launcher-core.manifest.ts` byte for byte, removes mirrored files the manifest no
+longer declares, and records the launcher commit plus a SHA-256 per file in
+`studio/launcher-core.lock.json`. It only ever reads the launcher checkout and only ever writes
+inside `studio/`; a checkout that is missing a declared file or has uncommitted changes to one
+aborts with a single error and writes nothing. Running it again against the same checkout
+changes nothing. Like the rest of `studio/`, it is local tooling — the launcher never fetches it.
+
 ## Test artefacts
 
 Playwright writes traces and screenshots for failing tests to `studio/test-results/`.

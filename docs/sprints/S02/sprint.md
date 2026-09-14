@@ -1,7 +1,7 @@
 ---
 sprint: S02
-status: planned # planned | in-progress | done
-branch: # set by /sprint
+status: in-progress # planned | in-progress | done
+branch: sprint/S02
 milestone: M2 — The launcher mirror
 ---
 

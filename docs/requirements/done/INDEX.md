@@ -19,3 +19,8 @@ second roadmap.
   (`docs/handoffs/q2-launcher-content-repo-checker.md`, R1–R7) for `q2-launcher`'s own backlog
   instead of changing that repository, restating AC1–AC6 and the `EXPECTED_HEAD` stale-pin
   replacement, proven here by `studio/tests/launcher-handoff.test.ts`.
+- 005 — Sync command and lock file for the launcher mirror · S02 · Added `npm run sync:launcher
+  -- --launcher <path>` (manifest, preflight, deterministic lock with `syncedAt` carry-over) that
+  copies the 11 declared launcher-core files byte-identically into `studio/src/launcher-core/`,
+  fails closed on any preflight problem, and is idempotent on rerun; proven by real-CLI
+  integration tests against throwaway git fixtures.
