@@ -17,3 +17,14 @@
 - 2026-09-14 18:27 · 015 · Review-fix cycle 1 (findings 1,3,4,5,8,9) · started
 - 2026-09-14 18:33 · 015 · Review-fix cycle 1 (findings 1,3,4,5,8,9) · done
 - 2026-09-14 18:35 · 015 · story done, moved to docs/requirements/done/ · done
+- 2026-09-14 18:36 · 016 · D1 Library model (pure) · started
+- 2026-09-14 18:43 · 016 · D1 Library model (pure) · done
+- 2026-09-14 18:43 · 016 · D2 Status badge · started
+- 2026-09-14 18:45 · 016 · D2 Status badge · done
+- 2026-09-14 18:45 · 016 · D3 Row, state notice and sections · started
+- 2026-09-14 18:49 · 016 · D3 Row, state notice and sections · done
+- 2026-09-14 18:49 · 016 · D4 Data hook and current-entry context · started
+- 2026-09-14 18:53 · 016 · D4 Data hook and current-entry context · done
+- 2026-09-14 18:53 · 016 · D5 Shell wiring and e2e spec · started
+- 2026-09-14 19:02 · 016 · D5 Shell wiring and e2e spec · done
+- 2026-09-14 19:07 · 016 · story complete, moved to done/ · done

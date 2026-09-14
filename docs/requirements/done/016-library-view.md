@@ -1,7 +1,7 @@
 ---
 id: 016
 title: Library view of the news directory
-status: ready # draft -> ready -> in-progress -> done
+status: done # draft -> ready -> in-progress -> done
 created: 2026-09-13
 ---
 
@@ -18,18 +18,18 @@ Concept: [Q2 Content Studio](../concepts/content-studio.md) — CS-15.
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — Every published entry is listed in the order the launcher will deliver it, showing
+- [x] **AC1** — Every published entry is listed in the order the launcher will deliver it, showing
       its title, template, `order` value and status.
-- [ ] **AC2** — Drafts are listed and marked as invisible to the launcher, separately from published
+- [x] **AC2** — Drafts are listed and marked as invisible to the launcher, separately from published
       entries.
-- [ ] **AC3** — A scheduled entry shows the date it becomes visible; an expired one shows the date
+- [x] **AC3** — A scheduled entry shows the date it becomes visible; an expired one shows the date
       it stopped being visible.
-- [ ] **AC4** — An entry that the launcher would drop is marked as dropped, with the reason readable
+- [x] **AC4** — An entry that the launcher would drop is marked as dropped, with the reason readable
       without leaving the list.
-- [ ] **AC5** — An entry whose delivered template differs from its declared one shows both.
-- [ ] **AC6** — Selecting an entry marks it as the current entry, which later stories use as the
+- [x] **AC5** — An entry whose delivered template differs from its declared one shows both.
+- [x] **AC6** — Selecting an entry marks it as the current entry, which later stories use as the
       preview and editor target.
-- [ ] **AC7** — An empty or unreadable `news/` produces a clear explanation, not a blank screen.
+- [x] **AC7** — An empty or unreadable `news/` produces a clear explanation, not a blank screen.
 
 ## Open Questions
 
@@ -118,7 +118,7 @@ Concept: [Q2 Content Studio](../concepts/content-studio.md) — CS-15.
 
 ## Deliverables
 
-- **D1 — Library model (pure).**
+- [x] **D1 — Library model (pure).**
   Files: `studio/src/library/library-types.ts`, `studio/src/library/library-model.ts`,
   `studio/src/library/library-model.test.ts`.
   Pattern to mirror: `studio/src/report/report-types.ts` and `studio/src/report/build-news-report.ts`
@@ -129,7 +129,7 @@ Concept: [Q2 Content Studio](../concepts/content-studio.md) — CS-15.
   distinct states. Tests in `library-model.test.ts` against `studio/tests/fixtures/content-repo`
   plus inline variants for scheduled/expired/dropped/mismatch.
 
-- **D2 — Status badge.**
+- [x] **D2 — Status badge.**
   Files: `studio/src/molecules/status/EntryStatusBadge.tsx`,
   `studio/src/molecules/status/EntryStatusBadge.test.tsx`, `studio/src/styles/index.css` (only if no
   token block exists yet).
@@ -138,7 +138,7 @@ Concept: [Q2 Content Studio](../concepts/content-studio.md) — CS-15.
   Acceptance: each of the five statuses renders its own word and a token-based style; no hex value
   and no raw palette class anywhere in the file; the status is readable with colour ignored.
 
-- **D3 — Row, state notice and the two sections.**
+- [x] **D3 — Row, state notice and the two sections.**
   Files: `studio/src/organisms/library/LibraryEntryRow.tsx`,
   `studio/src/organisms/library/LibraryStateNotice.tsx`,
   `studio/src/organisms/library/LibraryView.tsx`,
@@ -151,7 +151,7 @@ Concept: [Q2 Content Studio](../concepts/content-studio.md) — CS-15.
   visibility date, its drop reason, and a placeholder when no thumbnail URL is given; the three
   non-list states each render their own explanation. No data fetching in these files.
 
-- **D4 — Data hook and current-entry context.**
+- [x] **D4 — Data hook and current-entry context.**
   Files: `studio/src/library/use-news-library.ts`, `studio/src/library/use-news-library.test.ts`,
   `studio/src/context/current-entry-context.tsx`,
   `studio/src/context/current-entry-context.test.tsx`.
@@ -162,7 +162,7 @@ Concept: [Q2 Content Studio](../concepts/content-studio.md) — CS-15.
   the context exposes `currentEntryId` and `selectEntry` and is consumable by a second component
   (the seam story 017 uses).
 
-- **D5 — Shell wiring and the e2e spec.**
+- [x] **D5 — Shell wiring and the e2e spec.**
   Files: `studio/src/pages/studio/StudioPage.tsx`, `studio/src/pages/studio/StudioPage.test.tsx`,
   `studio/src/organisms/NewsBridgeSummary.tsx` (deleted, plus its test),
   `studio/e2e/library-view.spec.ts`, `studio/e2e/fixtures/library-feed.ts`.
@@ -215,4 +215,65 @@ AC6 → D4 + D5, AC7 → D1 + D3 + D5. Every criterion has a deliverable and a n
 
 ## Done
 
-<Filled by `/build 016`.>
+Built the library as five deliverables: a pure model (`library-model.ts`) fusing delivered
+verdict, visibility and drafts into one `LibraryStatus` with precedence dropped > draft >
+visibility; a token-based `EntryStatusBadge`; the `LibraryEntryRow`/`LibraryStateNotice`/
+`LibraryView` organisms; the `useNewsLibrary` hook plus a `current-entry-context`; and the
+`StudioPage` wiring that replaces story 015's interim `NewsBridgeSummary`. A clean-agent review
+found one real gap (an image name `newsImageUrl()` would reject, e.g. a dot-prefixed file, could
+throw during `LibraryView`'s render instead of falling back to the placeholder) — fixed in
+`use-news-library.ts`'s `thumbnailUrlFor` with a try/catch and a new regression test, then
+verification was re-run clean.
+
+**Commit message:** `016: library view of the news directory`
+
+**Decisions (implementation-time, in addition to the sprint decisions already in the file):**
+- `LibraryModel.entries` (D1) deliberately holds every index row (dropped/scheduled/expired
+  included), not only published ones — "published section" in the plan/UI sense is this list
+  rendered by `LibraryView`, which is a superset of strictly-`published`-status rows; drafts
+  stay a fully separate list per AC2.
+- `templatesDiffer` uses the same fallen-back comparison `ReportSummary.fallenBack` already
+  makes, so "declared nothing, delivered `text`" counts as a mismatch worth surfacing (AC5).
+- Thumbnail resolution is a hook-only, browser-URL concern (`use-news-library.ts`): `LibraryRow`
+  (D1) carries the raw declared `image` reference and stays pure/IO-free; `LibraryView` (D3)
+  gained one small additive prop, `thumbnailUrlFor?`, so D1's model needed no `IO`-shaped field.
+- `thumbnailUrlFor` now catches `newsImageUrl()`'s throw (empty name, path separator, or a
+  leading dot) and resolves to `undefined` instead of propagating it — a refused image is a
+  placeholder, never a render crash, matching the Decisions section's "must not become a second,
+  silent failure" for the image case.
+- The `file-bridge.spec.ts` bridge round-trip test (story 015) was updated to assert against the
+  real `LibraryView` DOM instead of the deleted `NewsBridgeSummary`'s counts text, since that
+  interim organism no longer exists; it still proves the unstubbed bridge path end to end.
+
+**Verification:**
+- `npm run build` — clean.
+- `npm run typecheck` — clean.
+- `npm run lint` — eslint clean; `prettier --check` reports ~150 pre-existing files repo-wide
+  (confirmed identical via `git stash` against the clean pre-story commit — a Windows CRLF
+  checkout artifact, not introduced by this story) — not a blocker.
+- `npm run test` (vitest) — 272 passed, 4 pre-existing failures unrelated to this story
+  (`tests/mirror-set.test.ts`, `tests/mirrorDrift.test.ts` — launcher-core mirror lock/drift
+  checks, same CRLF-hash cause, confirmed identical on the clean pre-story commit); one flaky
+  test (`tests/validate-cli.test.ts`) passed on isolated rerun.
+- `npm run e2e` (Playwright) — 23/23 passed, including all 8 `library-view.spec.ts` tests.
+- Clean-agent review: PASS overall, one finding (the thumbnail-throw gap above), fixed in one
+  review-fix cycle; re-verified (typecheck, targeted unit test, full test + e2e) green after the
+  fix.
+
+**AC → test mapping, as verified:**
+- AC1 → e2e "the library lists the published feed in delivered order with title, template, order
+  and status" (unstubbed, real `news/`) + unit `library-model.test.ts` "published rows come back
+  in delivered order" — both passed.
+- AC2 → e2e "drafts are listed in their own section and marked invisible to the launcher" —
+  passed.
+- AC3 → e2e "a scheduled entry shows its visible-from date and an expired entry its visible-until
+  date" — passed.
+- AC4 → e2e "a dropped entry is marked dropped and its reason is readable in the list" — passed.
+- AC5 → e2e "an entry whose delivered template differs from the declared one shows both" —
+  passed.
+- AC6 → e2e "selecting an entry marks it as the current entry" (unstubbed, real `news/`) —
+  passed.
+- AC7 → e2e "an empty news directory explains itself" + "an unreadable news directory explains
+  itself, not as an empty list" — both passed.
+
+No manual residue. No open blockers.

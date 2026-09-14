@@ -1,1 +1,48 @@
 @import 'tailwindcss';
+
+/*
+ * Semantic status tokens (house rule: /design-tokens). Tailwind v4 reads `@theme` colours
+ * directly and generates the matching `bg-*`/`text-*`/`border-*` utilities from them, so there is
+ * no separate `tailwind.config.*` in this project - this block is the whole token layer.
+ *
+ * One role per `LibraryStatus` (`studio/src/library/library-types.ts`), each a soft-fill / border
+ * / text triad so a status badge never relies on the fill colour alone - `EntryStatusBadge` always
+ * pairs it with the status word. Kept intentionally minimal: only the five roles that component
+ * needs exist here; extend this block, do not start a second one, when the next component needs a
+ * status colour.
+ */
+@theme {
+  --color-status-published: rgb(5 150 105);
+  --color-status-published-soft: rgb(209 250 229);
+  --color-status-published-border: rgb(167 243 208);
+
+  --color-status-scheduled: rgb(37 99 235);
+  --color-status-scheduled-soft: rgb(219 234 254);
+  --color-status-scheduled-border: rgb(191 219 254);
+
+  --color-status-expired: rgb(217 119 6);
+  --color-status-expired-soft: rgb(254 243 199);
+  --color-status-expired-border: rgb(253 230 138);
+
+  --color-status-dropped: rgb(220 38 38);
+  --color-status-dropped-soft: rgb(254 226 226);
+  --color-status-dropped-border: rgb(254 202 202);
+
+  --color-status-draft: rgb(71 85 105);
+  --color-status-draft-soft: rgb(241 245 249);
+  --color-status-draft-border: rgb(226 232 240);
+
+  /*
+   * Story 016 D3: two more roles for the library view. `selected` marks the chosen
+   * `LibraryEntryRow` (paired with `aria-current`, never colour alone); `muted` is the neutral
+   * chrome for row borders and the no-thumbnail placeholder — neither is a status, so neither
+   * belongs in the triads above.
+   */
+  --color-selected: rgb(79 70 229);
+  --color-selected-soft: rgb(224 231 255);
+  --color-selected-border: rgb(199 210 254);
+
+  --color-muted: rgb(100 116 139);
+  --color-muted-soft: rgb(241 245 249);
+  --color-muted-border: rgb(226 232 240);
+}

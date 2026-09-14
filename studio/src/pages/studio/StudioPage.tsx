@@ -6,16 +6,38 @@
  *
  * The content region renders `ContentTypeStateNotice` for whichever descriptor is selected: it
  * carries the per-state rendering (implemented / launcher-reads / reserved) so this page stays
- * composition only. Story 015 D4 adds one exception: an `implemented` descriptor with a `reader`
- * (today only `news`) renders `NewsBridgeSummary` instead, bound to that descriptor's own reader.
+ * composition only. Story 016 D5 adds one exception: an `implemented` descriptor with a `reader`
+ * (today only `news`) renders the real `LibraryView` instead, driven by `useNewsLibrary()` and
+ * wrapped in a `CurrentEntryProvider` so selecting a row marks it as the current entry (AC6). This
+ * replaces story 015 D4's interim `NewsBridgeSummary`, which is now deleted.
  */
 import { useState } from 'react'
 import { createBridgeClient } from '../../bridge/client'
 import type { ContentTypeDescriptor } from '../../content-types/descriptor'
 import { createContentTypeRegistry } from '../../content-types/registry'
+import { CurrentEntryProvider, useCurrentEntry } from '../../context/current-entry-context'
+import { useNewsLibrary } from '../../library/use-news-library'
 import { ContentTypeNav } from '../../organisms/ContentTypeNav'
 import { ContentTypeStateNotice } from '../../organisms/ContentTypeStateNotice'
-import { NewsBridgeSummary } from '../../organisms/NewsBridgeSummary'
+import { LibraryView } from '../../organisms/library/LibraryView'
+
+/** Bridges `useNewsLibrary(descriptor)` into `LibraryView`, reading the current entry from context
+ * rather than page state (Decisions (Sprint)) — separated from `StudioPage` only so it can sit
+ * beneath `CurrentEntryProvider` and call `useCurrentEntry()`. */
+function NewsLibrary({ descriptor }: { descriptor: ContentTypeDescriptor }): React.JSX.Element {
+  const { loading, model, thumbnailUrlFor } = useNewsLibrary(descriptor)
+  const { currentEntryId, selectEntry } = useCurrentEntry()
+
+  return (
+    <LibraryView
+      model={model}
+      loading={loading}
+      selectedId={currentEntryId}
+      onSelect={selectEntry}
+      thumbnailUrlFor={thumbnailUrlFor}
+    />
+  )
+}
 
 export function StudioPage(): React.JSX.Element {
   const [descriptors] = useState<readonly ContentTypeDescriptor[]>(() =>
@@ -37,7 +59,9 @@ export function StudioPage(): React.JSX.Element {
         <div>
           {selected ? (
             selected.state === 'implemented' && selected.reader ? (
-              <NewsBridgeSummary reader={selected.reader} />
+              <CurrentEntryProvider>
+                <NewsLibrary descriptor={selected} />
+              </CurrentEntryProvider>
             ) : (
               <ContentTypeStateNotice descriptor={selected} />
             )
