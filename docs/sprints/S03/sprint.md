@@ -21,7 +21,7 @@ something already true.
 
 - [x] 010 — Reader for the content repository's working tree
 - [x] 011 — The declared-versus-delivered report
-- [ ] 012 — Headless validate command
+- [x] 012 — Headless validate command
 - [ ] 013 — Repository-level findings across the news directory
 
 ## Notes

@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "id": "first-post",
+      "file": "2026-01-01-first-post.md",
+      "order": 10
+    },
+    {
+      "id": "nested-post",
+      "file": "nested/2026-01-02-nested-post.md",
+      "order": 20
+    }
+  ]
+}

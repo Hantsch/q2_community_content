@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "id": "good-post",
+      "file": "good-post.md",
+      "order": 10
+    },
+    {
+      "id": "bad-post",
+      "file": "bad-post.md",
+      "order": 20
+    }
+  ]
+}

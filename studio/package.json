@@ -12,6 +12,7 @@
     "test": "vitest run",
     "sync:launcher": "tsx scripts/sync-launcher.ts",
     "check:drift": "tsx scripts/check-drift.ts",
+    "validate": "tsx scripts/validate.ts",
     "e2e": "playwright test",
     "e2e:install": "playwright install chromium"
   },

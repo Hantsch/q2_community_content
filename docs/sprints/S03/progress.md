@@ -21,3 +21,14 @@
 - 2026-09-14 12:28 · 011 · D5 Visibility and order verdicts · done
 - 2026-09-14 12:50 · 011 · review-fix cycle (tie-break, source labelling, duplicate-id, test coverage) · done
 - 2026-09-14 12:50 · 011 · story complete, moved to done/ · done
+- 2026-09-14 12:52 · 012 · D1 Summary core (pure) · started
+- 2026-09-14 12:53 · 012 · D1 Summary core (pure) · done
+- 2026-09-14 12:53 · 012 · D2 Text formatter · started
+- 2026-09-14 12:53 · 012 · D3 JSON payload · started
+- 2026-09-14 12:55 · 012 · D2 Text formatter · done
+- 2026-09-14 12:55 · 012 · D3 JSON payload · done
+- 2026-09-14 12:55 · 012 · D4 CLI + scripts · started
+- 2026-09-14 13:01 · 012 · D4 CLI + scripts · done
+- 2026-09-14 13:01 · 012 · D5 Headless proof · started
+- 2026-09-14 13:02 · 012 · D5 Headless proof · done
+- 2026-09-14 13:07 · 012 · story complete, moved to done/ · done
