@@ -28,6 +28,17 @@ inside `studio/`; a checkout that is missing a declared file or has uncommitted 
 aborts with a single error and writes nothing. Running it again against the same checkout
 changes nothing. Like the rest of `studio/`, it is local tooling — the launcher never fetches it.
 
+## Checking the launcher mirror for drift
+
+`npm run check:drift` (from the repository root or from `studio/`) re-hashes every mirrored file
+against `studio/launcher-core.lock.json` and reports anything that does not match: a file edited
+by hand here, a file the lock does not know about, or a lock entry with no file on disk. Add
+`-- --launcher <path to a q2-launcher checkout>` to also compare each untouched mirrored file
+against the launcher's current source — that is what tells a mirror that has simply fallen behind
+(re-sync it) apart from one that was edited locally (move the change into `q2-launcher` first,
+then re-sync). Without `--launcher` it only checks the mirror against the lock and says so. It
+only reads; it never writes to either repository. Exits non-zero when it finds drift.
+
 ## Test artefacts
 
 Playwright writes traces and screenshots for failing tests to `studio/test-results/`.

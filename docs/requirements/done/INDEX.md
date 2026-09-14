@@ -24,3 +24,9 @@ second roadmap.
   copies the 11 declared launcher-core files byte-identically into `studio/src/launcher-core/`,
   fails closed on any preflight problem, and is idempotent on rerun; proven by real-CLI
   integration tests against throwaway git fixtures.
+- 006 — Drift check for the launcher mirror · S02 · Added `npm run check:drift -- --launcher
+  <path>` (`studio/scripts/drift.ts` core + `check-drift.ts` CLI) that re-hashes the mirror against
+  its lock, three-way-classifies each file as clean/locally-edited/stale against a real launcher
+  checkout when given one, skips that comparison with one explanatory line otherwise, stays
+  read-only in both repositories, and prints a kind-specific remedy on failure; proven by real-CLI
+  integration tests against synthetic git fixtures.

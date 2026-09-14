@@ -11,6 +11,7 @@
     "lint": "eslint . && prettier --check .",
     "test": "vitest run",
     "sync:launcher": "tsx scripts/sync-launcher.ts",
+    "check:drift": "tsx scripts/check-drift.ts",
     "e2e": "playwright test",
     "e2e:install": "playwright install chromium"
   },

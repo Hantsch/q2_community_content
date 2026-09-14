@@ -33,24 +33,41 @@ function fail(path: string, problem: string): PreflightFailure {
 }
 
 /**
+ * The first of the three checkout checks that fails — path missing, not a directory, not a git
+ * work tree — or `undefined` when `launcherPath` passes all three.
+ *
+ * Split out because the drift check (story 006, D2) asserts exactly these three and must not
+ * inherit the two below it: it compares a checkout as it stands (uncommitted work included) and
+ * turns a missing declared file into a per-file finding rather than a hard stop.
+ */
+export function launcherCheckoutProblem(launcherPath: string): string | undefined {
+  if (!existsSync(launcherPath)) {
+    return 'does not exist'
+  }
+
+  if (!statSync(launcherPath).isDirectory()) {
+    return 'is not a directory'
+  }
+
+  try {
+    runGit(['rev-parse', '--git-dir'], launcherPath)
+  } catch {
+    return 'is not a git work tree'
+  }
+
+  return undefined
+}
+
+/**
  * Runs the read-only preflight checks against `launcherPath`, in the fixed order the story
  * demands: path missing, not a directory, not a git work tree, a declared file missing, a
  * declared file dirty. Returns the launcher's HEAD commit sha on success. Never throws for an
  * expected failure mode, and never writes anything.
  */
 export function runPreflight(launcherPath: string): PreflightResult {
-  if (!existsSync(launcherPath)) {
-    return fail(launcherPath, 'does not exist')
-  }
-
-  if (!statSync(launcherPath).isDirectory()) {
-    return fail(launcherPath, 'is not a directory')
-  }
-
-  try {
-    runGit(['rev-parse', '--git-dir'], launcherPath)
-  } catch {
-    return fail(launcherPath, 'is not a git work tree')
+  const checkoutProblem = launcherCheckoutProblem(launcherPath)
+  if (checkoutProblem !== undefined) {
+    return fail(launcherPath, checkoutProblem)
   }
 
   for (const { source } of launcherCoreManifest) {

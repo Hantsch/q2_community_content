@@ -4,3 +4,9 @@
 - 2026-09-14 08:42 · 005 · D2 Preflight against a launcher checkout · done
 - 2026-09-14 08:42 · 005 · D3 sync:launcher command, wired and documented · started
 - 2026-09-14 08:51 · 005 · D3 sync:launcher command, wired and documented · done
+- 2026-09-14 08:58 · 006 · D1 Mirror integrity core · started
+- 2026-09-14 09:00 · 006 · D1 Mirror integrity core · done
+- 2026-09-14 09:00 · 006 · D2 Launcher comparison and skip path · started
+- 2026-09-14 09:06 · 006 · D2 Launcher comparison and skip path · done
+- 2026-09-14 09:06 · 006 · D3 CLI, wording and wiring · started
+- 2026-09-14 09:08 · 006 · D3 CLI, wording and wiring · done
