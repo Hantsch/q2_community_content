@@ -20,7 +20,7 @@ something already true.
 ## Stories (in build order)
 
 - [x] 010 — Reader for the content repository's working tree
-- [ ] 011 — The declared-versus-delivered report
+- [x] 011 — The declared-versus-delivered report
 - [ ] 012 — Headless validate command
 - [ ] 013 — Repository-level findings across the news directory
 

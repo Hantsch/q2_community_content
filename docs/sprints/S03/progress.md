@@ -8,3 +8,16 @@
 - 2026-09-14 11:41 · 010 · D4 Proof that the reader never writes · started
 - 2026-09-14 11:43 · 010 · D4 Proof that the reader never writes · done
 - 2026-09-14 11:51 · 010 · story complete, moved to done/ · done
+- 2026-09-14 11:52 · 011 · D1 Report model, severity taxonomy and warning classifier · started
+- 2026-09-14 11:55 · 011 · D1 Report model, severity taxonomy and warning classifier · done
+- 2026-09-14 11:55 · 011 · D2 Report spine: per-entry declared vs delivered verdict · started
+- 2026-09-14 11:59 · 011 · D2 Report spine: per-entry declared vs delivered verdict · done
+- 2026-09-14 11:59 · 011 · D3 Template fallback explained · started
+- 2026-09-14 12:05 · 011 · D3 Template fallback explained · done
+- 2026-09-14 12:05 · 011 · D4 Per-button kept/dropped verdicts · started
+- 2026-09-14 12:24 · 011 · D4 Per-button kept/dropped verdicts · done
+- 2026-09-14 12:24 · 011 · fix boundary-rule import violations (D1-D4 cleanup) · done
+- 2026-09-14 12:24 · 011 · D5 Visibility and order verdicts · started
+- 2026-09-14 12:28 · 011 · D5 Visibility and order verdicts · done
+- 2026-09-14 12:50 · 011 · review-fix cycle (tie-break, source labelling, duplicate-id, test coverage) · done
+- 2026-09-14 12:50 · 011 · story complete, moved to done/ · done

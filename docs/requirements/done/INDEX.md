@@ -50,3 +50,4 @@ second roadmap.
   `virtual:mirror-provenance` Vite module. Data-only per the sprint's Decisions — a rendered UI
   binding lands in M4/S04.
 - 010 — Reader for the content repository's working tree · S03 · Added a read-only, never-throwing reader for news/ (index, documents, drafts, image listing, _templates on request) with a shared finding vocabulary and a proven no-write guarantee.
+- 011 — The declared-versus-delivered report · S03 · Built a pure library (`studio/src/report/`) that turns the mirrored news pipeline's own output into a per-entry declared-vs-delivered verdict (template, buttons, visibility, order) with a source-tagged finding for every difference, so the contract's forgiving fallback/drop rules are stated out loud before publishing.

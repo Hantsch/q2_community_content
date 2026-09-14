@@ -16,5 +16,14 @@ export {
   MAX_BUTTONS_PER_SLIDE,
 } from '../launcher-core/src/main/modules/home/news/feed-pipeline'
 export type { NewsFeedWarning } from '../launcher-core/src/main/modules/home/news/feed-pipeline'
-export { NEWS_BUTTON_HOST_ALLOWLIST, isAllowedButtonHost } from '@shared/modules/home'
-export type { NewsSlide } from '@shared/modules/home'
+export { parseFrontmatter } from '../launcher-core/src/main/modules/home/news/frontmatter'
+export type {
+  ParsedFrontmatter,
+  ButtonLink,
+} from '../launcher-core/src/main/modules/home/news/frontmatter'
+export {
+  NEWS_BUTTON_HOST_ALLOWLIST,
+  isAllowedButtonHost,
+  newsButtonSchema,
+} from '@shared/modules/home'
+export type { NewsSlide, NewsTemplate, NewsButton } from '@shared/modules/home'
