@@ -1,0 +1,426 @@
+/* ==========================================================================
+   Signature surfaces
+   --------------------------------------------------------------------------
+   Everything here is pure CSS or an inline SVG data URI, so the UI stays small,
+   themeable and legible in a diff. The single exception is the boot splash,
+   which shows the official release hero still (see `.boot-hero` below); no
+   surface the user actually works in depends on a binary asset.
+
+   Restraint is the rule. The industrial texture (grain, scanlines, rivets,
+   hazard stripes) is what makes this read as Quake II rather than as a generic
+   dark app - but each effect sits at very low opacity. Turn any of them up and
+   it stops looking modern.
+   ========================================================================== */
+
+/* --- window backdrop ------------------------------------------------------
+   Three layers: a warm rust glow bleeding in from the top-left (the direction
+   light comes from in the hero art), a cold pool bottom-right, and the base
+   steel. The grain sits on top via ::after. */
+.app-backdrop {
+  position: relative;
+  background:
+    radial-gradient(120% 90% at 8% -10%, rgb(138 74 36 / 0.22) 0%, transparent 55%),
+    radial-gradient(90% 80% at 100% 105%, rgb(20 28 34 / 0.9) 0%, transparent 60%),
+    linear-gradient(180deg, #101114 0%, var(--color-base) 45%, #0a0b0d 100%);
+}
+
+.app-backdrop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--noise);
+  opacity: 0.035;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
+
+/* --- grain / scanlines, as opt-in overlays ------------------------------- */
+.grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--noise);
+  opacity: 0.05;
+  pointer-events: none;
+}
+
+.scanlines::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgb(0 0 0 / 0.16) 0px,
+    rgb(0 0 0 / 0.16) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* --- panels ---------------------------------------------------------------
+   A machined steel plate: hairline border, a 1px light catch along the top
+   edge, and a barely-there vertical gradient so large panels do not read flat. */
+.panel {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.022) 0%, transparent 40%), var(--color-panel);
+  border: 1px solid var(--color-line);
+  box-shadow: var(--shadow-panel);
+}
+
+.panel-raised {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.03) 0%, transparent 45%), var(--color-raised);
+  border: 1px solid var(--color-line-strong);
+  box-shadow: var(--shadow-popover);
+}
+
+/* Amber hairline along the top of a panel: marks the active/primary surface. */
+.edge-flame {
+  position: relative;
+}
+.edge-flame::before {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--color-flame-500) 18%,
+    var(--color-flame-500) 82%,
+    transparent 100%
+  );
+  opacity: 0.7;
+}
+
+/* --- rivets ---------------------------------------------------------------
+   Four recessed bolts, one per corner. Sized in em so they scale with the
+   panel's font size. Used sparingly: the action bar and the hero frame. */
+.rivets::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  pointer-events: none;
+  background-image:
+    radial-gradient(
+      circle at 0 0,
+      rgb(255 255 255 / 0.1) 0 1px,
+      rgb(0 0 0 / 0.55) 1px 2.5px,
+      transparent 2.5px
+    ),
+    radial-gradient(
+      circle at 100% 0,
+      rgb(255 255 255 / 0.1) 0 1px,
+      rgb(0 0 0 / 0.55) 1px 2.5px,
+      transparent 2.5px
+    ),
+    radial-gradient(
+      circle at 0 100%,
+      rgb(255 255 255 / 0.1) 0 1px,
+      rgb(0 0 0 / 0.55) 1px 2.5px,
+      transparent 2.5px
+    ),
+    radial-gradient(
+      circle at 100% 100%,
+      rgb(255 255 255 / 0.1) 0 1px,
+      rgb(0 0 0 / 0.55) 1px 2.5px,
+      transparent 2.5px
+    );
+  background-repeat: no-repeat;
+  background-size: 6px 6px;
+  background-position:
+    0 0,
+    100% 0,
+    0 100%,
+    100% 100%;
+  opacity: 0.8;
+}
+
+/* --- hazard stripes: used only on destructive / blocking states ---------- */
+.stripes-hazard {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgb(255 138 31 / 0.16) 0px,
+    rgb(255 138 31 / 0.16) 8px,
+    transparent 8px,
+    transparent 16px
+  );
+}
+
+.stripes-danger {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgb(255 90 82 / 0.14) 0px,
+    rgb(255 90 82 / 0.14) 8px,
+    transparent 8px,
+    transparent 16px
+  );
+}
+
+/* --- demo microtag ---------------------------------------------------------
+   A CSS-only corner label for installations whose game files are the demo
+   build (story 074 D7) - small, text-bearing (not colour-only), sitting in
+   the tile's bottom-right corner. Mirrors the favourite corner's absolute
+   placement in `InstallationRail.tsx` rather than inventing a new convention. */
+.tile-demo-tag {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  padding: 0 3px;
+  border-top-left-radius: var(--radius-xs);
+  background: var(--color-warning);
+  color: var(--color-base);
+  font-family: var(--font-display);
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: 0.06em;
+}
+
+/* --- failed microtag ---------------------------------------------------
+   A CSS-only corner label for installations carrying a `lastFailure`
+   (story 077 D4) - same mechanism as `.tile-demo-tag`, opposite corner
+   (top-left) so the two never collide on a tile that somehow carries both. */
+.tile-failed-tag {
+  position: absolute;
+  left: 0;
+  top: 0;
+  padding: 0 3px;
+  border-bottom-right-radius: var(--radius-xs);
+  background: var(--color-danger);
+  color: var(--color-base);
+  font-family: var(--font-display);
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: 0.06em;
+}
+
+/* --- typography helpers -------------------------------------------------- */
+/* Stencilled equipment label: the small uppercase text on every panel. */
+.stencil {
+  font-family: var(--font-display);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.6875rem;
+  line-height: 1;
+  color: var(--color-ink-muted);
+}
+
+.numeric {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* --- the PLAY button -----------------------------------------------------
+   The one element allowed to shout. Amber fill, dark ink, a hot top edge, and
+   a press that actually moves. */
+.btn-play {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  min-width: 13rem;
+  height: 3.25rem;
+  padding-inline: 2rem;
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-flame-ink);
+  background: linear-gradient(180deg, var(--color-flame-400) 0%, var(--color-flame-600) 100%);
+  border: 1px solid var(--color-flame-300);
+  border-radius: var(--radius-md);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.35) inset,
+    0 0 24px rgb(255 138 31 / 0.28),
+    0 6px 18px rgb(0 0 0 / 0.5);
+  transition:
+    transform var(--dur-fast) var(--ease-out-quart),
+    box-shadow var(--dur-fast) var(--ease-out-quart),
+    filter var(--dur-fast) var(--ease-out-quart);
+}
+
+.btn-play:hover:not(:disabled) {
+  filter: brightness(1.08);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.4) inset,
+    0 0 34px rgb(255 138 31 / 0.42),
+    0 8px 22px rgb(0 0 0 / 0.55);
+}
+
+.btn-play:active:not(:disabled) {
+  transform: translateY(1px);
+  filter: brightness(0.95);
+  box-shadow:
+    0 1px 0 rgb(0 0 0 / 0.25) inset,
+    0 0 14px rgb(255 138 31 / 0.2);
+}
+
+.btn-play:disabled {
+  background: linear-gradient(180deg, var(--color-hover) 0%, var(--color-panel) 100%);
+  border-color: var(--color-line-strong);
+  color: var(--color-ink-muted);
+  box-shadow: none;
+}
+
+/* Secondary actions on the button: install / update / repair reuse .btn-play
+   with a colour override so the shape and weight stay identical. */
+.btn-play[data-variant='neutral'] {
+  background: linear-gradient(180deg, var(--color-hover) 0%, var(--color-panel) 100%);
+  border-color: var(--color-line-strong);
+  color: var(--color-ink);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.06) inset,
+    0 6px 18px rgb(0 0 0 / 0.45);
+}
+
+.btn-play[data-variant='danger'] {
+  background: linear-gradient(180deg, #ff6a62 0%, #b8322c 100%);
+  border-color: #ff8a84;
+  color: #200604;
+}
+
+/* --- progress ------------------------------------------------------------
+   The Guild Wars 2 readout: a thin track, an amber fill, a PLAYABLE tick, and
+   a slow sheen that only runs while something is actually downloading. */
+.progress-track {
+  position: relative;
+  height: 6px;
+  background: linear-gradient(180deg, #06070880 0%, var(--color-void) 100%);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+}
+
+.progress-fill {
+  position: relative;
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-flame-700) 0%, var(--color-flame-400) 100%);
+  box-shadow: 0 0 12px rgb(255 138 31 / 0.5);
+  transition: width var(--dur-slow) var(--ease-out-quart);
+}
+
+.progress-fill[data-active='true']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgb(255 255 255 / 0.28) 50%, transparent 100%);
+  animation: sheen 1.8s linear infinite;
+}
+
+/* Indeterminate: we know work is happening but not how much. */
+.progress-fill[data-indeterminate='true'] {
+  width: 32% !important;
+  animation: slide 1.4s var(--ease-in-out-quart) infinite;
+}
+
+.progress-marker {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  background: var(--color-strogg-500);
+  box-shadow: 0 0 8px rgb(121 227 86 / 0.7);
+}
+
+@keyframes sheen {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(320%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress-fill[data-active='true']::after,
+  .progress-fill[data-indeterminate='true'] {
+    animation: none;
+  }
+}
+
+/* --- boot splash ----------------------------------------------------------
+   The hero still fills the window and drifts in very slowly, so the few frames
+   before the shell mounts read as a deliberate title card rather than a stall.
+   The scrim is what keeps the wordmark legible on top of a busy image. */
+.boot-hero {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 36%;
+  /* Pull the still towards the app's palette: slightly cooler and calmer. The
+     source is already very dark, so it must not be dimmed much further. */
+  filter: saturate(0.85) brightness(1.18) contrast(1.02);
+  animation: boot-hero-in 900ms var(--ease-out-quart) both;
+}
+
+.boot-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(52% 42% at 50% 40%, rgb(8 8 10 / 0.55) 0%, transparent 100%),
+    linear-gradient(180deg, transparent 45%, rgb(8 8 10 / 0.55) 100%);
+}
+
+/* Vignette last (::after, so it paints over the still), keeping the window
+   edges as dark as the rest of the chrome. */
+.boot-splash::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 90px 6px rgb(8 8 10 / 0.85);
+  pointer-events: none;
+}
+
+@keyframes boot-hero-in {
+  from {
+    opacity: 0;
+    transform: scale(1.045);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boot-hero {
+    animation: none;
+  }
+}
+
+:root[data-motion='reduced'] .boot-hero {
+  animation: none;
+}
+
+/* --- Electron window chrome --------------------------------------------- */
+.drag-region {
+  -webkit-app-region: drag;
+}
+
+/* Every interactive child of a drag region must opt out, or clicks are eaten
+   by the OS window-move handler. */
+.no-drag {
+  -webkit-app-region: no-drag;
+}

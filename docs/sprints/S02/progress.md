@@ -20,3 +20,15 @@
 - 2026-09-14 09:31 · 007 · D4 no second home for a contract rule · done
 - 2026-09-14 09:31 · 007 · D5 drift still green, boundary written down · started
 - 2026-09-14 09:33 · 007 · D5 drift still green, boundary written down · done
+- 2026-09-14 09:45 · 008 · D1 mirrored rendering files · started
+- 2026-09-14 09:53 · 008 · D1 mirrored rendering files · done
+- 2026-09-14 09:53 · 008 · D2 IPC boundary · started
+- 2026-09-14 10:01 · 008 · D2 IPC boundary · done
+- 2026-09-14 10:02 · 008 · D3 templates render · started
+- 2026-09-14 10:09 · 008 · D3 templates render · done
+- 2026-09-14 10:09 · 008 · D4 styles tokens fonts · started
+- 2026-09-14 10:12 · 008 · D4 styles tokens fonts · done
+- 2026-09-14 10:12 · 008 · D5 browser mirror check · started
+- 2026-09-14 10:16 · 008 · D5 browser mirror check · done
+- 2026-09-14 10:16 · 008 · D6 guards · started
+- 2026-09-14 10:19 · 008 · D6 guards · done

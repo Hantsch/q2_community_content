@@ -20,12 +20,15 @@ export default tseslint.config(
   },
   {
     // Story 007 D4 (AC5): `src/contract/launcher-contract.ts` is the one door into the mirrored
-    // launcher contract. Everything else in `src/` and `tests/` goes through that module, so a
-    // re-sync of the mirror only ever has one import site to satisfy. The mirror itself is
-    // exempt as well - it imports its own modules and its own `@shared/*` alias - and is listed
-    // here rather than left to the top-level `ignores` so this zone stays correct on its own.
+    // launcher *contract* (types, pipeline functions, rule constants). Story 008 adds a second,
+    // narrower door for the mirrored *rendering* set: `src/mirror-runtime/**` is the boundary
+    // that renders the mirrored slide components with their own styles, so it is exempt here too
+    // rather than left to the top-level `ignores` - a re-sync of either slice still only ever
+    // touches one import zone. Everything else in `src/` and `tests/` goes through one of those
+    // two doors. The mirror itself is exempt as well - it imports its own modules and its own
+    // `@shared/*` alias.
     files: ['src/**/*.{ts,tsx}', 'tests/**/*.ts'],
-    ignores: ['src/launcher-core/**', 'src/contract/launcher-contract.ts'],
+    ignores: ['src/launcher-core/**', 'src/contract/launcher-contract.ts', 'src/mirror-runtime/**'],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -34,7 +37,7 @@ export default tseslint.config(
             {
               group: ['**/launcher-core/**', '@shared', '@shared/*'],
               message:
-                'Only studio/src/contract/launcher-contract.ts may import the mirrored launcher contract. Import from there instead.',
+                'Only studio/src/contract/launcher-contract.ts (the data contract) or studio/src/mirror-runtime/** (the rendering boundary) may import the mirrored launcher code. Import from one of those instead.',
             },
           ],
         },

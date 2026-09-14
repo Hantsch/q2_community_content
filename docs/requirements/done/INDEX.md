@@ -36,3 +36,10 @@ second roadmap.
   runs unmodified over the repo's real `news/` tree and over drop/fallback fixtures, guarded by an
   eslint zone plus a scanning test proving no contract rule is re-implemented anywhere else;
   `npm run check:drift` stays green.
+- 008 — The mirrored slide rendering runs unmodified in the studio · S02 · Mirrored the four slide
+  templates, `SlideButtons`' import closure and the whole `renderer/src/styles/` entry graph into
+  `studio/src/launcher-core/`, added a Vite/Vitest boundary plugin that substitutes a thin stub for
+  the mirror's one non-mirrored import (`../client`), and proved the templates render with real
+  classes, real tokens, bundled fonts and a real repository image on a standalone
+  `studio/mirror-check.html` page, in jsdom unit tests and in a real Chromium `npm run e2e` run;
+  `npm run check:drift` stays green.

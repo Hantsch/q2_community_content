@@ -1,0 +1,311 @@
+/* ==========================================================================
+   Config syntax view — token colours + gutter/code layout
+   --------------------------------------------------------------------------
+   Style layer for `ConfigCodeView` (story 024 D2), the highlighted read-only
+   viewer that replaces the plain `CodeBlock` primitive for config text. Every
+   value here reads a @theme token or a local geometry variable declared in
+   this file — no hex, no rgb(), no Tailwind palette class, same rule as
+   `controls-grid.css`.
+
+   Prefix: `cfg-code-` for the layout, `cfg-tok-` for the token kinds. The
+   token classes are derived in the component from `ConfigSyntaxToken['kind']`
+   (`cfg-tok-<kind>`), so the ten class names below are exactly the ten kinds
+   `tokenizeConfigText` can emit — a kind without a rule here silently renders
+   as plain ink, which is why all ten are listed even where the intended
+   treatment is "inherit".
+
+   Two decisions worth writing down:
+
+   1. COPY FIDELITY. The line numbers are a sibling column, not a `::before`
+      on each line and not spans interleaved with the code's text nodes.
+      Anything inside the `<pre>`'s text-node stream ends up in the clipboard;
+      a pseudo-element's content does too, in some browsers. The gutter is
+      therefore its own subtree, `aria-hidden`, and `user-select: none` on top
+      of that — selecting the block yields the original bytes and nothing else.
+
+   2. ONE SCROLLER. The scroll container is the grid (`.cfg-code`), not the
+      code column. Giving the code column `overflow-x: auto` would, per CSS,
+      also make it `overflow-y: auto` (a single-axis `visible` computes to
+      `auto`), which turns it into a second vertical scroller and lets the
+      gutter drift out of sync line for line. Instead the grid scrolls in both
+      axes and the gutter is `position: sticky; left: 0`, so horizontally only
+      the code moves while vertically the two columns can never detach — they
+      are the same scrollport.
+   ========================================================================== */
+
+/* --- shared typography + geometry ---------------------------------------
+   The font size, line height and block padding match the `CodeBlock`
+   primitive this view replaces (`text-[11px]`, `p-3`, `max-h-64`), so D4's
+   swap-in does not change the visible size of Raw File or the preview
+   dialog. The line height is a fixed px value on purpose: the gutter rows
+   read the same variable for their `height`, and that is the whole basis of
+   the line-for-line alignment. */
+.cfg-code,
+.cfg-code-single {
+  --cfg-code-line-h: 17px;
+  --cfg-code-gap: 10px;
+  --cfg-code-pad: 12px;
+
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: var(--cfg-code-line-h);
+  tab-size: 4;
+}
+
+.cfg-code {
+  display: grid;
+  /* Gutter is `max-content`: it's always just a few digits wide, so it takes
+     its intrinsic content width and no more. The code column is
+     `minmax(0, 1fr)`, not a bare `auto`/`1fr`: a plain `auto` track absorbs
+     ALL leftover grid free space under `justify-content: normal`, which would
+     stretch the GUTTER (the first `auto` track) to eat most of the
+     container's width and shove the code column to the intrinsic width at
+     the right edge — backwards from what this layout needs. `minmax(0, 1fr)`
+     on the code column instead lets it fill the remaining width while still
+     allowing its `overflow-x: auto` to work (a bare `1fr`/`auto` track would
+     otherwise floor the grid item at its min-content size, the usual CSS
+     grid + overflow gotcha), so the code column's trailing padding stays at
+     the end of the longest line and the horizontal scroll range is exact. */
+  grid-template-columns: max-content minmax(0, 1fr);
+  max-height: 16rem; /* = CodeBlock's max-h-64 */
+  overflow: auto;
+  /* Horizontal padding lives on the two columns: a padding-inline here would
+     sit outside the sticky gutter's own box and scroll away from it. */
+  padding-block: var(--cfg-code-pad);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  background: var(--color-void);
+}
+
+/* --- the line-number gutter ---------------------------------------------
+   Sticky against the scrollport's left edge, opaque, and painted above the
+   code so long lines pass underneath it instead of through it. */
+.cfg-code-gutter {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  padding-inline: var(--cfg-code-pad) var(--cfg-code-gap);
+  text-align: right;
+  color: var(--color-ink-faint);
+  background: var(--color-void);
+  border-right: 1px solid var(--color-line);
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
+}
+
+.cfg-code-lineno {
+  /* Fixed height rather than an inherited line box: a number can then never
+     wrap or change metrics and drift from its line. */
+  height: var(--cfg-code-line-h);
+  white-space: pre;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* --- the code column ----------------------------------------------------
+   `white-space: pre` (never `pre-wrap`): a soft-wrapped line would occupy two
+   rows in the code column and one in the gutter, which is the alignment bug
+   this whole layout exists to avoid. Long lines scroll instead. */
+.cfg-code-content,
+.cfg-code-single {
+  margin: 0;
+  white-space: pre;
+  color: var(--color-ink);
+  user-select: text;
+  -webkit-user-select: text;
+  cursor: text;
+}
+
+.cfg-code-content {
+  /* Restated on the element itself, not inherited from `.cfg-code`: the UA
+     stylesheet declares `font-family: monospace` on `pre` directly, and a
+     matching declaration always beats an inherited value - without this the
+     code column would render in the generic monospace face while the gutter
+     beside it used JetBrains Mono. (`.cfg-code-single` is itself the `pre`, so
+     the shared block above already covers it.) */
+  font-family: var(--font-mono);
+  padding-inline: var(--cfg-code-gap) var(--cfg-code-pad);
+}
+
+/* Single-snippet mode: the same highlighting with no gutter and no panel
+   chrome, for use inside a surface that already has its own. */
+.cfg-code-single {
+  overflow-x: auto;
+}
+
+/* --- fill mode (story 057 D1) --------------------------------------------
+   Drops the fixed `max-height: 16rem` cap so the grid can size to whatever
+   its container gives it instead. Sizing that container to the viewport is a
+   different deliverable's job - this only removes the cap in this
+   component. */
+.cfg-code--fill {
+  max-height: none;
+  height: 100%;
+  /* Story 061 D2: the raw tab funds the shared header's new row out of its own chrome - shrinking
+     this variant's block padding from the base `.cfg-code`'s 12px is one of the two levers the
+     story's Decisions section allows (the other is the merged toolbar row above), and it only
+     applies to `--fill` - the bounded, `max-h-64` read-only viewer elsewhere keeps the base 12px. */
+  padding-block: 6px;
+}
+
+/* --- editable overlay (story 057 D1) --------------------------------------
+   `ConfigCodeView`'s `editable` mode wraps the tokenised `<pre>` (still doing
+   all the highlighting) and a transparent `<textarea>` in this element, so
+   `inset: 0` on the textarea can line it up with the `<pre>`'s own box
+   exactly - the `<pre>` is what defines the size here, not the other way
+   round, which is why the wrapper never gets an explicit width/height of its
+   own beyond what its (visible) `<pre>` child needs.
+
+   `width: max-content` (not the `.cfg-code-content`/`stretch` default the
+   read-only `<pre>` gets from the grid) is deliberate: a stretched box would
+   clip at the track's width and leave the textarea's own box narrower than a
+   long line, so typing past that point would scroll the textarea's native
+   viewport out of sync with the `<pre>` beside it - the two would drift
+   apart with nothing left to keep them aligned. Sizing to content instead
+   means a long line genuinely widens the wrapper (and therefore the
+   textarea), so the existing single scroller - `.cfg-code`'s own
+   `overflow: auto` - still does the only scrolling, exactly as it does for
+   the read-only `<pre>` today. `min-width: 100%` keeps the wrapper (and the
+   background it paints through the textarea) filling the row when the
+   content is shorter than that. */
+.cfg-code-content-wrap {
+  position: relative;
+  width: max-content;
+  min-width: 100%;
+  border-radius: var(--radius-sm);
+}
+
+/* Focus-visible indicator for the editable textarea (story 057, deviation table in CLAUDE.md
+   keeps focus-visible in full even where the touch-target floor is relaxed). The textarea itself
+   suppresses its own outline below - it sits transparently over the tokenised `<pre>`, and an
+   outline on the wrapper reads more reliably than one on the textarea's own (content-sized,
+   possibly scrolled) box. Deliberately `:focus-visible`, not `:focus`, so a mouse click into the
+   editor does not draw a ring a keyboard user never needed - same convention as the app-wide rule
+   in `styles/index.css`, reused here (same colour/offset) because that rule lives on `:focus-visible`
+   directly and cannot target `.cfg-code-content-wrap` through the textarea's own `:focus-visible`
+   state via plain CSS inheritance. */
+.cfg-code-content-wrap:has(.cfg-code-textarea:focus-visible) {
+  outline: 2px solid var(--color-flame-500);
+  outline-offset: 2px;
+}
+
+.cfg-code-textarea {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding-block: 0;
+  padding-inline: var(--cfg-code-gap) var(--cfg-code-pad);
+  border: 0;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  background: transparent;
+  /* Transparent text, not `visibility: hidden` or an opacity trick: the caret and the native
+     text-selection highlight must still render, only the glyphs themselves are invisible so the
+     tokenised `<pre>` behind shows through instead. */
+  color: transparent;
+  caret-color: var(--color-ink);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: var(--cfg-code-line-h);
+  tab-size: 4;
+  white-space: pre;
+}
+
+/* --- token kinds --------------------------------------------------------
+   Colour is never the only signal (see /design-tokens): comments carry
+   italics and the two command kinds carry weight, so the three structural
+   kinds stay apart in a screenshot with the hue removed. */
+.cfg-tok-comment {
+  color: var(--color-cfg-comment);
+  font-style: italic;
+}
+
+.cfg-tok-command {
+  color: var(--color-cfg-command);
+  font-weight: 600;
+}
+
+/* `+attack`-style action commands: a command form, so it takes the same
+   weight as `command` and differs from it by hue only in the second signal. */
+.cfg-tok-plusCommand {
+  color: var(--color-cfg-plus-command);
+  font-weight: 600;
+}
+
+.cfg-tok-key {
+  color: var(--color-cfg-key);
+}
+
+.cfg-tok-cvar {
+  color: var(--color-cfg-cvar);
+}
+
+.cfg-tok-number {
+  color: var(--color-cfg-number);
+}
+
+.cfg-tok-string {
+  color: var(--color-cfg-string);
+}
+
+.cfg-tok-separator {
+  color: var(--color-cfg-separator);
+}
+
+/* `text` (an unrecognized word) and `space` deliberately inherit the code
+   column's ink. They are still emitted as spans by the component — one span
+   per token, so the DOM matches the tokenizer's output exactly — but an
+   unclassified word should read as ordinary text, and a whitespace run has
+   nothing to colour. `.cfg-tok-space` therefore has no rule at all; that is
+   intentional, not an omission. */
+.cfg-tok-text {
+  color: var(--color-cfg-text);
+}
+
+/* --- find-in-file (story 024 D3) -----------------------------------------
+   `.cfg-match`/`.cfg-match-current` wrap a SUB-RANGE of an existing token's
+   text — `splitTokenByMatches` only ever slices, never rewrites, a token's
+   characters — so these are additional inline spans nested inside a
+   `cfg-tok-*` span, not a replacement for it. The current match is never
+   distinguished by hue alone (see /design-tokens): it also carries weight and
+   an outline, so it still reads apart from the other matches with colour
+   removed. */
+.cfg-match {
+  background: var(--color-warning);
+  color: var(--color-void);
+  border-radius: var(--radius-xs);
+}
+
+.cfg-match-current {
+  background: var(--color-flame-500);
+  color: var(--color-flame-ink);
+  font-weight: 600;
+  outline: 1px solid var(--color-flame-200);
+  outline-offset: 0;
+}
+
+/* --- search header --------------------------------------------------------
+   The always-visible find-in-file bar `ConfigCodeView` renders above the
+   gutter+code grid when `searchable` is set. Sits outside the `.cfg-code`
+   scrollport itself, so it never scrolls with the code. */
+.cfg-code-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cfg-code-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cfg-code-search-count {
+  min-width: 5.5rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink-muted);
+}

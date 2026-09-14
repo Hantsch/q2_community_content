@@ -1,0 +1,725 @@
+/* ==========================================================================
+   Controls tab — column grid
+   --------------------------------------------------------------------------
+   Style layer for the Controls tab's dense binding table (story 020). Mirrors
+   the structure of the "column grid" prototype
+   (docs/prototypes/bindings/a-column-grid.html), but every value here reads a
+   @theme token — the prototype's hex values are reference only.
+
+   Prefix: every class is `ctrl-` scoped. The prototype's bare `.slot`,
+   `.row`, `.colhead`, `.group`, `.reset`, `.opts`, `.foot` names are too
+   generic for this shared components layer, so they are not reused directly.
+   ========================================================================== */
+
+/* --- stage: caps content width instead of letting an ultrawide window
+   stretch the table into unreadable rows (AC 2) ------------------------- */
+.ctrl-stage {
+  max-width: 1120px;
+  margin-inline: auto;
+}
+
+/* --- category rail: single-row, horizontally scrollable strip (story 020
+   D9) -- scales to an unbounded number of custom categories instead of
+   wrapping or shrinking tabs (sprint decision). Chips carry `shrink-0`
+   themselves (ControlsTab.tsx); this class only owns the scroll container
+   and its themed scrollbar so it does not fall back to the OS default. --- */
+.ctrl-category-rail {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex-wrap: nowrap;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-strong) transparent;
+}
+
+.ctrl-category-rail::-webkit-scrollbar {
+  height: 6px;
+}
+
+.ctrl-category-rail::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ctrl-category-rail::-webkit-scrollbar-thumb {
+  background: var(--color-line-strong);
+  border-radius: var(--radius-sm);
+}
+
+/* --- category chip: one visual level ------------------------------------
+   Story 062 D2: the chip used to be a box in a box - a bordered container
+   wrapping a bordered, filled `Button`. The container now owns the *single*
+   border/background level and the label button is a `variant="ghost"`
+   (transparent border and background), so nothing inside paints a second box.
+
+   This is deliberately the same node that carries the chip's three behavioural
+   roles - the row drop target (story 054 D5), the rail's sortable item (D7) and
+   the scroll-into-view ref (story 020 D9). Selection therefore lands here too,
+   as `data-selected`, instead of on the label button: `aria-pressed` stays on
+   the button, and the emphasis is the box's. */
+.ctrl-category-chip {
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  background: var(--color-raised);
+  transition:
+    background-color var(--dur-fast) var(--ease-out-quart),
+    border-color var(--dur-fast) var(--ease-out-quart);
+}
+
+.ctrl-category-chip:hover {
+  border-color: var(--color-line-strong);
+  background: var(--color-hover);
+}
+
+.ctrl-category-chip[data-selected='true'] {
+  border-color: var(--color-flame-500);
+  background: color-mix(in srgb, var(--color-flame-500) 14%, var(--color-raised));
+}
+
+/* The accent marker in front of the selected chip's label. With the label's
+   semibold weight it is the non-colour channel AC4 asks for: the selected chip
+   stays identifiable when its tint and border colour are not perceived at all.
+   Styled here rather than as a `bg-*` utility so the chip's *box* level stays
+   the single class-painted surface the unit test asserts. */
+.ctrl-chip-marker {
+  flex: none;
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  background: var(--color-flame-500);
+}
+
+:root[data-motion='reduced'] .ctrl-category-chip {
+  transition: none;
+}
+
+/* --- shared grid template for header + rows -----------------------------
+   Story 056 D2: the two peer key columns (Primary/Secondary) collapse into one
+   Key column - a row's further keys are subordinate extras rendered as indented
+   sub-rows underneath (`.ctrl-keysub-row`), not a second grid track. The freed
+   190px goes to Action (+~116px, minmax(180px,1fr) -> minmax(220px,1fr)) and
+   Options (165px -> 190px) per the story's Decisions ("Grid template"); the Key
+   track itself grows to 224px (165px slot width plus the 34px+gap "+n"/`+`
+   affordance area that sits inline after the slot). The 1120px stage is
+   unchanged: 220+34+224+190 fixed/min tracks + gaps match the old sum.
+
+   Story 054 D3: a leading grip column reserves space for D4's `DragHandle` -
+   always in the DOM (`ControlsRow`/`ControlsGrid`'s header) so the column never
+   reflows once a real grip lands in it.
+
+   Story 054 D4: that track is 28px, not D3's placeholder 20px. The grip is an
+   `IconButton` (`size="sm"` = 28px, the same size as every other dense icon
+   button in this grid), and shrinking its box below that would either clip the
+   button or leave a hit target smaller than the row's own dense controls for the
+   one affordance that has to be grabbed with a pointer. The 8px comes out of the
+   Action column's `1fr`, so the 1120px stage and every other track are
+   unchanged. */
+.ctrl-colhead,
+.ctrl-row {
+  display: grid;
+  grid-template-columns: 28px minmax(220px, 1fr) 34px 224px 190px;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+}
+
+/* --- grip column (story 054 D3/D4) ---------------------------------------
+   The cell is always rendered, with or without a handle in it. */
+.ctrl-grip {
+  display: flex;
+  align-items: center;
+  width: 28px;
+  height: 100%;
+}
+
+/* Story 054's decision: the grip is always in the DOM and visually revealed on
+   row hover/focus-within, so a dense grid of 40px rows does not grow a permanent
+   column of grip icons. Revealed for keyboard users by `:focus-within` (the
+   handle is a real, tabbable button and dnd-kit's keyboard sensor starts a drag
+   from it) and kept visible while its own row is being dragged, since the pointer
+   has left the row by then. */
+.ctrl-grip-handle {
+  opacity: 0;
+  cursor: grab;
+  transition: opacity var(--dur-fast) var(--ease-out-quart);
+}
+
+.ctrl-row:hover .ctrl-grip-handle,
+.ctrl-row:focus-within .ctrl-grip-handle,
+.ctrl-rowgroup.is-dragging .ctrl-grip-handle,
+/* Story 054 D6: the sub-category header's own grip follows the same hover/focus/dragging
+   reveal rule as a row's. */
+.ctrl-group:hover .ctrl-grip-handle,
+.ctrl-group:focus-within .ctrl-grip-handle,
+.ctrl-group.is-dragging .ctrl-grip-handle,
+/* Story 054 D7: the category rail's own chip grip follows the same reveal rule. */
+.ctrl-category-chip:hover .ctrl-grip-handle,
+.ctrl-category-chip:focus-within .ctrl-grip-handle,
+.ctrl-category-chip.is-dragging .ctrl-grip-handle {
+  opacity: 1;
+}
+
+/* Story 062 D2: the chip's kebab reveals exactly like the grip above, plus two
+   states the grip does not need. Its own menu being open (`aria-expanded`),
+   because `Menu` portals its list out of the chip and moves focus into it - so
+   the chip's `:focus-within` goes false the instant the menu opens and the
+   trigger would fade out underneath its own open menu. And the chip being
+   selected, since that chip is the one the user is acting on. */
+.ctrl-chip-kebab {
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out-quart);
+}
+
+.ctrl-category-chip:hover .ctrl-chip-kebab,
+.ctrl-category-chip:focus-within .ctrl-chip-kebab,
+.ctrl-category-chip.is-dragging .ctrl-chip-kebab,
+.ctrl-category-chip[data-selected='true'] .ctrl-chip-kebab,
+.ctrl-chip-kebab[aria-expanded='true'] {
+  opacity: 1;
+}
+
+:root[data-motion='reduced'] .ctrl-chip-kebab {
+  transition: none;
+}
+
+/* A disabled grip (the filter is narrowing the list) stays visible instead of
+   hiding until hover: `DragHandle`'s own `opacity-45` is a Tailwind utility and
+   this file is in the `components` layer, so the utility wins - and that is the
+   better behaviour anyway. The one affordance the user is being told they cannot
+   use right now should be on screen carrying its explaining tooltip, not
+   invisible until they happen to hover the row. */
+.ctrl-grip-handle[aria-disabled='true'] {
+  cursor: not-allowed;
+}
+
+:root[data-motion='reduced'] .ctrl-grip-handle {
+  transition: none;
+}
+
+/* The row being dragged stays in the flow (that is what keeps the list's height
+   and the zebra parity stable) but recedes, since a copy of it is riding under
+   the pointer - see `ControlsGrid`'s `renderOverlay`. */
+.ctrl-rowgroup.is-dragging,
+/* Story 054 D6: the sub-category header being dragged recedes the same way a dragged row does -
+   there is no separate `DragOverlay` copy for a header (see `ControlsGrid`'s doc comment), so the
+   header itself moves under the pointer via its own `useSortable` transform. */
+.ctrl-group.is-dragging,
+/* Story 054 D7: a category chip being dragged recedes the same way - no separate `DragOverlay`
+   copy for a chip either, so it moves under the pointer via its own `useSortable` transform. */
+.ctrl-category-chip.is-dragging {
+  opacity: 0.4;
+}
+
+/* --- sticky column header ------------------------------------------------ */
+.ctrl-colhead {
+  height: 34px;
+  border-bottom: 1px solid var(--color-line-strong);
+  background: var(--color-panel);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.ctrl-colhead span {
+  font-family: var(--font-display);
+  font-size: 0.656rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+}
+
+.ctrl-colhead .ctrl-colhead-slot {
+  text-align: center;
+}
+
+/* --- group rule: eyebrow label + hairline + count badge -----------------
+   Review fix (finding 1): the divider's content lives in one `role="cell"` span
+   (`.ctrl-group-cell`) spanning the full row - `.ctrl-group` (the `role="row"` div) now only
+   owns the row's padding, not the flex layout itself. */
+.ctrl-group {
+  padding: 18px 16px 8px;
+}
+
+.ctrl-group-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.ctrl-group-eyebrow {
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-dim);
+}
+
+.ctrl-group-rule {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--color-line-strong), transparent);
+}
+
+/* --- group header CRUD: rename/reorder/delete for the sub-category itself (story 053 D6) ---
+   Sits at the end of the same `.ctrl-group-cell` flex row as the eyebrow/rule/count, after the
+   rule (`flex: 1`) has already claimed the remaining width - `shrink-0` keeps the four icon
+   buttons from being squeezed under a long sub-category name. */
+.ctrl-group-crud {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+/*
+  Row height is 40px and the slot below is 30px — below the /design-tokens
+  skill's 44px touch-target floor. This is a deliberate, documented deviation
+  (see CLAUDE.md and story 020's Decisions): Q2 Launcher is a desktop,
+  mouse-and-keyboard-only Electron app with no touch input surface.
+*/
+.ctrl-row {
+  height: 40px;
+  border-bottom: 1px solid rgb(41 44 51 / 0.55);
+  border-left: 2px solid transparent;
+}
+
+/* Story 049 D8: "this row has an unsaved edit" - mirrors the cvar row's left-border accent
+   (`CvarRow.tsx`) so all three edited-row surfaces (Settings, Controls, layers) read the same way.
+   Colour is never the only signal - see `.ctrl-unsaved-glyph` below for the paired labelled glyph
+   next to the row's name (AC10, non-colour-only). */
+.ctrl-row.is-edited {
+  border-left-color: var(--color-flame-600);
+}
+
+.ctrl-unsaved-glyph {
+  color: var(--color-flame-500);
+  flex-shrink: 0;
+}
+
+/* Story 020 D4: explicit class rather than `:nth-of-type(odd)` — a catalogue group's `.ctrl-group`
+   divider is a `div` sibling ahead of that group's first row, and `:nth-of-type` counts by tag,
+   not by class, so the running parity would reset at every group boundary instead of alternating
+   across the whole row list. `ControlsGrid`/`ControlsRow` compute `odd` across the filtered row
+   list itself and apply this class directly. */
+.ctrl-row.is-odd {
+  background: rgb(255 255 255 / 0.014);
+}
+
+.ctrl-row:hover {
+  background: rgb(255 138 31 / 0.05);
+}
+
+.ctrl-row:hover .ctrl-reset,
+.ctrl-row:focus-within .ctrl-reset {
+  opacity: 1;
+}
+
+/* --- action label + its command in mono as a secondary label ------------ */
+.ctrl-label {
+  font-size: 0.844rem;
+  color: var(--color-ink);
+}
+
+.ctrl-label-cmd {
+  font-family: var(--font-mono);
+  font-size: 0.656rem;
+  color: var(--color-ink-faint);
+  margin-left: 8px;
+}
+
+/* --- per-row reset: hidden until the row is hovered/focused -------------- */
+.ctrl-reset {
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out-quart);
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  color: var(--color-ink-muted);
+  background: var(--color-raised);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.ctrl-reset:hover {
+  color: var(--color-flame-500);
+  border-color: var(--color-flame-700);
+}
+
+.ctrl-reset:focus-visible {
+  opacity: 1;
+}
+
+/* Count and chevron keep larger binding sets compact and discoverable. */
+.ctrl-keymore {
+  height: 30px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding-inline: 7px;
+  font-family: var(--font-mono);
+  font-size: 0.688rem;
+  color: var(--color-ink-dim);
+  background: var(--color-raised);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.ctrl-keymore:hover,
+.ctrl-keymore[aria-expanded='true'] {
+  color: var(--color-flame-500);
+  border-color: var(--color-flame-700);
+}
+
+.ctrl-keymore[aria-expanded='true'] .ctrl-keymore-chevron {
+  transform: rotate(180deg);
+}
+
+/* --- the bind slot: a full-width, always-visible filled cell ------------ */
+.ctrl-slot {
+  height: 30px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-ink-faint);
+  background: var(--color-raised);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.ctrl-slot:hover {
+  color: var(--color-ink-dim);
+  background: var(--color-hover);
+  border-color: var(--color-line-strong);
+}
+
+.ctrl-slot-empty {
+  font-family: var(--font-display);
+  letter-spacing: 0.14em;
+  font-size: 0.688rem;
+  text-transform: uppercase;
+}
+
+/* An alias entry's Primary/Secondary cell (story 019/020): a filled cell like every other, but
+   inert - not a button, so no hover affordance and no pointer. */
+.ctrl-slot.is-inert {
+  cursor: default;
+  background: transparent;
+  border-style: dashed;
+}
+
+/* .ctrl-slot:hover above has the same specificity, so the inert cell has to say explicitly that
+   nothing about it reacts to the pointer. */
+.ctrl-slot.is-inert:hover {
+  color: var(--color-ink-faint);
+  background: transparent;
+  border-color: var(--color-line);
+}
+
+/* The modifier of a modifier-bound key, as a small cap ahead of the key itself (`ALT R`, AC 8). */
+.ctrl-cap {
+  font-family: var(--font-display);
+  font-size: 0.594rem;
+  letter-spacing: 0.1em;
+  padding: 0 4px;
+  color: var(--color-ink-dim);
+  background: var(--color-raised);
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-sm);
+}
+
+/* A row that carries a bind: stronger fill than the default empty cell. */
+.ctrl-slot.is-bound {
+  color: var(--color-ink);
+  background: linear-gradient(180deg, var(--color-line-strong) 0%, var(--color-panel) 100%);
+  border-color: var(--color-line-strong);
+}
+
+.ctrl-slot.is-bound:hover {
+  border-color: var(--color-flame-700);
+}
+
+/* The primary slot of a bound row: the strongest element in the row
+   (AC 6) — flame gradient fill, flame ink text, flame border. */
+.ctrl-slot.is-primary-bound {
+  color: var(--color-flame-ink);
+  background: linear-gradient(180deg, var(--color-flame-300), var(--color-flame-600));
+  border-color: var(--color-flame-700);
+}
+
+/* On the flame-filled primary cell the cap needs the inverse treatment - the neutral raised
+   fill above disappears into the gradient. */
+.ctrl-slot.is-primary-bound .ctrl-cap {
+  color: var(--color-flame-ink);
+  background: rgb(0 0 0 / 0.12);
+  border-color: var(--color-flame-800);
+}
+
+/* Capturing: dashed flame border, low-opacity flame tint, pulsing.
+   Disabled under both reduced-motion conditions the app recognises. */
+.ctrl-slot.is-capturing {
+  color: var(--color-flame-300);
+  background: rgb(255 138 31 / 0.1);
+  border-color: var(--color-flame-500);
+  border-style: dashed;
+  animation: ctrl-pulse calc(var(--dur-slow) * 3) var(--ease-in-out-quart) infinite;
+}
+
+@keyframes ctrl-pulse {
+  50% {
+    background: rgb(255 138 31 / 0.2);
+  }
+}
+
+/* Conflict: layered over is-bound/is-primary-bound, so it must win on
+   border/text colour. The warning glyph + Options text live in the
+   component (AC 8's "never colour alone") — nothing extra needed here. */
+.ctrl-slot.is-conflict {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+/* --- Key column cell (story 056 D2) --------------------------------------
+   Holds the primary `.ctrl-slot` (unchanged, 30px) plus, inline after it,
+   either the "+n" fold chevron or the `+` add-key button (`.ctrl-keymore`,
+   D3 wires which one and its content) - a flex row so the two sit side by
+   side inside the 224px track without breaking its width. `min-width: 0` on
+   the slot side of the pairing is `.ctrl-slot`'s own `width: 100%`, so this
+   cell only needs `min-width: 0` on itself (mirrors `.ctrl-opts`) so a long
+   key cap still truncates/ellipsizes inside the fixed track instead of
+   forcing the column wider. */
+.ctrl-keycell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.ctrl-keycell > .ctrl-slot {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.ctrl-keycell > .ctrl-slot-add {
+  flex: 0 0 28px;
+  border-style: dashed;
+}
+
+/* Match the main row grid so expanded keys stay directly under the Key column. */
+.ctrl-keysub-container {
+  padding-block: 4px;
+  background: color-mix(in srgb, var(--color-raised) 45%, transparent);
+  border-bottom: 1px solid var(--color-line);
+}
+
+.ctrl-keysub-row {
+  display: grid;
+  grid-template-columns: 28px minmax(220px, 1fr) 34px 224px 190px;
+  gap: 10px;
+  padding: 3px 16px;
+  border-left: 2px solid transparent;
+}
+
+.ctrl-keysub {
+  grid-column: 4 / 6;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ctrl-keysub .ctrl-slot {
+  width: 224px;
+}
+
+/* --- blocked-capture sub-row --------------------------------------------
+   Story 020 decision: a collision prompt (a sentence plus Cancel/Replace) is an expanded
+   full-width row under its row, because a 190px slot column cannot hold one without breaking
+   the column alignment this redesign is about. `ControlsRow` renders the host as a sibling of
+   `.ctrl-row`; the slot portals its prompt into it (see `BindSlot`). The host is always present
+   so the portal has a target, and `:empty` keeps it out of the layout while nothing is parked. */
+.ctrl-subrow-host:empty {
+  display: none;
+}
+
+/* Review fix (finding 1): the portal target itself stays the `role="cell"` node (`:empty`
+   collapses it), while its new `role="row"` wrapper (`ControlsRow.tsx`) collapses along with it -
+   `:has()` is safe here, this app only ships on Chromium/Electron. */
+.ctrl-subrow-host-row:has(.ctrl-subrow-host:empty) {
+  display: none;
+}
+
+.ctrl-subrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--color-raised);
+  border-bottom: 1px solid var(--color-line);
+}
+
+/* --- "with message" inline sub-row (story 029 D3) ------------------------
+   Same full-width-row pattern as `.ctrl-subrow-host-row`/`.ctrl-subrow` above, but always
+   rendered by `ControlsRow` when its `subRow` prop is passed (no `:empty` collapse needed - the
+   caller only passes the prop when there is content to show). Reuses `.ctrl-subrow`'s padding
+   rhythm and tokens; the label is indented by the Action column's width (34px reset + its 10px
+   grid gap) so it lines up under the label column instead of the reset button. */
+.ctrl-msgrow-row {
+  display: block;
+}
+
+.ctrl-msgrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* Review-fix (finding 6): same 28px grip + 10px gap added as `.ctrl-keysub` above, for the same
+     reason - restores this row's indent relative to the primary row's label. */
+  padding: 8px 16px 8px calc(16px + 28px + 10px + 34px + 10px);
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  background: var(--color-raised);
+  border-bottom: 1px solid var(--color-line);
+}
+
+/* --- options column: right-aligned badge/content row ---------------------
+   Review fix (finding 2): the fixed track (150px, 200px since story 052 D8) needs
+   `min-width: 0`/`overflow: hidden` or its content (layer name, "also: <owner>" conflict text)
+   forces the column wider than its fixed width instead of truncating inside it. */
+.ctrl-opts {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: flex-end;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Warning-tone pill for the header's profile-wide conflict count (D7). */
+.ctrl-conflict-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding-inline: 8px;
+  font-family: var(--font-display);
+  font-size: 0.656rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-warning);
+  background: rgb(245 179 43 / 0.12);
+  border: 1px solid var(--color-warning);
+  border-radius: var(--radius-md);
+}
+
+/* --- footer legend -------------------------------------------------------- */
+.ctrl-foot {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--color-line);
+  font-family: var(--font-mono);
+  font-size: 0.688rem;
+  color: var(--color-ink-muted);
+}
+
+.ctrl-foot-spacer {
+  flex: 1;
+}
+
+.ctrl-kbd {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  padding: 1px 5px;
+  background: var(--color-raised);
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-sm);
+  color: var(--color-ink-dim);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ctrl-slot.is-capturing {
+    animation: none;
+  }
+}
+
+:root[data-motion='reduced'] .ctrl-slot.is-capturing {
+  animation: none;
+}
+
+/* --- drag-and-drop drop indicator (story 054 D1) -------------------------
+   A thin line shown between two rows during a drag-over, so the exact drop
+   position is unambiguous. Consumers (D4+) toggle this class on whichever
+   edge of a row is closer to the pointer - this file only owns its look.
+   `::before`/`::after` so the indicator draws without affecting the row's
+   own layout or height (AC 4: the dragged row keeps its 40px height). */
+.ctrl-drop-indicator {
+  position: relative;
+}
+
+.ctrl-drop-indicator-top::before,
+.ctrl-drop-indicator-bottom::after {
+  content: '';
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  height: 2px;
+  background: var(--color-flame-500);
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+}
+
+.ctrl-drop-indicator-top::before {
+  top: -1px;
+}
+
+.ctrl-drop-indicator-bottom::after {
+  bottom: -1px;
+}
+
+/* --- drag preview (story 054 D4) -----------------------------------------
+   The copy that rides under the pointer inside dnd-kit's `DragOverlay`: the
+   row's own 40px `.ctrl-row` shell with just the grip cell and the row's name,
+   lifted off the grid with a panel background and a border so it reads as one
+   detached row over whatever it passes. */
+.ctrl-drag-preview {
+  background: var(--color-raised);
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 10px 24px rgb(0 0 0 / 0.45);
+  cursor: grabbing;
+}
+
+/* --- category chip as a drop target (story 054 D5) -----------------------
+   While a row is being dragged and the pointer rests on a category chip, the
+   chip has to read as "let go here and the row lands in this category". The
+   same flame accent the drop indicator between two rows uses, so both drop
+   affordances of one drag speak with one voice - plus a dashed border, so the
+   state is not carried by colour alone (`/design-tokens`). It is applied to
+   the chip's wrapper, which already has a 1px border, so nothing reflows. */
+/* Story 062 D2: qualified with `.ctrl-category-chip` so this keeps beating the
+   selected chip's `[data-selected='true']` border/background (same specificity,
+   later in the file). Dropping a row on the *selected* chip must show the same
+   dashed affordance as dropping it on any other. */
+.ctrl-category-chip.ctrl-chip-drop-over {
+  border-style: dashed;
+  border-color: var(--color-flame-500);
+  background: color-mix(in srgb, var(--color-flame-500) 12%, transparent);
+}

@@ -26,6 +26,13 @@ const SCAN_ROOTS = ['src', 'tests']
 const BOUNDARY_MODULE = 'src/contract/launcher-contract.ts'
 
 /**
+ * Story 008 D2 (`eslint.config.js`'s `no-restricted-imports` exemption): a second, narrower
+ * boundary for the mirrored *rendering* set - `src/mirror-runtime/**` renders the mirrored slide
+ * components with their own styles, so files there may import the mirror too.
+ */
+const BOUNDARY_DIRECTORY = 'src/mirror-runtime/'
+
+/**
  * Skipped by every check. The mirror is the one legitimate home of all four rules; this file is
  * skipped because it has to spell the rules out to look for them, and a guard that trips over its
  * own needles guards nothing.
@@ -151,12 +158,15 @@ describe('contract single source', () => {
   it('only the boundary module imports the mirror', () => {
     const findings: string[] = []
     for (const file of codeFiles()) {
-      if (file === BOUNDARY_MODULE) continue
+      if (file === BOUNDARY_MODULE || file.startsWith(BOUNDARY_DIRECTORY)) continue
       for (const specifier of importSpecifiers(read(file))) {
         if (reachesMirror(specifier)) findings.push(`${file}: ${specifier}`)
       }
     }
 
-    expect(findings, `only ${BOUNDARY_MODULE} may import the mirror`).toEqual([])
+    expect(
+      findings,
+      `only ${BOUNDARY_MODULE} or ${BOUNDARY_DIRECTORY}** may import the mirror`,
+    ).toEqual([])
   })
 })

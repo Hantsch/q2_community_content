@@ -3,8 +3,12 @@ import path from 'node:path'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vitest/config'
 
+import { launcherBoundaryPlugin } from './src/mirror-runtime/launcherBoundary'
+
 export default defineConfig({
-  plugins: [react()],
+  // Same boundary as `vite.config.ts`: the mirrored `../client` import resolves to the studio
+  // stub here too, so a test imports the mirror through the real resolution pipeline.
+  plugins: [launcherBoundaryPlugin(), react()],
   resolve: {
     alias: {
       '@shared': path.resolve(import.meta.dirname, 'src/launcher-core/src/shared'),

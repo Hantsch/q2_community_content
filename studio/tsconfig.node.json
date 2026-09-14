@@ -9,7 +9,11 @@
   ],
   "compilerOptions": {
     "target": "ES2023",
-    "lib": ["ES2023"],
+    // "DOM" is needed only so `e2e/**/*.ts` specs can type `page.evaluate()` callbacks that
+    // reference browser globals (`document`, `getComputedStyle`, `HTMLImageElement`) - those
+    // callbacks run in the browser under test, never in this Node-side config/scripts code, but
+    // `tsc` type-checks the whole file against one `lib` regardless of where a callback executes.
+    "lib": ["ES2023", "DOM"],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "paths": {

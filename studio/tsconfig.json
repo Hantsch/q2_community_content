@@ -1,10 +1,5 @@
 {
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  // The renderer slice of the mirror (D2-D5 territory, not this deliverable) imports launcher
-  // modules that sit outside the manifest (`components/ui/Button`, the home IPC `client`) and
-  // are not mirrored here. Excluded from typecheck rather than hand-edited, per the "mirror
-  // is never hand-edited" rule.
-  "exclude": ["src/launcher-core/src/renderer/**"],
   "compilerOptions": {
     "target": "ES2022",
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
@@ -15,6 +10,17 @@
     "paths": {
       "@shared/*": ["./src/launcher-core/src/shared/*"]
     },
+    // SlideButtons.tsx imports `../client`, the Electron IPC boundary (`window.q2`), which does
+    // not exist in this browser-only studio (story 008, Decisions). `launcherBoundary.ts` already
+    // redirects that one import to `homeClientStub.ts` for Vite/Vitest at runtime; `tsc` does not
+    // run Vite plugins, so it needs its own way to resolve the same import. `paths` cannot do
+    // this - TypeScript never consults `paths` for a relative specifier, only `rootDirs` merges
+    // two physical directories for relative-import resolution, so a relative import that fails to
+    // resolve inside the mirror's `modules/home/` falls through to `src/mirror-runtime/client.ts`
+    // (which re-exports `homeClientStub.ts`) instead - without ever hand-editing the mirror.
+    // Story 008 D3 statically imports the mirrored slide templates (and so, transitively,
+    // `SlideButtons.tsx`) from `src/mirror-runtime/`, which is what makes this reachable by `tsc`.
+    "rootDirs": ["./src/launcher-core/src/renderer/src/modules/home", "./src/mirror-runtime"],
 
     "strict": true,
     "noUnusedLocals": true,

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "launcher": {
     "commit": "a41b3acab4bd3a089f8a04594fff81556fbd6f8a",
-    "syncedAt": "2026-09-14T07:13:37.717Z"
+    "syncedAt": "2026-09-14T07:46:38.089Z"
   },
   "files": [
     {
@@ -14,6 +14,16 @@
       "source": "src/main/modules/home/news/frontmatter.ts",
       "mirror": "studio/src/launcher-core/src/main/modules/home/news/frontmatter.ts",
       "sha256": "0bc6a88fd5f696c4a33dac87a893ca024e192101258d2106864b83eb29f5c7b0"
+    },
+    {
+      "source": "src/renderer/src/components/ui/Button.tsx",
+      "mirror": "studio/src/launcher-core/src/renderer/src/components/ui/Button.tsx",
+      "sha256": "294a6e2d25a2f2343623abe08b3bf444a09bf76c82c9bf6e1d0361110740dcee"
+    },
+    {
+      "source": "src/renderer/src/lib/cn.ts",
+      "mirror": "studio/src/launcher-core/src/renderer/src/lib/cn.ts",
+      "sha256": "66414b674948395832fc0b1a72cf03a152f2a15c651053ffc53c3cbcbb74c176"
     },
     {
       "source": "src/renderer/src/modules/home/components/resolveSlideTemplate.ts",
@@ -46,6 +56,21 @@
       "sha256": "8def3e75d2e83e7dc7ef9d16673f1f6f433ea1842a25045944bdd0b213a7f27e"
     },
     {
+      "source": "src/renderer/src/styles/config-syntax.css",
+      "mirror": "studio/src/launcher-core/src/renderer/src/styles/config-syntax.css",
+      "sha256": "f7244299e64234969d999624ae946f2d931b0f2ff6bd302e1510daf1f3dbbcf5"
+    },
+    {
+      "source": "src/renderer/src/styles/controls-grid.css",
+      "mirror": "studio/src/launcher-core/src/renderer/src/styles/controls-grid.css",
+      "sha256": "6c86de4afcc4816f21b4f32737aced30e3437f86e19b9cd06f0366be5f3fd9d8"
+    },
+    {
+      "source": "src/renderer/src/styles/dashboard.css",
+      "mirror": "studio/src/launcher-core/src/renderer/src/styles/dashboard.css",
+      "sha256": "dd787d72f928974444cef0dd953e031ce183f67ef6eed28d80ad34c7d782f474"
+    },
+    {
       "source": "src/renderer/src/styles/home-hero.css",
       "mirror": "studio/src/launcher-core/src/renderer/src/styles/home-hero.css",
       "sha256": "f8ab40956a0210202c680bc06f96794d22d1d43f59eb41709bd2037b57bb569e"
@@ -54,6 +79,11 @@
       "source": "src/renderer/src/styles/index.css",
       "mirror": "studio/src/launcher-core/src/renderer/src/styles/index.css",
       "sha256": "ce072842602664bd14f7634718c7056d332dfe6808a6f5822ab4ad225bcb4d6b"
+    },
+    {
+      "source": "src/renderer/src/styles/surfaces.css",
+      "mirror": "studio/src/launcher-core/src/renderer/src/styles/surfaces.css",
+      "sha256": "fa211ee02038cdf8203732fdb08bacea593c670f9c8851a020841ed03655d2bb"
     },
     {
       "source": "src/shared/modules/home.ts",

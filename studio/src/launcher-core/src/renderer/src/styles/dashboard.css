@@ -1,0 +1,78 @@
+/* ==========================================================================
+   Home dashboard grid
+   --------------------------------------------------------------------------
+   Story 086 D3: the dashboard's own grid/stack containers. Tile geometry
+   itself (columns, row height, each tile's placement) is computed in
+   DashboardGrid.tsx via the `style` prop / CSS custom properties, never a
+   parsed style attribute (the production CSP rule, docs/ARCHITECTURE.md) -
+   this file only owns what plain Tailwind utilities don't cover: the grid's
+   own `display`/gap and the stacked-mode column layout. Mirrors
+   controls-grid.css's shape - a small, purpose-built stylesheet, not a
+   design-token change.
+   ========================================================================== */
+
+.dashboard-grid {
+  /* 12px is GRID_GAP_PX in src/shared/modules/home.ts - D5's pointer math reads it from there and
+     both values have to stay in sync (CSS cannot import a TS constant). */
+  display: grid;
+  gap: 12px;
+  width: 100%;
+}
+
+.dashboard-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+/*
+ * Story 086 D4: the arrange-mode catalog/status bar docks OVER the grid rather than pushing it
+ * down - AC4's "entering arrange mode moves no tile". It sits inside `Dashboard.tsx`'s own relative
+ * wrapper around `DashboardGrid`, absolutely positioned to the top of that wrapper, so it never
+ * adds to the document flow.
+ *
+ * Story 086 D5: that wrapper now reserves the bar's height as permanent top padding, so "over the
+ * grid" means over its own slot instead of over the grid's first row. See `Dashboard.tsx`'s comment
+ * on the padding - a bar drawn on top of row 0 swallowed every affordance of every tile placed
+ * there. `top: 0` is the wrapper's border box, i.e. above that padding.
+ */
+.dashboard-arrange-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+}
+
+/*
+ * Story 086 D5: the drag ghost - the only thing that moves while a pointer drag is in flight. The
+ * tile itself stays at its stored placement until a drop is accepted (AC5), so this outline is
+ * where the user reads "this is where it would land, and whether it may".
+ *
+ * `[data-invalid='true']` mirrors `.btn-play[data-variant=...]`'s idiom in surfaces.css (a data
+ * attribute React sets, read by a layered rule) rather than swapping class names in the component.
+ * The refusal is never carried by colour alone: the ghost also gets a `Ban` icon and the status
+ * line spells out the reducer's reason.
+ */
+.dashboard-drag-ghost {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: 8px 12px;
+  border: 2px dashed var(--color-line-strong);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-raised) 70%, transparent);
+  color: var(--color-ink-dim);
+  font-size: 0.75rem;
+  pointer-events: none;
+}
+
+.dashboard-drag-ghost[data-invalid='true'] {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}

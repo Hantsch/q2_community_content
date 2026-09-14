@@ -36,7 +36,15 @@ export const launcherCoreManifest: readonly LauncherCoreManifestEntry[] = [
   entry('src/renderer/src/modules/home/components/SlideButtons.tsx'),
   entry('src/renderer/src/modules/home/components/resolveSlideTemplate.ts'),
 
+  // Rendering support
+  entry('src/renderer/src/components/ui/Button.tsx'),
+  entry('src/renderer/src/lib/cn.ts'),
+
   // Styles
   entry('src/renderer/src/styles/home-hero.css'),
   entry('src/renderer/src/styles/index.css'),
+  entry('src/renderer/src/styles/surfaces.css'),
+  entry('src/renderer/src/styles/controls-grid.css'),
+  entry('src/renderer/src/styles/config-syntax.css'),
+  entry('src/renderer/src/styles/dashboard.css'),
 ]

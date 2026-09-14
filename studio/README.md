@@ -62,3 +62,15 @@ only reads; it never writes to either repository. Exits non-zero when it finds d
 
 Playwright writes traces and screenshots for failing tests to `studio/test-results/`.
 That directory is git-ignored.
+
+## Third-party
+
+The mirrored rendering (`studio/src/mirror-runtime/mirrorStyles.ts`) bundles the three font
+families the launcher's own `home-hero.css` and base styles read — Inter, Oswald and JetBrains
+Mono — via the `@fontsource-variable/*` packages, the same packages and import pattern the
+launcher's own `main.tsx` uses. Each is licensed under the SIL Open Font License 1.1 (OFL 1.1):
+
+- Inter — Copyright 2016 The Inter Project Authors (https://github.com/rsms/inter)
+- Oswald — Copyright 2016 The Oswald Project Authors (https://github.com/googlefonts/OswaldFont)
+- JetBrains Mono — Copyright 2020 The JetBrains Mono Project Authors
+  (https://github.com/JetBrains/JetBrainsMono)
