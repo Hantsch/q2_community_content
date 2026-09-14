@@ -43,3 +43,9 @@ second roadmap.
   classes, real tokens, bundled fonts and a real repository image on a standalone
   `studio/mirror-check.html` page, in jsdom unit tests and in a real Chromium `npm run e2e` run;
   `npm run check:drift` stays green.
+- 009 — Mirror provenance is reported, not buried · S02 · Added `studio/src/mirror/provenance.ts`
+  (verdict vocabulary, `describeMirror`, `formatProvenance`) and `read-provenance.ts` (reads the
+  lock, hashes the mirror, never throws); `npm run check:drift` now prints the launcher commit and
+  verdict as its header, and the studio surface gets the same data build-time via the
+  `virtual:mirror-provenance` Vite module. Data-only per the sprint's Decisions — a rendered UI
+  binding lands in M4/S04.

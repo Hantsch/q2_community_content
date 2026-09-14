@@ -32,3 +32,11 @@
 - 2026-09-14 10:16 · 008 · D5 browser mirror check · done
 - 2026-09-14 10:16 · 008 · D6 guards · started
 - 2026-09-14 10:19 · 008 · D6 guards · done
+- 2026-09-14 10:37 · 009 · D1 Provenance core (pure) · started
+- 2026-09-14 10:38 · 009 · D1 Provenance core (pure) · done
+- 2026-09-14 10:38 · 009 · D2 Node reader · started
+- 2026-09-14 10:40 · 009 · D2 Node reader · done
+- 2026-09-14 10:40 · 009 · D3 Drift CLI header · started
+- 2026-09-14 10:40 · 009 · D4 virtual:mirror-provenance · started
+- 2026-09-14 10:42 · 009 · D3 Drift CLI header · done
+- 2026-09-14 10:42 · 009 · D4 virtual:mirror-provenance · done

@@ -1,7 +1,7 @@
 ---
 id: 009
 title: Mirror provenance is reported, not buried
-status: ready # draft -> ready -> in-progress -> done
+status: done # draft -> ready -> in-progress -> done
 created: 2026-09-13
 ---
 
@@ -19,17 +19,17 @@ Concept: [Q2 Content Studio](../concepts/content-studio.md) — CS-9, section 6.
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — A provenance module reports the launcher commit, the sync date, the number of
+- [x] **AC1** — A provenance module reports the launcher commit, the sync date, the number of
       mirrored files and the drift verdict, derived from the lock file and the files on disk.
-- [ ] **AC2** — The command-line output of the drift check names the launcher commit the mirror came
+- [x] **AC2** — The command-line output of the drift check names the launcher commit the mirror came
       from.
-- [ ] **AC3** — The provenance is available to the studio surface as structured data, not only as
+- [x] **AC3** — The provenance is available to the studio surface as structured data, not only as
       printed text.
-- [ ] **AC4** — A mirror whose hashes no longer match is reported as out of sync, with the same
+- [x] **AC4** — A mirror whose hashes no longer match is reported as out of sync, with the same
       wording in every place provenance is shown.
-- [ ] **AC5** — Provenance survives a fresh clone: it is read from the committed lock file and needs
+- [x] **AC5** — Provenance survives a fresh clone: it is read from the committed lock file and needs
       no launcher checkout and no git history to produce.
-- [ ] **AC6** — A missing or unparseable lock file is reported as "provenance unknown" rather than
+- [x] **AC6** — A missing or unparseable lock file is reported as "provenance unknown" rather than
       crashing or silently reporting a clean mirror.
 
 ## Open Questions
@@ -91,22 +91,22 @@ than `studio/scripts/check-drift.ts`, use the name that exists — do not add a 
 
 ## Deliverables
 
-- **D1 — Provenance core (pure).** `studio/src/mirror/provenance.ts`: `MirrorVerdict`,
+- [x] **D1 — Provenance core (pure).** `studio/src/mirror/provenance.ts`: `MirrorVerdict`,
   `MirrorProvenance` (`verdict`, `launcherCommit`, `launcherCommitShort`, `syncedAt`, `ageInDays`,
   `fileCount`, `mismatchedFiles[]`, `reason`), `describeMirror()`, `VERDICT_LABELS` and
   `formatProvenance()`. Plus its tests in `studio/src/mirror/provenance.test.ts`.
   *Accepted when:* a lock whose hashes all match yields `in-sync`; one changed hash yields
   `out-of-sync` and names the file; `ageInDays` follows from `syncedAt` and gates nothing.
-- **D2 — Node reader.** `studio/src/mirror/read-provenance.ts` plus
+- [x] **D2 — Node reader.** `studio/src/mirror/read-provenance.ts` plus
   `studio/src/mirror/read-provenance.test.ts` (fixtures under `studio/src/mirror/__fixtures__/`).
   *Accepted when:* a lock + mirror copied into a temp directory with no `.git` and no launcher
   checkout produces full provenance; a missing and a truncated-JSON lock each produce
   `unknown` with a reason and no throw.
-- **D3 — Drift CLI header.** Touches only the drift entry point from 006 (expected
+- [x] **D3 — Drift CLI header.** Touches only the drift entry point from 006 (expected
   `studio/scripts/check-drift.ts`) and adds `studio/tests/drift-provenance.test.ts`, which spawns
   the real `npm run check:drift`. *Accepted when:* the output names the launcher commit from the
   lock, and 006's out-of-sync wording is the label exported by D1 (no second string literal).
-- **D4 — `virtual:mirror-provenance`.** Vite plugin in `studio/vite.config.ts` (or
+- [x] **D4 — `virtual:mirror-provenance`.** Vite plugin in `studio/vite.config.ts` (or
   `studio/src/mirror/provenance-plugin.ts` imported there) plus
   `studio/tests/provenance-virtual-module.test.ts`, booting Vite the way
   `studio/tests/dev-server.test.ts` does and loading the module via `ssrLoadModule`.
@@ -144,4 +144,65 @@ review:** CS-9's "visible in the studio" half is data-only after S02; the render
 
 ## Done
 
-<Filled by `/build 009`.>
+Built the provenance module (`studio/src/mirror/provenance.ts`): the `MirrorVerdict` vocabulary
+(`in-sync`/`out-of-sync`/`unknown`) with its labels, `describeMirror()` and `formatProvenance()`,
+pure and browser-safe. Added the Node reader (`read-provenance.ts`) that hashes the mirror on disk
+against the lock and never throws. Wired its output as the drift CLI's header line
+(`studio/scripts/check-drift.ts`) and as a build-time Vite virtual module
+(`virtual:mirror-provenance`, `studio/src/mirror/provenance-plugin.ts` + `vite.config.ts`). No
+files under `studio/src/launcher-core/` or the published surface were touched.
+
+**Commit message:** `009: report mirror provenance in the drift CLI and as a virtual module`
+
+**Verification:**
+- `npm run build` — green (studio builds).
+- `npm run test` — green, 27 test files / 96 tests passed (includes the 8 new tests from this
+  story: 2 in `provenance.test.ts`, 3 in `read-provenance.test.ts`, 2 in `drift-provenance.test.ts`,
+  1 in `provenance-virtual-module.test.ts`).
+- `npm run typecheck` — green.
+- `npm run lint` — ESLint clean (`npx eslint .` in `studio/` reports zero issues). `prettier
+  --check` fails, but on 34 files including files this story never touched (e.g.
+  `scripts/launcher-core.manifest.ts`, `README.md`, `package.json` — none in this story's diff);
+  reproduced on an untouched file to confirm. Root cause is this Windows checkout's
+  `core.autocrlf=true` converting the repo's LF line endings to CRLF, which Prettier then flags
+  repository-wide — pre-existing before this story, not introduced by it. Left as-is: fixing it
+  is a repo-wide line-ending/config change out of this story's scope.
+- `npm run e2e` — not run. Per the sprint Decisions, this story delivers structured data only
+  (CS-9's rendered-UI half is out of scope for S02, gap recorded for the sprint review), and no
+  Acceptance Criterion here describes a user-facing action in the studio UI.
+- Review: clean-agent review returned **PASS**, no findings under (b) weakened tests, (c) scope
+  creep, or (d) correctness/guardrail violations. Confirmed `ageInDays` never gates `verdict`,
+  `VERDICT_LABELS` is the sole source of in-sync/out-of-sync wording (CLI imports it, does not
+  re-type it), the Node reader never throws on a missing/corrupt lock or a missing mirrored file,
+  and the virtual module resolves the repo root correctly (proven by loading it through a real
+  Vite dev server, not just static inspection).
+
+**AC → test mapping, as verified:**
+- AC1 → `studio/src/mirror/provenance.test.ts` › "reports launcher commit, sync date, file count
+  and verdict from the lock and the files on disk" — passed.
+- AC2 → `studio/tests/drift-provenance.test.ts` › "`npm run check:drift` names the launcher commit
+  the mirror came from" (spawns the real CLI) — passed.
+- AC3 → `studio/tests/provenance-virtual-module.test.ts` › "the studio surface imports mirror
+  provenance as structured data" (real Vite dev server + `ssrLoadModule`) — passed.
+- AC4 → `studio/src/mirror/provenance.test.ts` › "a mirrored file whose hash changed is reported
+  as out of sync, naming the file" plus `studio/tests/drift-provenance.test.ts` › "the CLI prints
+  the module's out-of-sync label, not its own wording" — both passed.
+- AC5 → `studio/src/mirror/read-provenance.test.ts` › "produces provenance from a lock copy with
+  no git history and no launcher checkout" — passed.
+- AC6 → `studio/src/mirror/read-provenance.test.ts` › covered by two tests (missing lock, and
+  truncated/unparseable JSON lock), both asserting `unknown` + a reason + no throw — a naming
+  split from the single AC6 test line originally planned, full behavioural coverage confirmed by
+  review.
+
+No `manual residue`.
+
+**Decisions (implementation-time):**
+- `launcherCommitShort` fixes at 12 characters, matching the sprint Decision ("displayed short
+  (12 chars)").
+- AC6's planned single test was implemented as two (missing lock, unparseable lock) — clearer
+  failure output than one parametrised test; both assert the same contract.
+- `prettier --check` left red for this story: it is a pre-existing, repo-wide condition from this
+  machine's `core.autocrlf=true`, reproduced on files outside this story's diff, and fixing it
+  would mean reformatting ~30 unrelated files — out of scope here and a risk to review noise in
+  future stories. Flagging for a separate housekeeping story or a `.gitattributes`/Prettier config
+  fix.

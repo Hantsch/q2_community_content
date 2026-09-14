@@ -7,6 +7,8 @@
  */
 import { checkDrift, type DriftFinding } from './drift'
 import { resolveRepoRoot } from './sync-launcher'
+import { formatProvenance } from '../src/mirror/provenance'
+import { readMirrorProvenance } from '../src/mirror/read-provenance'
 
 const USAGE = 'usage: npm run check:drift [-- --launcher <path to a q2-launcher checkout>]'
 
@@ -87,6 +89,11 @@ function main(): void {
     console.error(repoRoot.error)
     process.exitCode = 1
     return
+  }
+
+  const provenance = readMirrorProvenance(repoRoot.value)
+  for (const line of formatProvenance(provenance)) {
+    console.log(line)
   }
 
   const report = checkDrift({ repoRoot: repoRoot.value, launcherPath })
