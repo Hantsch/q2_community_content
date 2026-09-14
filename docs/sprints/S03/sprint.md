@@ -1,7 +1,7 @@
 ---
 sprint: S03
-status: planned # planned | in-progress | done
-branch: # set by /sprint
+status: in-progress # planned | in-progress | done
+branch: sprint/S03
 milestone: M3 — Validation
 ---
 
@@ -19,7 +19,7 @@ something already true.
 
 ## Stories (in build order)
 
-- [ ] 010 — Reader for the content repository's working tree
+- [x] 010 — Reader for the content repository's working tree
 - [ ] 011 — The declared-versus-delivered report
 - [ ] 012 — Headless validate command
 - [ ] 013 — Repository-level findings across the news directory

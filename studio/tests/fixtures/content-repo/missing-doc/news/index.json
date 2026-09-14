@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "id": "gone",
+      "file": "2026-03-01-gone.md",
+      "order": 10
+    },
+    {
+      "id": "present",
+      "file": "2026-03-02-present.md",
+      "order": 20
+    }
+  ]
+}

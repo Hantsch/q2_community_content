@@ -49,3 +49,4 @@ second roadmap.
   verdict as its header, and the studio surface gets the same data build-time via the
   `virtual:mirror-provenance` Vite module. Data-only per the sprint's Decisions — a rendered UI
   binding lands in M4/S04.
+- 010 — Reader for the content repository's working tree · S03 · Added a read-only, never-throwing reader for news/ (index, documents, drafts, image listing, _templates on request) with a shared finding vocabulary and a proven no-write guarantee.

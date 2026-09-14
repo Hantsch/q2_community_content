@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "id": "escapes-with-dot-dot",
+      "file": "../outside.md",
+      "order": 10
+    },
+    {
+      "id": "absolute-posix",
+      "file": "/etc/passwd",
+      "order": 20
+    },
+    {
+      "id": "absolute-windows",
+      "file": "C:\\Windows\\win.ini",
+      "order": 30
+    }
+  ]
+}

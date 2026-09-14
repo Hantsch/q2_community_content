@@ -1,0 +1,10 @@
+- 2026-09-14 11:32 · 010 · D1 Finding vocabulary, path guard, text normalisation · started
+- 2026-09-14 11:32 · 010 · D1 Finding vocabulary, path guard, text normalisation · started
+- 2026-09-14 11:34 · 010 · D1 Finding vocabulary, path guard, text normalisation · done
+- 2026-09-14 11:34 · 010 · D2 The reader: index, documents, drafts, findings · started
+- 2026-09-14 11:40 · 010 · D2 The reader: index, documents, drafts, findings · done
+- 2026-09-14 11:40 · 010 · D3 Image listing and templates on request · started
+- 2026-09-14 11:41 · 010 · D3 Image listing and templates on request · done
+- 2026-09-14 11:41 · 010 · D4 Proof that the reader never writes · started
+- 2026-09-14 11:43 · 010 · D4 Proof that the reader never writes · done
+- 2026-09-14 11:51 · 010 · story complete, moved to done/ · done

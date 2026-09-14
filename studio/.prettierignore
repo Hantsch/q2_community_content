@@ -3,3 +3,5 @@ dist/
 package-lock.json
 test-results/
 src/launcher-core/
+# Deliberately invalid JSON (story 010 AC3 fixture) — prettier cannot parse it, by design.
+tests/fixtures/content-repo/broken-index/
