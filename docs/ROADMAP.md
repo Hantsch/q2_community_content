@@ -1,22 +1,22 @@
 # Roadmap
 
-As of: 2026-09-14. One screen: where the project stands, what was done recently, what comes
+As of: 2026-09-14 (S03). One screen: where the project stands, what was done recently, what comes
 next. Detail lives where it is produced — sprint reviews, story files, concepts — and this file
 links to it. Maintained by `/sprint`, `/concept` and `/roadmap`; the rules are in
 `.claude/commands/roadmap.md`.
 
 ## Where we stand
 
-- Sprint S02 is done: the launcher's news contract and slide rendering run inside this repository,
-  copied verbatim via `npm run sync:launcher`, hash-locked in `studio/launcher-core.lock.json`,
-  and checked for drift via `npm run check:drift` — see [S02 review](sprints/S02/review.md).
-- The mirror's provenance (launcher commit, sync date, drift verdict) is reported by the drift CLI
-  and exposed to the studio as structured data; a rendered provenance UI is still open, planned
-  for M4/S04.
-- Next step: `/sprint S03` — validation (`npm run validate` states what the launcher will really
-  do with each entry).
-- Waiting on the user: the launcher-side change from story 004's handoff spec, and the
-  `index.json` formatting policy that blocks story 024.
+- Sprint S03 is done: `npm run validate` (text or `--json`, `--strict`) states, per entry, what
+  was declared and what the launcher will deliver, plus repository-wide findings (duplicate ids,
+  drafts, orphaned images, unsafe names) — see [S03 review](sprints/S03/review.md).
+- The mirror now also covers the launcher's file-safe-name rule (mirrored into
+  `studio/src/launcher-core/`, re-exported through `studio/src/contract/launcher-safe-names.ts`),
+  alongside the news contract and slide rendering from S02.
+- Next step: `/sprint S04` — the studio shows the repository (library and validation panel).
+- Waiting on the user: the launcher-side change from story 004's handoff spec, the
+  `index.json` formatting policy that blocks story 024, and merging `sprint/S03` into
+  `feature/studio`.
 
 ## Phase overview
 
@@ -32,7 +32,7 @@ Concept: [Q2 Content Studio](concepts/content-studio.md).
 | --- | --- | --- | --- | --- |
 | M1 | Foundation | done 2026-09-13 | [S01 review](sprints/S01/review.md) | Story 004 handed to `q2-launcher`'s backlog as a handoff spec, not implemented here. |
 | M2 | The launcher mirror | done 2026-09-14 | [S02 review](sprints/S02/review.md) | Provenance UI still open, planned for M4/S04. |
-| M3 | Validation | planned | [S03](sprints/S03/sprint.md) | `npm run validate` states what the launcher will really do with each entry. |
+| M3 | Validation | done 2026-09-14 | [S03 review](sprints/S03/review.md) | `npm run validate`'s repository-findings count stays 0 until a follow-up wires story 013's findings into the CLI. |
 | M4 | The studio shows the repository | planned | [S04](sprints/S04/sprint.md) | Library and validation panel, driven by a content-type registry. |
 | M5 | Preview | planned | [S05](sprints/S05/sprint.md) | The post as the launcher renders it, at 940/1280/1920, drafts included. |
 | M6 | Authoring | planned | [S06](sprints/S06/sprint.md) | Create, edit, illustrate, order and publish — the first writes to the repository. |
@@ -56,9 +56,15 @@ Ideas and concepts that need a decision before they become work. One line each.
   `home-screen.md` layout block, both missing `studio/`) — worth a launcher-side fix alongside
   story 004's handoff. [S01 review](sprints/S01/review.md)
 - This checkout's `core.autocrlf=true` with no `.gitattributes` makes `prettier --check` fail
-  repeatedly on unrelated pre-existing files — every S02 story had to re-confirm the noise wasn't
-  theirs. A `.gitattributes` line-ending policy would fix it once instead of per-story.
+  repeatedly on unrelated pre-existing files — every S02 and S03 story had to re-confirm the noise
+  wasn't theirs. A `.gitattributes` line-ending policy would fix it once instead of per-story.
   [S02 review](sprints/S02/review.md)
+- Wire story 013's `collectRepositoryFindings()` output into `npm run validate` (`studio/src/validate/`)
+  so its `repositoryFindings` count reflects real data instead of always `0`. [S03 review](sprints/S03/review.md)
+- Four `launcher-core/` mirror-hash-drift tests fail on this Windows checkout independently of any
+  story's changes (confirmed on the base branch via `git stash` in every S03 story) — worth a
+  one-time investigation into whether it's a line-ending or hashing issue specific to this checkout.
+  [S03 review](sprints/S03/review.md)
 
 ## History
 
