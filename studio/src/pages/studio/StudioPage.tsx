@@ -6,17 +6,20 @@
  *
  * The content region renders `ContentTypeStateNotice` for whichever descriptor is selected: it
  * carries the per-state rendering (implemented / launcher-reads / reserved) so this page stays
- * composition only.
+ * composition only. Story 015 D4 adds one exception: an `implemented` descriptor with a `reader`
+ * (today only `news`) renders `NewsBridgeSummary` instead, bound to that descriptor's own reader.
  */
 import { useState } from 'react'
+import { createBridgeClient } from '../../bridge/client'
 import type { ContentTypeDescriptor } from '../../content-types/descriptor'
 import { createContentTypeRegistry } from '../../content-types/registry'
 import { ContentTypeNav } from '../../organisms/ContentTypeNav'
 import { ContentTypeStateNotice } from '../../organisms/ContentTypeStateNotice'
+import { NewsBridgeSummary } from '../../organisms/NewsBridgeSummary'
 
 export function StudioPage(): React.JSX.Element {
   const [descriptors] = useState<readonly ContentTypeDescriptor[]>(() =>
-    createContentTypeRegistry(),
+    createContentTypeRegistry({ source: createBridgeClient() }),
   )
   const [selectedId, setSelectedId] = useState<ContentTypeDescriptor['id']>(descriptors[0].id)
   const selected = descriptors.find((descriptor) => descriptor.id === selectedId)
@@ -31,7 +34,15 @@ export function StudioPage(): React.JSX.Element {
           selectedId={selectedId}
           onSelect={setSelectedId}
         />
-        <div>{selected ? <ContentTypeStateNotice descriptor={selected} /> : null}</div>
+        <div>
+          {selected ? (
+            selected.state === 'implemented' && selected.reader ? (
+              <NewsBridgeSummary reader={selected.reader} />
+            ) : (
+              <ContentTypeStateNotice descriptor={selected} />
+            )
+          ) : null}
+        </div>
       </div>
     </main>
   )

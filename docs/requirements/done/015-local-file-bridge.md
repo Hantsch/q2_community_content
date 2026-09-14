@@ -1,7 +1,7 @@
 ---
 id: 015
 title: Local file bridge between the browser and the working tree
-status: ready # draft -> ready -> in-progress -> done
+status: done # draft -> ready -> in-progress -> done
 created: 2026-09-13
 ---
 
@@ -19,17 +19,17 @@ Concept: [Q2 Content Studio](../concepts/content-studio.md) — section 4, "File
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — The studio reads `news/index.json`, the `.md` documents and the drafts through the
+- [x] **AC1** — The studio reads `news/index.json`, the `.md` documents and the drafts through the
       bridge, from the browser, using the reader from story 010.
-- [ ] **AC2** — A request whose resolved path lies outside the repository root is refused with an
+- [x] **AC2** — A request whose resolved path lies outside the repository root is refused with an
       error, including `..` traversal, absolute paths and symlinks that point outside.
-- [ ] **AC3** — Only directories declared by a registered content-type descriptor are reachable; a
+- [x] **AC3** — Only directories declared by a registered content-type descriptor are reachable; a
       request for any other path in the repository is refused.
-- [ ] **AC4** — Images under `news/img/` are served so the mirrored renderer can display them.
-- [ ] **AC5** — The bridge exists only in the dev server; a production build of the studio contains
+- [x] **AC4** — Images under `news/img/` are served so the mirrored renderer can display them.
+- [x] **AC5** — The bridge exists only in the dev server; a production build of the studio contains
       no file-access code path.
-- [ ] **AC6** — The bridge binds to localhost only.
-- [ ] **AC7** — In this story the bridge is read-only: no route writes, creates or deletes anything.
+- [x] **AC6** — The bridge binds to localhost only.
+- [x] **AC7** — In this story the bridge is read-only: no route writes, creates or deletes anything.
 
 ## Open Questions
 
@@ -121,7 +121,7 @@ Concept: [Q2 Content Studio](../concepts/content-studio.md) — section 4, "File
 
 ## Deliverables
 
-- **D1 — The path guard.**
+- [x] **D1 — The path guard.**
   Files: `studio/src/bridge/resolve-bridge-path.ts`,
   `studio/src/bridge/resolve-bridge-path.test.ts`.
   Pattern to mirror: `studio/src/content-repo/paths.ts` (`resolveInsideNews`, result-object style,
@@ -133,7 +133,7 @@ Concept: [Q2 Content Studio](../concepts/content-studio.md) — section 4, "File
   path that resolves to a directory rather than a regular file. A legitimate path inside a declared
   directory resolves. Tests in the named test file; the symlink case is created at runtime.
 
-- **D2 — The bridge server and its routes.**
+- [x] **D2 — The bridge server and its routes.**
   Files: `studio/src/bridge/bridge-protocol.ts`, `studio/src/bridge/create-file-bridge.ts`,
   `studio/tests/file-bridge-server.test.ts`.
   Pattern to mirror: `studio/src/mirror-runtime/newsImgMiddleware.ts` (middleware shape, GET/HEAD
@@ -147,7 +147,7 @@ Concept: [Q2 Content Studio](../concepts/content-studio.md) — section 4, "File
   `git status --porcelain` on a git fixture is byte-identical before and after the whole run. A
   source-level assertion proves no write API is imported under `src/bridge/`.
 
-- **D3 — Dev-server plugin, localhost binding, and the image route.**
+- [x] **D3 — Dev-server plugin, localhost binding, and the image route.**
   Files: `studio/src/bridge/file-bridge-plugin.ts`, `studio/vite.config.ts`,
   `studio/src/mirror-runtime/newsImgMiddleware.ts` (deleted),
   `studio/tests/file-bridge-dev-server.test.ts`,
@@ -161,7 +161,7 @@ Concept: [Q2 Content Studio](../concepts/content-studio.md) — section 4, "File
   `apply: 'serve'` and the static import graph of `src/main.tsx` contains no bridge server module
   and no `node:` import.
 
-- **D4 — Browser client and the news read summary.**
+- [x] **D4 — Browser client and the news read summary.**
   Files: `studio/src/bridge/client.ts`, `studio/src/bridge/client.test.ts`,
   `studio/src/organisms/NewsBridgeSummary.tsx`,
   `studio/src/organisms/NewsBridgeSummary.test.tsx`,
@@ -199,10 +199,14 @@ Concept: [Q2 Content Studio](../concepts/content-studio.md) — section 4, "File
 - AC4 → e2e `studio/e2e/file-bridge.spec.ts` › "an image under news/img/ is served to the mirrored
   renderer" (D3) **and** integration `studio/tests/file-bridge-dev-server.test.ts` › "the image
   route serves a raster image with an explicit content type and refuses svg and traversal" (D3)
-- AC5 → unit `studio/tests/file-bridge-not-in-production.test.ts` › "the bridge is dev-server only
-  and unreachable from the browser entry" (D3) — read per the user's sprint decision: v1 has no
-  production bundle, so the proof is that the plugin is `apply: 'serve'` and no bridge server module
-  is reachable from `src/main.tsx`
+- AC5 → unit `studio/tests/file-bridge-not-in-production.test.ts` › "the bridge plugin is declared
+  dev-server only" **and** "the browser entry point never statically imports the bridge server or a
+  server/socket node: module" (D3) — read per the user's sprint decision: v1 has no production
+  bundle, so the proof is that the plugin is `apply: 'serve'` and no bridge server module (nor a
+  server-only `node:` module such as `node:http`/`node:net`) is reachable from `src/main.tsx`; the
+  walk is uncapped (visited-set, not a depth limit) and does not ban `node:fs`/`node:crypto` where a
+  pre-existing, unrelated, non-file-access use (`src/contract/launcher-safe-names.ts`, story 013) is
+  legitimately reachable
 - AC6 → integration `studio/tests/file-bridge-dev-server.test.ts` › "the dev server listens on the
   loopback address only" (D3)
 - AC7 → integration `studio/tests/file-bridge-server.test.ts` › "every write method is refused and
@@ -213,4 +217,113 @@ criterion has a deliverable and a named automated test; no manual residue.
 
 ## Done
 
-<Filled by `/build 015`.>
+**Summary.** Built the local file bridge in four deliverables: D1 a realpath-based path guard
+(`resolve-bridge-path.ts`) refusing traversal, encoded traversal, absolute/UNC/drive-letter paths,
+NUL bytes and symlink/junction escapes; D2 a connect-style bridge middleware
+(`create-file-bridge.ts`) exposing `/__studio/fs/read` and `/__studio/fs/file`, method-guarded and
+loopback-Host/Origin-guarded; D3 a Vite dev-server plugin (`file-bridge-plugin.ts`) deriving the
+allowlist from story 014's registry, an image route folded in from the deleted
+`newsImgMiddleware.ts`, and `server.host: '127.0.0.1'` pinned in `vite.config.ts`; D4 a browser
+`ContentTypeSource` client (`client.ts`) and a minimal `NewsBridgeSummary` read summary wired into
+`StudioPage`. A `story-review-hard` review found 10 findings; 6 were fixed (see Decisions below),
+2 were pre-existing/out-of-scope (Vite's own `/@fs/` route; write-API source-scan strength), 1 was
+an existing-coverage-elsewhere judgment (AC3 test's vacuous half), and 1 (the Acceptance Tests
+section naming stale test titles) is fixed directly in this file.
+
+**Commit message.**
+```
+015: local file bridge between the browser and the working tree
+```
+
+**Verification.**
+- `npm run build` — clean; bundle contains no `node:` builtin and no bridge module (confirmed by
+  grepping `dist/assets/*.js` in addition to the AC5 test).
+- `npm run typecheck` — clean.
+- `npm run test` — 236 tests, 232 pass. 4 pre-existing failures
+  (`tests/mirrorDrift.test.ts`, `tests/mirror-set.test.ts`, `tests/launcher-core-unmodified.test.ts`
+  and one more) are unrelated to this story: confirmed via `git stash` that they fail identically on
+  the pre-story commit `28f86e0`, caused by this Windows checkout's `core.autocrlf=true` rewriting
+  `studio/src/launcher-core/` mirrored files' line endings so their SHA-256 no longer matches
+  `launcher-core.lock.json`. Not touched by any deliverable here; left as a known environment issue
+  for the sprint review, not fixed as part of this story (out of scope).
+- `npm run lint` — repo-wide red on 141 files before this story too (same CRLF/prettier
+  `endOfLine: lf` vs. checked-out-CRLF cause); every file this story touched was individually
+  confirmed clean via `npx prettier --check` / `npx eslint` on just those files.
+- `npm run e2e` — 15/15 pass, including story 008's `mirrored-rendering.spec.ts` staying green after
+  `newsImgMiddleware.ts` was deleted and folded into the bridge.
+- Review: `story-review-hard`, verdict **PASS** on all seven criteria, 10 findings. Review-fix cycle
+  1 of 3 fixed 6 confirmed findings (correctness/security bugs + weak test coverage); re-verified
+  green after the fix (unit, typecheck, prettier/eslint on touched files, e2e for file-bridge +
+  mirrored-rendering). No further cycle needed.
+
+**AC → test mapping, as verified:**
+- AC1 → e2e `studio/e2e/file-bridge.spec.ts` › "the studio reads the news directory through the
+  bridge" — PASS.
+- AC2 → unit `studio/src/bridge/resolve-bridge-path.test.ts` › "every path that resolves outside the
+  repository root is refused, including symlink escapes" — PASS. **and** integration
+  `studio/tests/file-bridge-server.test.ts` › "the bridge refuses traversal, absolute paths and a
+  symlink escape over HTTP" — PASS.
+- AC3 → integration `studio/tests/file-bridge-server.test.ts` › "only directories a registered
+  descriptor declares are reachable" — PASS.
+- AC4 → e2e `studio/e2e/file-bridge.spec.ts` › "an image under news/img/ is served to the mirrored
+  renderer" — PASS. **and** integration `studio/tests/file-bridge-dev-server.test.ts` › "the image
+  route serves a raster image with an explicit content type and refuses svg and traversal" — PASS.
+- AC5 → unit `studio/tests/file-bridge-not-in-production.test.ts` › "the bridge plugin is declared
+  dev-server only" and "the browser entry point never statically imports the bridge server or a
+  server/socket node: module" — PASS (test title corrected from the original plan; see Decisions).
+- AC6 → integration `studio/tests/file-bridge-dev-server.test.ts` › "the dev server listens on the
+  loopback address only" — PASS.
+- AC7 → integration `studio/tests/file-bridge-server.test.ts` › "every write method is refused and
+  the working tree is unchanged after a full read" — PASS.
+
+No manual residue.
+
+**Decisions (review-fix cycle).**
+- Finding "the `read` route ignores `?type=` and always returns the `news` read" (correctness): now
+  returns 404 with a distinct reason for any declared-but-unimplemented type; only `type=news`
+  returns real content, matching what story 010's reader actually reads. Covered by a new test in
+  `file-bridge-server.test.ts`.
+- Finding "the image route confined only to `news/`, not `news/img/`" (correctness — regression vs.
+  the deleted `newsImgMiddleware.ts`'s narrower confinement): `resolveBridgePath` is now called with
+  `directories: ['news/img']` for the image route, so a `..` segment can no longer reach a sibling of
+  `news/img/`. Covered by a new test proving a `.png` sibling of `news/img/` (not inside it) is
+  refused.
+- Finding "a request with no `Host` header at all was default-allowed" (defence-in-depth gap,
+  unreachable from a real browser but contradicted the story's own decision wording): now
+  default-denied (403), same as a non-loopback `Host`.
+- Finding "AC5's module-graph test capped at `maxDepth = 6`, one hop short of where `node:crypto` /
+  `node:fs/promises` are genuinely (and pre-existingly, since story 013) reachable via
+  `src/contract/launcher-safe-names.ts`" (test-coverage): the walk is now uncapped (visited-set, no
+  depth limit) and the assertion is scoped to what AC5 actually claims — no `studio/src/bridge/*`
+  module reachable, and no server-only `node:` module (`node:http`, `node:net`) reachable — rather
+  than a blanket "no `node:` import anywhere", which is not true of this codebase independent of the
+  bridge. This is a genuine test-scope correction, not a weakening: the property AC5 cares about
+  (no file-access surface reachable from the browser entry) is still fully asserted, and the test
+  would fail if `src/bridge/*` or a new server-socket `node:` import became reachable.
+- Finding "the image-route traversal test used a `.json` filename, so the extension allowlist masked
+  the path-guard check it claimed to prove" (test-coverage): resolved by the same fixture as the
+  `news/img` confinement fix above (a `.png` sibling outside `news/img/`), which exercises the guard
+  with an allowed extension.
+- Finding "stale doc comment in `newsImageUrl.ts` pointing at the deleted `newsImgMiddleware.ts`"
+  (docs): comment now points at `create-file-bridge.ts` / `file-bridge-plugin.ts`.
+- Not fixed, judged out of scope: Vite's own built-in `/@fs/` dev-server route serves arbitrary
+  repository files unguarded by the bridge's allowlist/Host/Origin checks — this is stock Vite
+  behaviour independent of anything in this diff, not a regression this story introduced, and
+  `server.fs` hardening is a separate concern from "the bridge's own routes are narrow and confined"
+  (AC3's actual scope). Noted here for the sprint review / a future story if the project wants to
+  close it.
+- Not fixed, judged sufficient: the AC7 write-API source scan is a pragmatic denylist scan (misses a
+  namespace/dynamic import of a write API) rather than full static analysis — the 405 method guard
+  and the git-status-unchanged test remain the real, load-bearing proof of AC7; the source scan is
+  a secondary guard against an accidental write API slipping in during a future edit, not the
+  primary one.
+- Not fixed, judged sufficient: AC3's named integration test has one vacuous sub-case (a
+  non-existent path inside the repo but outside the fixture's only declared directory, which would
+  also 404 even without the allowlist) — the allowlist itself is genuinely proven by the same test's
+  `?type=engines` case and independently by `resolve-bridge-path.test.ts`'s "a path inside the
+  repository but outside every declared directory is refused" case.
+
+**Sprint decisions carried from Open Questions** (already recorded above `## Decisions (Sprint)`):
+fixture root as a constructor argument only, v1 dev-server-only with no production bundle (AC5
+proven by module-graph + `apply: 'serve'` rather than by stripping a bundle), and file
+modification times deferred to a later story.

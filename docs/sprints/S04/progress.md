@@ -6,3 +6,14 @@
 - 2026-09-14 17:07 · 014 · D3 Navigation built from the registry · done
 - 2026-09-14 17:07 · 014 · D4 State views for non-implemented types · started
 - 2026-09-14 17:25 · 014 · D4 State views for non-implemented types (incl. node-builtin browser crash fix) · done
+- 2026-09-14 17:29 · 015 · D1 The path guard · started
+- 2026-09-14 17:34 · 015 · D1 The path guard · done
+- 2026-09-14 17:35 · 015 · D2 The bridge server and its routes · started
+- 2026-09-14 17:40 · 015 · D2 The bridge server and its routes · done
+- 2026-09-14 17:40 · 015 · D3 Dev-server plugin, localhost binding, image route · started
+- 2026-09-14 18:01 · 015 · D3 Dev-server plugin, localhost binding, image route · done
+- 2026-09-14 18:01 · 015 · D4 Browser client and the news read summary · started
+- 2026-09-14 18:06 · 015 · D4 Browser client and the news read summary · done
+- 2026-09-14 18:27 · 015 · Review-fix cycle 1 (findings 1,3,4,5,8,9) · started
+- 2026-09-14 18:33 · 015 · Review-fix cycle 1 (findings 1,3,4,5,8,9) · done
+- 2026-09-14 18:35 · 015 · story done, moved to docs/requirements/done/ · done

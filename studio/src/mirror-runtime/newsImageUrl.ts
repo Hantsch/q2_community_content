@@ -1,8 +1,9 @@
 /**
- * `/news-img/` is the URL prefix `newsImgMiddlewarePlugin` (`newsImgMiddleware.ts`) serves
- * `news/img/` under, and the prefix the slide fixtures (`slideFixtures.ts`) already author their
- * `imageUrl` values with. This helper is the one place that prefix is spelled out, so the
- * middleware and any future caller agree on it without repeating the string literal.
+ * `/news-img/` is the URL prefix the local file bridge (`studio/src/bridge/create-file-bridge.ts`,
+ * wired in by `studio/src/bridge/file-bridge-plugin.ts`) serves `news/img/` under, and the prefix
+ * the slide fixtures (`slideFixtures.ts`) already author their `imageUrl` values with. This helper
+ * is the one place that prefix is spelled out, so the bridge and any future caller agree on it
+ * without repeating the string literal.
  */
 export const NEWS_IMAGE_URL_PREFIX = '/news-img/'
 
