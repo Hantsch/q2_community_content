@@ -1,6 +1,6 @@
 ---
 sprint: S02
-status: in-progress # planned | in-progress | done
+status: done # planned | in-progress | done
 branch: sprint/S02
 milestone: M2 — The launcher mirror
 ---
@@ -19,11 +19,11 @@ rather than by something that agrees with it today.
 
 ## Stories (in build order)
 
-- [ ] 005 — Sync command and lock file for the launcher mirror
-- [ ] 006 — Drift check for the launcher mirror
-- [ ] 007 — The mirrored news contract runs unmodified in the studio
-- [ ] 008 — The mirrored slide rendering runs unmodified in the studio
-- [ ] 009 — Mirror provenance is reported, not buried
+- [x] 005 — Sync command and lock file for the launcher mirror
+- [x] 006 — Drift check for the launcher mirror
+- [x] 007 — The mirrored news contract runs unmodified in the studio
+- [x] 008 — The mirrored slide rendering runs unmodified in the studio
+- [x] 009 — Mirror provenance is reported, not buried
 
 ## Notes
 
