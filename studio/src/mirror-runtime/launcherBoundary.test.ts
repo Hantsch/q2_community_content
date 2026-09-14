@@ -144,6 +144,30 @@ describe('the launcher IPC boundary', () => {
     expect(resolveLauncherBoundary('../../../lib/renderer-source', slideButtonsPath)).toBeNull()
   })
 
+  it('redirects the four Node built-ins imported by mirrored files, importer-guarded', () => {
+    // `fs-utils.ts` imports all three of node:fs, node:fs/promises and node:path; `images/paths.ts`
+    // pulls in node:crypto too, so it doubles as a plausible importer for that one.
+    const fsUtilsPath = resolve(mirrorRoot, 'src/main/lib/fs-utils.ts')
+    const pathsPath = resolve(mirrorRoot, 'src/main/modules/home/images/paths.ts')
+
+    expect(resolveLauncherBoundary('node:crypto', pathsPath)).toBe(
+      resolve(here, 'nodeCryptoStub.ts'),
+    )
+    expect(resolveLauncherBoundary('node:fs', fsUtilsPath)).toBe(resolve(here, 'nodeFsStub.ts'))
+    expect(resolveLauncherBoundary('node:fs/promises', fsUtilsPath)).toBe(
+      resolve(here, 'nodeFsPromisesStub.ts'),
+    )
+    expect(resolveLauncherBoundary('node:path', fsUtilsPath)).toBe(resolve(here, 'nodePathStub.ts'))
+
+    // A non-mirror importer must keep resolving the real built-ins - only imports made *from
+    // within* the mirrored tree are redirected.
+    const outsideMirror = resolve(here, 'mirrorCheck.tsx')
+    expect(resolveLauncherBoundary('node:crypto', outsideMirror)).toBeNull()
+    expect(resolveLauncherBoundary('node:fs', outsideMirror)).toBeNull()
+    expect(resolveLauncherBoundary('node:fs/promises', outsideMirror)).toBeNull()
+    expect(resolveLauncherBoundary('node:path', outsideMirror)).toBeNull()
+  })
+
   it('leaves every other importer, specifier and module id alone', () => {
     const outsideMirror = resolve(here, 'mirrorCheck.tsx')
     const siblingDirectory = resolve(

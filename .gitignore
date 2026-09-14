@@ -2,3 +2,4 @@ node_modules/
 studio/dist/
 studio/test-results/
 *.tsbuildinfo
+.playwright-mcp/

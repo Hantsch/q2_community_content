@@ -1,0 +1,8 @@
+- 2026-09-14 16:57 · 014 · D1 Registry core and the six descriptors · started
+- 2026-09-14 17:02 · 014 · D1 Registry core and the six descriptors · done
+- 2026-09-14 17:02 · 014 · D2 Reserved concept stubs · started
+- 2026-09-14 17:03 · 014 · D2 Reserved concept stubs · done
+- 2026-09-14 17:03 · 014 · D3 Navigation built from the registry · started
+- 2026-09-14 17:07 · 014 · D3 Navigation built from the registry · done
+- 2026-09-14 17:07 · 014 · D4 State views for non-implemented types · started
+- 2026-09-14 17:25 · 014 · D4 State views for non-implemented types (incl. node-builtin browser crash fix) · done

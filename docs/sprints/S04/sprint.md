@@ -1,7 +1,7 @@
 ---
 sprint: S04
-status: planned # planned | in-progress | done
-branch: # set by /sprint
+status: in-progress # planned | in-progress | done
+branch: sprint/S04 # set by /sprint
 milestone: M4 — The studio shows the repository
 ---
 
@@ -19,7 +19,7 @@ hidden.
 
 ## Stories (in build order)
 
-- [ ] 014 — Content-type registry drives the studio
+- [x] 014 — Content-type registry drives the studio
 - [ ] 015 — Local file bridge between the browser and the working tree
 - [ ] 016 — Library view of the news directory
 - [ ] 017 — Validation panel in the studio
