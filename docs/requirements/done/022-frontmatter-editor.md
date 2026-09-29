@@ -1,7 +1,7 @@
 ---
 id: 022
 title: Frontmatter editor with live validation
-status: ready # draft -> ready -> in-progress -> done
+status: done # draft -> ready -> in-progress -> done
 created: 2026-09-13
 ---
 
@@ -18,17 +18,17 @@ Concept: [Q2 Content Studio](../concepts/content-studio.md) — CS-20.
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — `template`, `title`, `order`, `image`, `visibleFrom`, `visibleUntil` and `buttons`
+- [x] **AC1** — `template`, `title`, `order`, `image`, `visibleFrom`, `visibleUntil` and `buttons`
       are editable as fields.
-- [ ] **AC2** — The fields offered follow the selected template: no `image` field for `text`, and
+- [x] **AC2** — The fields offered follow the selected template: no `image` field for `text`, and
       the `image` field is marked as required for `split` and `cover`.
-- [ ] **AC3** — A button URL the launcher would reject is flagged while typing, naming the rule it
+- [x] **AC3** — A button URL the launcher would reject is flagged while typing, naming the rule it
       breaks.
-- [ ] **AC4** — Adding a fourth button is flagged as one the launcher will drop, and which one.
-- [ ] **AC5** — A date that is not a valid ISO 8601 instant is flagged before it can be saved.
-- [ ] **AC6** — No field allows a value that would carry presentation into the published surface —
+- [x] **AC4** — Adding a fourth button is flagged as one the launcher will drop, and which one.
+- [x] **AC5** — A date that is not a valid ISO 8601 instant is flagged before it can be saved.
+- [x] **AC6** — No field allows a value that would carry presentation into the published surface —
       no HTML, no CSS, no colour or layout value.
-- [ ] **AC7** — Editing changes nothing on disk until the entry is saved; leaving an entry with
+- [x] **AC7** — Editing changes nothing on disk until the entry is saved; leaving an entry with
       unsaved changes warns rather than discarding silently.
 
 ## Open Questions
@@ -105,7 +105,7 @@ escape hatch for unknown fields. `studio/src/launcher-core/` is only imported, n
 
 ## Deliverables
 
-- **D1 — Frontmatter draft model.** New `studio/src/editor/frontmatter-draft.ts` plus
+- [x] **D1 — Frontmatter draft model.** New `studio/src/editor/frontmatter-draft.ts` plus
   `studio/src/editor/frontmatter-draft.test.ts` (vitest, node env; mirror the style of
   `studio/src/report/build-news-report.ts` for importing the mirror).
   - `draftFromDocument(file, text)` → `EntryDraft | { unreadable: true }`: reads with the mirrored
@@ -124,7 +124,7 @@ escape hatch for unknown fields. `studio/src/launcher-core/` is only imported, n
     requires it for split and cover", "an unknown template gets the text field set", "a draft is
     dirty after an edit and clean after reverting it".
 
-- **D2 — Field rules.** New `studio/src/editor/field-rules.ts` plus
+- [x] **D2 — Field rules.** New `studio/src/editor/field-rules.ts` plus
   `studio/src/editor/field-rules.test.ts`. `validateDraft(draft)` → `FieldIssue[]` with
   `{ field, index?, rule, message, blocksSave }`; `canSave(draft)` = no issue with `blocksSave`.
   - **Buttons (warnings, `blocksSave: false`).** Verdict per button from the mirrored exports only:
@@ -154,7 +154,7 @@ escape hatch for unknown fields. `studio/src/launcher-core/` is only imported, n
     instant with a zone passes", "presentation values are refused in every free-text field",
     "ordinary titles are not mistaken for presentation", "canSave is false while an error stands".
 
-- **D3 — Frontmatter editor UI.** Touches: new `studio/src/context/entry-draft-context.tsx`
+- [x] **D3 — Frontmatter editor UI.** Touches: new `studio/src/context/entry-draft-context.tsx`
   (`EntryDraftProvider`, `useEntryDraft()` → `{ draft, update, isDirty, issues, canSave, reset }`;
   mirror `studio/src/context/current-entry-context.tsx`), new
   `studio/src/organisms/editor/FrontmatterEditor.tsx`, new field molecules under
@@ -179,7 +179,7 @@ escape hatch for unknown fields. `studio/src/launcher-core/` is only imported, n
     fourth button is flagged as dropped", "an invalid date is flagged and blocks saving", "an HTML
     tag in the title is refused".
 
-- **D4 — Unsaved-changes guard.** Touches `studio/src/context/entry-draft-context.tsx` (add
+- [x] **D4 — Unsaved-changes guard.** Touches `studio/src/context/entry-draft-context.tsx` (add
   `confirmDiscard(): boolean` — true when clean, else `window.confirm("Discard unsaved changes to
   <file>?")`; register a `beforeunload` handler only while dirty),
   `studio/src/pages/studio/StudioPage.tsx` (route `selectEntry` for `LibraryView` and
@@ -233,4 +233,18 @@ Coverage: AC1 D1+D3 · AC2 D1+D3 · AC3 D2+D3 · AC4 D2+D3 · AC5 D2+D3 · AC6 D
 
 ## Done
 
-<Filled by `/build 022`.>
+Frontmatter editor: a pure draft model (mirrored `parseFrontmatter`, dirty tracking, per-template field set) and pure field rules (launcher-agreeing button verdict with survivors-only cap, strict ISO 8601 dates, presentation detector, `canSave`). The `FrontmatterEditor` organism shows inline, rule-named issues and a status line, `order` read-only, unreadable frontmatter as a notice. An unsaved-changes guard covers entry switch, Re-check, content-type switch and `beforeunload`. Nothing is written to disk.
+
+Commit message: `022: frontmatter editor (draft model, live field rules, unsaved-changes guard)`
+
+Verification (narrow gate): `npm run build`, `typecheck`, eslint green; `test --workspace studio -- --changed HEAD` green; `e2e --workspace studio -- e2e/frontmatter-editor.spec.ts` 11/11 green. Review 1 (default tier): PASS, no blocking findings.
+- AC1-AC7 -> named unit and e2e tests all ran and passed (as mapped in `## Acceptance Tests`); no manual residue.
+- Pre-existing red, not caused here: `npm run lint` prettier on 163 untouched files; 5 vitest failures (drift-provenance, launcher-core-unmodified, mirror-set, mirrorDrift, repo-contract).
+
+Decisions:
+- `EntryDraftProvider` sits above everything in a `StudioPage` wrapper; `NewsLibrary` reports `{file, text}` up via a layout effect so the library read was not lifted. An accepted Re-check resets the draft.
+- `use-news-library.ts` and `index.css` unchanged (`read` already exposed by 018; existing severity/selected/muted tokens suffice). New helper `studio/src/library/document-text.ts`.
+- Two extra e2e tests (unknown template, unreadable draft) follow the Decisions above.
+- Unfixed minor review notes: e2e covers only entry switch and `beforeunload` for the guard; CSS-declaration rule would refuse a title like "Update: v1.2; fixes" (conservative by design, AC6).
+
+tiers: D 4 / hard 0 · review default · cycles 0 · agents 6

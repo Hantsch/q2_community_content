@@ -55,3 +55,17 @@
 - 2026-09-29 14:00:48 · 021 · review 1 · started
 - 2026-09-29 14:02:00 · 021 · review 1 · done
 - 2026-09-29 14:02:04 · 021 · story · done
+- 2026-09-29 14:02:21 · 022 · build · started
+- 2026-09-29 14:02:37 · 022 · D1 Frontmatter draft model · started
+- 2026-09-29 14:03:19 · 022 · D1 Frontmatter draft model · done
+- 2026-09-29 14:03:19 · 022 · D2 Field rules · started
+- 2026-09-29 14:04:59 · 022 · D2 Field rules · done
+- 2026-09-29 14:04:59 · 022 · D3 Frontmatter editor UI · started
+- 2026-09-29 14:08:49 · 022 · D3 Frontmatter editor UI · done
+- 2026-09-29 14:08:49 · 022 · D4 Unsaved-changes guard · started
+- 2026-09-29 14:11:07 · 022 · D4 Unsaved-changes guard · done
+- 2026-09-29 14:11:16 · 022 · verify · started
+- 2026-09-29 14:12:41 · 022 · verify · done
+- 2026-09-29 14:12:41 · 022 · review 1 · started
+- 2026-09-29 14:13:57 · 022 · review 1 · done
+- 2026-09-29 14:14:02 · 022 · story · done

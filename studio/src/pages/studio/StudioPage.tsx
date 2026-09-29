@@ -21,18 +21,21 @@
  * is fetched once on mount and again whenever the re-check control fires, alongside a real re-read
  * through `useNewsLibrary()`'s own `refresh()`.
  */
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useState } from 'react'
 import { createBridgeClient } from '../../bridge/client'
 import type { ContentTypeDescriptor, ContentTypeSource } from '../../content-types/descriptor'
 import { createContentTypeRegistry } from '../../content-types/registry'
 import { CurrentEntryProvider, useCurrentEntry } from '../../context/current-entry-context'
+import { EntryDraftProvider, useEntryDraft } from '../../context/entry-draft-context'
 import { PreviewWidthProvider } from '../../context/preview-width-context'
+import { documentFor } from '../../library/document-text'
 import { useNewsLibrary } from '../../library/use-news-library'
 import type { LibraryRow } from '../../library/library-types'
 import { fetchMirrorProvenance } from '../../mirror-runtime/provenance-client'
 import type { MirrorProvenance } from '../../mirror/provenance'
 import { ContentTypeNav } from '../../organisms/ContentTypeNav'
 import { ContentTypeStateNotice } from '../../organisms/ContentTypeStateNotice'
+import { FrontmatterEditor } from '../../organisms/editor/FrontmatterEditor'
 import { DraftPreviewNotice } from '../../organisms/preview/DraftPreviewNotice'
 import { SlidePreview } from '../../organisms/preview/SlidePreview'
 import { buildSlidePreviewModel } from '../../preview/preview-model'
@@ -48,6 +51,13 @@ const EMPTY_PANEL_MODEL: ValidationPanelModel = {
   allClear: true,
 }
 
+interface EditorSource {
+  readonly file: string | null
+  readonly text: string | undefined
+}
+
+const NO_SOURCE: EditorSource = { file: null, text: undefined }
+
 function findRow(
   model: { entries: readonly LibraryRow[]; drafts: readonly LibraryRow[] } | null,
   id: string | null,
@@ -59,7 +69,13 @@ function findRow(
 /** Bridges `useNewsLibrary(descriptor)` into `LibraryView` and `ValidationPanel`, reading the
  * current entry from context rather than page state (Decisions (Sprint)) — separated from
  * `StudioPage` only so it can sit beneath `CurrentEntryProvider` and call `useCurrentEntry()`. */
-function NewsLibrary({ descriptor }: { descriptor: ContentTypeDescriptor }): React.JSX.Element {
+function NewsLibrary({
+  descriptor,
+  onEditorSource,
+}: {
+  descriptor: ContentTypeDescriptor
+  onEditorSource: (source: EditorSource) => void
+}): React.JSX.Element {
   const {
     loading,
     model,
@@ -70,7 +86,8 @@ function NewsLibrary({ descriptor }: { descriptor: ContentTypeDescriptor }): Rea
     refresh,
     draftPreviewFor,
   } = useNewsLibrary(descriptor)
-  const { currentEntryId, selectEntry } = useCurrentEntry()
+  const { currentEntryId, selectEntry: selectEntryUnguarded } = useCurrentEntry()
+  const { confirmDiscard, reset } = useEntryDraft()
   const [provenance, setProvenance] = useState<MirrorProvenance | undefined>(undefined)
 
   useEffect(() => {
@@ -82,6 +99,7 @@ function NewsLibrary({ descriptor }: { descriptor: ContentTypeDescriptor }): Rea
       ? buildPanelModel({ report, repositoryFindings, selectedEntryId: currentEntryId })
       : EMPTY_PANEL_MODEL
   const selectedRow = findRow(model, currentEntryId)
+  const selectedDocument = documentFor(read, selectedRow)
   // Story 020 D2: a selected draft feeds the same preview the synthetic read/report it would have
   // as a published row; when that cannot be built the input stays the published one, which yields
   // 018's own "not in index" state for the draft's id.
@@ -100,7 +118,24 @@ function NewsLibrary({ descriptor }: { descriptor: ContentTypeDescriptor }): Rea
       (entry) => entry.delivered !== 'dropped' && entry.delivered.position !== undefined,
     ).length ?? 0
 
+  const editorFile = selectedDocument?.file ?? null
+  const editorText = selectedDocument?.text
+  // The draft provider sits above the content-type nav, so the library reports what the editor
+  // edits instead of hosting the provider; before paint, so the editor never shows a stale draft.
+  useLayoutEffect(() => {
+    onEditorSource({ file: editorFile, text: editorText })
+    return () => onEditorSource(NO_SOURCE)
+  }, [onEditorSource, editorFile, editorText])
+
+  // Leaving an entry asks first when its draft is dirty; picking the current one is not leaving.
+  const selectEntry = (id: string): void => {
+    if (id === currentEntryId) return
+    if (confirmDiscard()) selectEntryUnguarded(id)
+  }
+
   const handleRecheck = (): void => {
+    if (!confirmDiscard()) return
+    reset()
     refresh()
     void fetchMirrorProvenance().then(setProvenance)
   }
@@ -111,6 +146,7 @@ function NewsLibrary({ descriptor }: { descriptor: ContentTypeDescriptor }): Rea
         <DraftPreviewNotice verdict={draftVerdict} deliveredCount={deliveredCount} />
       )}
       <SlidePreview model={previewModel} />
+      <FrontmatterEditor />
       <div className="flex gap-8">
         <LibraryView
           model={model}
@@ -142,7 +178,13 @@ export interface StudioPageProps {
   readonly source?: ContentTypeSource
 }
 
-export function StudioPage({ source }: StudioPageProps = {}): React.JSX.Element {
+function StudioScreen({
+  source,
+  onEditorSource,
+}: StudioPageProps & {
+  onEditorSource: (source: EditorSource) => void
+}): React.JSX.Element {
+  const { confirmDiscard } = useEntryDraft()
   const [descriptors] = useState<readonly ContentTypeDescriptor[]>(() =>
     createContentTypeRegistry({ source: source ?? createBridgeClient() }),
   )
@@ -157,14 +199,16 @@ export function StudioPage({ source }: StudioPageProps = {}): React.JSX.Element 
         <ContentTypeNav
           descriptors={descriptors}
           selectedId={selectedId}
-          onSelect={setSelectedId}
+          onSelect={(id) => {
+            if (id !== selectedId && confirmDiscard()) setSelectedId(id)
+          }}
         />
         <div className="min-w-0 flex-1">
           {selected ? (
             selected.state === 'implemented' && selected.reader ? (
               <CurrentEntryProvider>
                 <PreviewWidthProvider>
-                  <NewsLibrary descriptor={selected} />
+                  <NewsLibrary descriptor={selected} onEditorSource={onEditorSource} />
                 </PreviewWidthProvider>
               </CurrentEntryProvider>
             ) : (
@@ -174,5 +218,14 @@ export function StudioPage({ source }: StudioPageProps = {}): React.JSX.Element 
         </div>
       </div>
     </main>
+  )
+}
+
+export function StudioPage({ source }: StudioPageProps = {}): React.JSX.Element {
+  const [editorSource, setEditorSource] = useState<EditorSource>(NO_SOURCE)
+  return (
+    <EntryDraftProvider file={editorSource.file} text={editorSource.text}>
+      <StudioScreen source={source} onEditorSource={setEditorSource} />
+    </EntryDraftProvider>
   )
 }
