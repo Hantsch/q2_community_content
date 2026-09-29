@@ -1,11 +1,17 @@
 // @vitest-environment jsdom
 import { StrictMode } from 'react'
-import { act, cleanup, render, screen, within } from '@testing-library/react'
+import { act, cleanup, render as renderBare, screen, within } from '@testing-library/react'
 import { afterEach, expect, test, vi } from 'vitest'
-import { HERO_HEIGHT_PX, PREVIEW_WIDTH_PX, SlidePreview } from './SlidePreview'
+import { HERO_HEIGHT_PX, SlidePreview } from './SlidePreview'
+import { PreviewWidthProvider } from '../../context/preview-width-context'
+import { DEFAULT_PREVIEW_WIDTH } from '../../preview/preview-widths'
 import type { NewsSlide } from '../../contract/launcher-contract'
 import type { SlidePreviewModel } from '../../preview/preview-model'
 import { PREVIEW_FRAME_PATH } from '../../preview/preview-protocol'
+
+function render(ui: React.ReactElement) {
+  return renderBare(ui, { wrapper: PreviewWidthProvider })
+}
 
 afterEach(() => {
   cleanup()
@@ -55,7 +61,7 @@ test('the frame is the launcher-sized preview document', () => {
   render(<SlidePreview model={slideModel(welcome)} />)
 
   expect(frame().getAttribute('src')).toBe(PREVIEW_FRAME_PATH)
-  expect(frame().getAttribute('width')).toBe(String(PREVIEW_WIDTH_PX))
+  expect(frame().getAttribute('width')).toBe(String(DEFAULT_PREVIEW_WIDTH))
   expect(frame().getAttribute('height')).toBe(String(HERO_HEIGHT_PX))
   expect(frame().hidden).toBe(false)
 })

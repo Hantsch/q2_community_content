@@ -1,7 +1,7 @@
 ---
 id: 019
 title: Preview width switcher
-status: ready # draft -> ready -> in-progress -> done
+status: done # draft -> ready -> in-progress -> done
 created: 2026-09-13
 ---
 
@@ -19,16 +19,16 @@ Concept: [Q2 Content Studio](../concepts/content-studio.md) — CS-17.
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — The preview can be switched between 940, 1280 and 1920 pixels wide.
-- [ ] **AC2** — Switching changes the preview's real viewport width: the content re-lays out, it is
+- [x] **AC1** — The preview can be switched between 940, 1280 and 1920 pixels wide.
+- [x] **AC2** — Switching changes the preview's real viewport width: the content re-lays out, it is
       not a scaled-down picture of a wider rendering.
-- [ ] **AC3** — The current width is labelled, including which one is the launcher's minimum and
+- [x] **AC3** — The current width is labelled, including which one is the launcher's minimum and
       which its default.
-- [ ] **AC4** — A `cover` entry visibly loses image area on its left between 1920 and 940, matching
+- [x] **AC4** — A `cover` entry visibly loses image area on its left between 1920 and 940, matching
       the launcher's own right-anchoring behaviour.
-- [ ] **AC5** — A preview wider than the studio window remains fully inspectable rather than being
+- [x] **AC5** — A preview wider than the studio window remains fully inspectable rather than being
       clipped out of reach.
-- [ ] **AC6** — The selected width persists while the author switches between entries.
+- [x] **AC6** — The selected width persists while the author switches between entries.
 
 ## Open Questions
 
@@ -85,7 +85,7 @@ Order: D1, then D2 (D2 only adds a test on top of D1's mechanism).
 
 ## Deliverables
 
-- **D1 — Width switcher on the preview, with a real viewport and scroll reach** (AC1, AC2, AC3,
+- [x] **D1 — Width switcher on the preview, with a real viewport and scroll reach** (AC1, AC2, AC3,
   AC5, AC6)
   - Read first: `/frontend-guidelines` and `/design-tokens` (studio rules: atomic layers, semantic
     tokens only — no raw palette classes or hex values, visible focus state, touch target floor).
@@ -129,7 +129,7 @@ Order: D1, then D2 (D2 only adds a test on top of D1's mechanism).
     - "the selected width persists while switching entries" — select 940, select a different entry
       in the library, the 940 button is still pressed and the iframe is still 940 px wide.
 
-- **D2 — Proof that a `cover` loses image area on its left as the preview narrows** (AC4)
+- [x] **D2 — Proof that a `cover` loses image area on its left as the preview narrows** (AC4)
   - No production code expected; if the test fails, the fix lies in D1's viewport wiring, never in
     `studio/src/launcher-core/`.
   - Add to `studio/e2e/preview-width.spec.ts` (from D1) the test "a cover entry loses image area
@@ -162,4 +162,25 @@ Order: D1, then D2 (D2 only adds a test on top of D1's mechanism).
 
 ## Done
 
-<Filled by `/build 019`.>
+Preview now has a three-step width switcher (940 / 1280 / 1920) above the frame. The iframe's real
+viewport width is the selected px (width + min-width, no transform) inside a horizontally scrolling
+container; the width lives in an in-memory `PreviewWidthProvider` in `StudioPage`, so it survives entry
+switches. A `cover` entry measurably loses left image area from 1920 to 940.
+
+Commit message: `019: preview width switcher (940/1280/1920, real viewport, scroll reach, cover crop proof)`
+
+Verification (narrow gate): build, typecheck, `test --changed HEAD` (16 tests) green; e2e
+`npm run e2e --workspace studio -- e2e/preview-width.spec.ts` 6/6 green (also full studio e2e 41/41 by D1 agent). Lint: eslint clean;
+prettier red only on pre-existing untouched files (StudioPage.tsx was reformatted to green). Full gate pending (sprint's).
+AC -> test (all `studio/e2e/preview-width.spec.ts`, all passed): AC1 switches between...; AC2 real viewport, not scale;
+AC3 names launcher minimum/default and current width; AC4 cover loses image area on left; AC5 scrolled into full view;
+AC6 persists while switching entries. No manual residue.
+Review: PASS (default tier), one finding fixed: AC3 readout note was unasserted, added assertions for
+"1280 px (launcher default)" and "940 px (launcher minimum)". Unfixed nits: `label()` separator param used once.
+
+Decisions:
+- `StudioPage.tsx`: added `min-w-0` on content column and NewsLibrary root, `flex-1` on the column, otherwise flex ancestors grew to 1920 px and scroll reach failed (AC5).
+- Iframe `min-width` set via inline style (runtime px value, commented); removed `PREVIEW_WIDTH_PX` export from `SlidePreview.tsx`, 018's unit test now uses `DEFAULT_PREVIEW_WIDTH` inside the provider.
+- No Storybook story for the new molecule (repo has no Storybook setup).
+
+tiers: D 2 / hard 0 · review default · cycles 1 · agents 5

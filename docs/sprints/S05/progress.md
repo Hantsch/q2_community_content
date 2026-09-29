@@ -15,3 +15,15 @@
 - 2026-09-29 13:34:58 · 018 · review 1 · started
 - 2026-09-29 13:36:50 · 018 · review 1 · done
 - 2026-09-29 13:37:04 · 018 · story · done
+- 2026-09-29 13:37:46 · 019 · build · started
+- 2026-09-29 13:38:01 · 019 · D1 Width switcher · started
+- 2026-09-29 13:40:01 · 019 · D1 Width switcher · done
+- 2026-09-29 13:40:01 · 019 · D2 cover crop test · started
+- 2026-09-29 13:40:36 · 019 · D2 cover crop test · done
+- 2026-09-29 13:40:36 · 019 · verify · started
+- 2026-09-29 13:41:36 · 019 · verify · done
+- 2026-09-29 13:41:36 · 019 · review 1 · started
+- 2026-09-29 13:42:42 · 019 · review 1 · done
+- 2026-09-29 13:42:42 · 019 · review-fix AC3 readout assertion · started
+- 2026-09-29 13:43:14 · 019 · review-fix AC3 readout assertion · done
+- 2026-09-29 13:43:18 · 019 · story · done

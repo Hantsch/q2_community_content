@@ -10,9 +10,13 @@
  * - The iframe is always mounted and never keyed: switching entries or states must not reload its
  *   document. Non-slide states only set the `hidden` attribute. No display utility goes on the
  *   iframe, because one would override `[hidden]`.
+ * - The frame is `width` px wide at a real viewport (no scaling); the wrapper scrolls when that is
+ *   wider than the window.
  * - Only a `ready` from this component's own frame window, on this origin, is accepted.
  */
 import { useEffect, useRef } from 'react'
+import { usePreviewWidth } from '../../context/preview-width-context'
+import { PreviewWidthSwitcher } from '../../molecules/preview/PreviewWidthSwitcher'
 import type { SlidePreviewModel } from '../../preview/preview-model'
 import {
   PREVIEW_FRAME_PATH,
@@ -20,8 +24,6 @@ import {
   type PreviewRenderMessage,
 } from '../../preview/preview-protocol'
 
-/** The launcher window's design width - the frame renders the slide at the launcher's own size. */
-export const PREVIEW_WIDTH_PX = 1280
 /** The launcher's hero slot height. */
 export const HERO_HEIGHT_PX = 320
 
@@ -40,6 +42,7 @@ export function SlidePreview({ model }: SlidePreviewProps): React.JSX.Element {
   const frameRef = useRef<HTMLIFrameElement>(null)
   const slideRef = useRef<PreviewedSlide | null>(null)
   const frameReadyRef = useRef(false)
+  const { width, setWidth } = usePreviewWidth()
 
   const slide = model.state === 'slide' ? model.slide : null
 
@@ -67,7 +70,8 @@ export function SlidePreview({ model }: SlidePreviewProps): React.JSX.Element {
   }, [])
 
   return (
-    <section aria-label="Slide preview" className="flex flex-col gap-2 overflow-x-auto">
+    <section aria-label="Slide preview" className="flex min-w-0 flex-col gap-2">
+      <PreviewWidthSwitcher width={width} onChange={setWidth} />
       {model.state === 'idle' && <p className="text-text-muted">Select an entry to preview it.</p>}
       {model.state === 'nothing' && (
         <div role="status" className="flex flex-col gap-1">
@@ -75,15 +79,20 @@ export function SlidePreview({ model }: SlidePreviewProps): React.JSX.Element {
           <p className="text-text-muted">{model.reason}</p>
         </div>
       )}
-      <iframe
-        ref={frameRef}
-        title="Slide preview"
-        src={PREVIEW_FRAME_PATH}
-        width={PREVIEW_WIDTH_PX}
-        height={HERO_HEIGHT_PX}
-        hidden={model.state !== 'slide'}
-        className="shrink-0 border-0"
-      />
+      <div data-testid="preview-scroll" className="max-w-full overflow-x-auto">
+        <iframe
+          ref={frameRef}
+          title="Slide preview"
+          src={PREVIEW_FRAME_PATH}
+          width={width}
+          height={HERO_HEIGHT_PX}
+          hidden={model.state !== 'slide'}
+          className="block shrink-0 border-0"
+          // Dynamic value: no utility class can carry a runtime px, and min-width is what stops a
+          // flex/grid ancestor shrinking the frame below its real viewport width.
+          style={{ minWidth: width }}
+        />
+      </div>
     </section>
   )
 }

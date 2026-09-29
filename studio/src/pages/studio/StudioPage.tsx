@@ -26,6 +26,7 @@ import { createBridgeClient } from '../../bridge/client'
 import type { ContentTypeDescriptor, ContentTypeSource } from '../../content-types/descriptor'
 import { createContentTypeRegistry } from '../../content-types/registry'
 import { CurrentEntryProvider, useCurrentEntry } from '../../context/current-entry-context'
+import { PreviewWidthProvider } from '../../context/preview-width-context'
 import { useNewsLibrary } from '../../library/use-news-library'
 import type { LibraryRow } from '../../library/library-types'
 import { fetchMirrorProvenance } from '../../mirror-runtime/provenance-client'
@@ -80,7 +81,7 @@ function NewsLibrary({ descriptor }: { descriptor: ContentTypeDescriptor }): Rea
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex min-w-0 flex-col gap-8">
       <SlidePreview model={previewModel} />
       <div className="flex gap-8">
         <LibraryView
@@ -130,11 +131,13 @@ export function StudioPage({ source }: StudioPageProps = {}): React.JSX.Element 
           selectedId={selectedId}
           onSelect={setSelectedId}
         />
-        <div>
+        <div className="min-w-0 flex-1">
           {selected ? (
             selected.state === 'implemented' && selected.reader ? (
               <CurrentEntryProvider>
-                <NewsLibrary descriptor={selected} />
+                <PreviewWidthProvider>
+                  <NewsLibrary descriptor={selected} />
+                </PreviewWidthProvider>
               </CurrentEntryProvider>
             ) : (
               <ContentTypeStateNotice descriptor={selected} />
