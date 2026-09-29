@@ -1,3 +1,17 @@
 - 2026-09-29 13:06:51 · sprint · started
 - 2026-09-29 13:10:23 · refine · 018-030 · started
 - 2026-09-29 13:19:03 · refine · 018-030 · done (030 blocked: user question)
+- 2026-09-29 13:22:00 · 018 · build · started
+- 2026-09-29 13:22:15 · 018 · D1 preview model · started
+- 2026-09-29 13:24:52 · 018 · D1 preview model · done
+- 2026-09-29 13:24:52 · 018 · D2 frame document · started
+- 2026-09-29 13:27:13 · 018 · D2 frame document · done
+- 2026-09-29 13:27:13 · 018 · D3 SlidePreview organism · started
+- 2026-09-29 13:30:10 · 018 · D3 SlidePreview organism · done
+- 2026-09-29 13:30:10 · 018 · D4 wiring and e2e · started
+- 2026-09-29 13:33:59 · 018 · D4 wiring and e2e · done
+- 2026-09-29 13:33:59 · 018 · verify · started
+- 2026-09-29 13:34:58 · 018 · verify · done
+- 2026-09-29 13:34:58 · 018 · review 1 · started
+- 2026-09-29 13:36:50 · 018 · review 1 · done
+- 2026-09-29 13:37:04 · 018 · story · done

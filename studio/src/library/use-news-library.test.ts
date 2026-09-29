@@ -187,6 +187,19 @@ describe('useNewsLibrary', () => {
     expect(result.current.repositoryFindings).toEqual([])
   })
 
+  it('exposes the read itself: null while loading, the read once loaded', async () => {
+    const read = readFromTree(buildNewsTreeFixture([]))
+    const descriptor = newsDescriptorFor(read)
+
+    const { result } = renderHook(() => useNewsLibrary(descriptor, NOW))
+
+    expect(result.current.read).toBeNull()
+
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    expect(result.current.read).toBe(read)
+  })
+
   it('refresh() re-reads through the descriptor rather than re-rendering stale data', async () => {
     const read = readFromTree(buildNewsTreeFixture([]))
     const { descriptor, readCount } = countingNewsDescriptorFor(read)

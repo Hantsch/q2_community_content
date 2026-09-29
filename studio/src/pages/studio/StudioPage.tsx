@@ -32,6 +32,8 @@ import { fetchMirrorProvenance } from '../../mirror-runtime/provenance-client'
 import type { MirrorProvenance } from '../../mirror/provenance'
 import { ContentTypeNav } from '../../organisms/ContentTypeNav'
 import { ContentTypeStateNotice } from '../../organisms/ContentTypeStateNotice'
+import { SlidePreview } from '../../organisms/preview/SlidePreview'
+import { buildSlidePreviewModel } from '../../preview/preview-model'
 import { LibraryView } from '../../organisms/library/LibraryView'
 import { ValidationPanel } from '../../organisms/ValidationPanel'
 import { buildPanelModel, type ValidationPanelModel } from '../../validate/panel-model'
@@ -56,7 +58,7 @@ function findRow(
  * current entry from context rather than page state (Decisions (Sprint)) — separated from
  * `StudioPage` only so it can sit beneath `CurrentEntryProvider` and call `useCurrentEntry()`. */
 function NewsLibrary({ descriptor }: { descriptor: ContentTypeDescriptor }): React.JSX.Element {
-  const { loading, model, report, repositoryFindings, thumbnailUrlFor, refresh } =
+  const { loading, model, read, report, repositoryFindings, thumbnailUrlFor, refresh } =
     useNewsLibrary(descriptor)
   const { currentEntryId, selectEntry } = useCurrentEntry()
   const [provenance, setProvenance] = useState<MirrorProvenance | undefined>(undefined)
@@ -70,6 +72,7 @@ function NewsLibrary({ descriptor }: { descriptor: ContentTypeDescriptor }): Rea
       ? buildPanelModel({ report, repositoryFindings, selectedEntryId: currentEntryId })
       : EMPTY_PANEL_MODEL
   const selectedRow = findRow(model, currentEntryId)
+  const previewModel = buildSlidePreviewModel({ read, report, entryId: currentEntryId })
 
   const handleRecheck = (): void => {
     refresh()
@@ -77,24 +80,27 @@ function NewsLibrary({ descriptor }: { descriptor: ContentTypeDescriptor }): Rea
   }
 
   return (
-    <div className="flex gap-8">
-      <LibraryView
-        model={model}
-        loading={loading}
-        selectedId={currentEntryId}
-        onSelect={selectEntry}
-        thumbnailUrlFor={thumbnailUrlFor}
-      />
-      <div className="flex flex-col gap-4">
-        <button type="button" onClick={handleRecheck} className="self-start">
-          Re-check
-        </button>
-        <ValidationPanel
-          panelModel={panelModel}
-          selectedRow={selectedRow}
-          onSelectEntry={selectEntry}
-          provenance={provenance}
+    <div className="flex flex-col gap-8">
+      <SlidePreview model={previewModel} />
+      <div className="flex gap-8">
+        <LibraryView
+          model={model}
+          loading={loading}
+          selectedId={currentEntryId}
+          onSelect={selectEntry}
+          thumbnailUrlFor={thumbnailUrlFor}
         />
+        <div className="flex flex-col gap-4">
+          <button type="button" onClick={handleRecheck} className="self-start">
+            Re-check
+          </button>
+          <ValidationPanel
+            panelModel={panelModel}
+            selectedRow={selectedRow}
+            onSelectEntry={selectEntry}
+            provenance={provenance}
+          />
+        </div>
       </div>
     </div>
   )

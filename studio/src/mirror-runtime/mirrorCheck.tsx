@@ -1,13 +1,9 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
-import { SlideBanner } from '../launcher-core/src/renderer/src/modules/home/components/SlideBanner'
-import { SlideCover } from '../launcher-core/src/renderer/src/modules/home/components/SlideCover'
-import { SlideSplit } from '../launcher-core/src/renderer/src/modules/home/components/SlideSplit'
-import { SlideText } from '../launcher-core/src/renderer/src/modules/home/components/SlideText'
 import { resolveSlideTemplate } from '../launcher-core/src/renderer/src/modules/home/components/resolveSlideTemplate'
-import type { SlideTemplateProps } from '../launcher-core/src/renderer/src/modules/home/components/SlideText'
 import { slideFixtures } from './slideFixtures'
+import { TEMPLATE_COMPONENTS } from './slideTemplates'
 // Side-effect only: pulls in the mirrored stylesheet graph and fonts. Deliberately not imported
 // by the studio shell (`main.tsx`) - only this standalone diagnostic root uses it (D4/D5).
 import './mirrorStyles'
@@ -23,16 +19,6 @@ import './mirrorStyles'
  * A diagnostic page, not product UI - no chrome, no routing, just every slide stacked in fixture
  * order with a stable `data-testid` per slide for the e2e spec to target.
  */
-
-const TEMPLATE_COMPONENTS = {
-  text: SlideText,
-  split: SlideSplit,
-  banner: SlideBanner,
-  cover: SlideCover,
-} as const satisfies Record<
-  ReturnType<typeof resolveSlideTemplate>,
-  (props: SlideTemplateProps) => React.JSX.Element
->
 
 function noopOpenUrl(): void {
   // The mirror-check page never actually navigates - see `SlideButtons.tsx`'s `onOpenUrl` prop.

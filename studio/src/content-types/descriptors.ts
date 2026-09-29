@@ -15,7 +15,7 @@ import type { ContentSourceRead, ContentTypeDescriptor, ContentTypeSource } from
 const NEWS_DIRECTORY = 'news'
 
 /** The same adaptation `scripts/validate.ts` performs: document texts by file, image sizes by name. */
-function toNewsReportInput(read: ContentSourceRead, now: Date) {
+export function toNewsReportInput(read: ContentSourceRead, now: Date) {
   return {
     index: read.index.value,
     documents: Object.fromEntries(

@@ -123,3 +123,18 @@ test('the re-check control is visible and re-reads through the news source', asy
 
   await waitFor(() => expect(readCalls).toBe(2))
 })
+
+test('the slide preview region renders beside the library', async () => {
+  const source = newsSourceFor([{ id: 'welcome', template: 'text', title: 'Welcome', order: '10' }])
+
+  render(<StudioPage source={source} />)
+
+  const region = await screen.findByRole('region', { name: 'Entries' })
+  expect(screen.getByRole('region', { name: 'Slide preview' })).toBeDefined()
+  expect(screen.getByText('Select an entry to preview it.')).toBeDefined()
+
+  fireEvent.click(within(region).getByRole('button'))
+
+  await waitFor(() => expect(screen.queryByText('Select an entry to preview it.')).toBeNull())
+  expect(screen.getByTitle('Slide preview')).toBeDefined()
+})

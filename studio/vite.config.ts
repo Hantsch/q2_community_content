@@ -31,6 +31,14 @@ export default defineConfig({
       '@shared': path.resolve(import.meta.dirname, 'src/launcher-core/src/shared'),
     },
   },
+  build: {
+    rollupOptions: {
+      input: {
+        main: path.resolve(import.meta.dirname, 'index.html'),
+        'preview-frame': path.resolve(import.meta.dirname, 'preview-frame.html'),
+      },
+    },
+  },
   server: {
     // Pinned explicitly (story 015 Decisions, AC6): the loopback bind must not silently widen
     // to all interfaces from a later, unrelated config edit relying on Vite's own default.

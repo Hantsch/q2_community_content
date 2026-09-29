@@ -15,7 +15,7 @@
  * findings, which `buildLibraryModel` already turns into the `unreadable` state.
  */
 import { useCallback, useEffect, useState } from 'react'
-import type { ContentTypeDescriptor } from '../content-types/descriptor'
+import type { ContentSourceRead, ContentTypeDescriptor } from '../content-types/descriptor'
 import { newsImageUrl } from '../mirror-runtime/newsImageUrl'
 import type { ContentReport } from '../report/report-types'
 import type { RepositoryFinding } from '../report/repository-findings'
@@ -30,6 +30,10 @@ export interface UseNewsLibraryResult {
    * (`buildPanelModel`) from the SAME read, rather than triggering a second bridge fetch. `null`
    * while loading or when the descriptor has no `reader`/`validators` bound. */
   readonly report: ContentReport | null
+  /** Story 018 D1: the read the model and report were built from, exposed as-is so the slide
+   * preview can resolve the pipeline's own slide from the SAME read. `null` while loading or when
+   * the descriptor has no `reader`/`validators` bound. */
+  readonly read: ContentSourceRead | null
   /** Story 017 D5: story 013's repository-level findings from the same read, alongside `report`
    * for the same reason. */
   readonly repositoryFindings: readonly RepositoryFinding[] | null
@@ -50,7 +54,7 @@ function bareFileName(image: string): string {
   return segments[segments.length - 1] ?? image
 }
 
-function thumbnailUrlFor(row: LibraryRow): string | undefined {
+export function thumbnailUrlFor(row: Pick<LibraryRow, 'image'>): string | undefined {
   if (!row.image) return undefined
   const name = bareFileName(row.image)
   // `newsImageUrl()` throws for a name it cannot serve (empty, a path separator, or a leading
@@ -84,8 +88,16 @@ export function useNewsLibrary(
     loading: boolean
     model: LibraryModel | null
     report: ContentReport | null
+    read: ContentSourceRead | null
     repositoryFindings: readonly RepositoryFinding[] | null
-  }>({ descriptor, loading: true, model: null, report: null, repositoryFindings: null })
+  }>({
+    descriptor,
+    loading: true,
+    model: null,
+    report: null,
+    read: null,
+    repositoryFindings: null,
+  })
 
   // Story 017 D5: a simple incrementing counter, included in the effect's dependency array below,
   // is the least invasive way to let a caller trigger a real re-read on demand without restructuring
@@ -93,7 +105,14 @@ export function useNewsLibrary(
   const [refreshNonce, setRefreshNonce] = useState(0)
 
   if (state.descriptor !== descriptor) {
-    setState({ descriptor, loading: true, model: null, report: null, repositoryFindings: null })
+    setState({
+      descriptor,
+      loading: true,
+      model: null,
+      report: null,
+      read: null,
+      repositoryFindings: null,
+    })
   }
 
   useEffect(() => {
@@ -108,6 +127,7 @@ export function useNewsLibrary(
     const result: Promise<{
       model: LibraryModel
       report: ContentReport | null
+      read: ContentSourceRead | null
       repositoryFindings: readonly RepositoryFinding[] | null
     }> =
       !reader || !validators
@@ -118,6 +138,7 @@ export function useNewsLibrary(
               repositoryFindings: undefined,
             }),
             report: null,
+            read: null,
             repositoryFindings: null,
           })
         : reader().then((read) => {
@@ -126,13 +147,14 @@ export function useNewsLibrary(
             return {
               model: buildLibraryModel({ read, report, repositoryFindings }),
               report,
+              read,
               repositoryFindings,
             }
           })
 
-    void result.then(({ model, report, repositoryFindings }) => {
+    void result.then(({ model, report, read, repositoryFindings }) => {
       if (cancelled) return
-      setState({ descriptor, loading: false, model, report, repositoryFindings })
+      setState({ descriptor, loading: false, model, report, read, repositoryFindings })
     })
 
     return () => {
@@ -153,6 +175,7 @@ export function useNewsLibrary(
     loading: state.loading,
     model: state.model,
     report: state.report,
+    read: state.read,
     repositoryFindings: state.repositoryFindings,
     thumbnailUrlFor,
     refresh,

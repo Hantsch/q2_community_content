@@ -1,7 +1,7 @@
 ---
 id: 018
 title: Slide preview of the selected entry
-status: ready # draft -> ready -> in-progress -> done
+status: done # draft -> ready -> in-progress -> done
 created: 2026-09-13
 ---
 
@@ -18,16 +18,16 @@ Concept: [Q2 Content Studio](../concepts/content-studio.md) — CS-16, section 4
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — The selected entry renders with the mirrored slide components inside an iframe.
-- [ ] **AC2** — The preview renders the **delivered** form: an entry that falls back to `text`
+- [x] **AC1** — The selected entry renders with the mirrored slide components inside an iframe.
+- [x] **AC2** — The preview renders the **delivered** form: an entry that falls back to `text`
       previews as `text`, not as the template that was declared.
-- [ ] **AC3** — No studio chrome style affects the preview, and no mirrored hero style affects the
+- [x] **AC3** — No studio chrome style affects the preview, and no mirrored hero style affects the
       studio chrome — proven by a test, not by looking at it.
-- [ ] **AC4** — An entry's image is displayed, loaded from `news/img/` through the file bridge.
-- [ ] **AC5** — An entry's buttons render, showing only the ones the launcher would keep.
-- [ ] **AC6** — An entry the launcher would drop shows an explicit "nothing would be shown" state
+- [x] **AC4** — An entry's image is displayed, loaded from `news/img/` through the file bridge.
+- [x] **AC5** — An entry's buttons render, showing only the ones the launcher would keep.
+- [x] **AC6** — An entry the launcher would drop shows an explicit "nothing would be shown" state
       with the reason, rather than an empty frame.
-- [ ] **AC7** — Changing the selected entry updates the preview without a page reload.
+- [x] **AC7** — Changing the selected entry updates the preview without a page reload.
 
 ## Open Questions
 
@@ -123,7 +123,7 @@ the carousel.
 
 ## Deliverables
 
-- [ ] **D1 — The preview model (pure) (AC2, AC4, AC5, AC6).**
+- [x] **D1 — The preview model (pure) (AC2, AC4, AC5, AC6).**
   Files:
   - new `studio/src/preview/preview-model.ts` and `studio/src/preview/preview-model.test.ts`;
   - `studio/src/library/use-news-library.ts` and `studio/src/library/use-news-library.test.ts`
@@ -172,7 +172,7 @@ the carousel.
 
   *Accepted when:* all of these pass and `npm run typecheck` is clean.
 
-- [ ] **D2 — The frame document (AC1, AC3 static side).**
+- [x] **D2 — The frame document (AC1, AC3 static side).**
   Files:
   - new `studio/preview-frame.html` (pattern: `studio/mirror-check.html`, root
     `#preview-frame-root`);
@@ -214,7 +214,7 @@ the carousel.
   `studio/e2e/mirrored-rendering.spec.ts` still passes after the map extraction, and
   `npm run check:drift` passes.
 
-- [ ] **D3 — The `SlidePreview` organism (AC6, AC7 mechanics).**
+- [x] **D3 — The `SlidePreview` organism (AC6, AC7 mechanics).**
   Files: new `studio/src/organisms/preview/SlidePreview.tsx` and
   `studio/src/organisms/preview/SlidePreview.test.tsx`.
 
@@ -255,7 +255,7 @@ the carousel.
 
   *Accepted when:* all of these pass and lint is clean.
 
-- [ ] **D4 — Wiring and the e2e proof (AC1–AC7).**
+- [x] **D4 — Wiring and the e2e proof (AC1–AC7).**
   Files:
   - `studio/src/pages/studio/StudioPage.tsx` and `studio/src/pages/studio/StudioPage.test.tsx`;
   - new `studio/e2e/slide-preview.spec.ts`;
@@ -361,4 +361,19 @@ Every criterion has a deliverable and a named test.
 
 ## Done
 
-<Filled by `/build 018`.>
+Adds the one-slide preview: pure `buildSlidePreviewModel` (idle / slide / nothing with reason), a separate Vite frame document (`preview-frame.html`) that renders the hero shell plus the mirrored template and is driven by a `postMessage` ready handshake, the always-mounted `SlidePreview` iframe organism, and its wiring above the library row in `StudioPage`. Drafts, width switching and the visibility override stay with 019-021.
+
+Commit message: `018: slide preview of the selected entry (iframe frame document, handshake, nothing state)`
+
+Verification (narrow gate): `npm run build`, `typecheck` green; `npm run test --workspace studio -- --changed HEAD` 107/107; `npm run e2e --workspace studio -- studio/e2e/slide-preview.spec.ts` 7/7 (library-view, validation-panel, mirrored-rendering specs also green in the deliverable runs). `npm run lint`: eslint green; `prettier --check .` red on ~165 files this story did not touch (pre-existing); story-touched files are prettier-clean. `npm run check:drift` reports 6 launcher-core files locally edited; git shows no change under `launcher-core/`, so it predates this story (not fixed here). Full gate pending (sprint's).
+AC -> test as verified: AC1 e2e "the selected entry renders…" + PreviewFrameApp "a render message…"; AC2 e2e "falls back to text…" + preview-model tests; AC3 e2e "no studio chrome style reaches the preview…"; AC4 e2e "image loads from news/img…" + model test; AC5 e2e "only the buttons…" + model test; AC6 e2e "drops… shows why" + model and SlidePreview tests; AC7 e2e "changing the selected entry…" + SlidePreview "a new model is posted without remounting". All passed. No manual residue.
+Review: default stage, PASS, 1 cycle, no fix cycle needed.
+
+Decisions:
+- Image lookup uses the bare file name of `verdict.declared.image` against `read.images[].name`, because the pipeline's resolved slide never carries the raw image path; the slide itself is still the pipeline's own plus `imageUrl`. Looser than the report's exact comparison for an `img/`-prefixed declaration (review F1, accepted).
+- AC3 custom-property check: `--font-sans`, `--font-mono`, `--radius-xs/sm/md` are also defined by Tailwind's own theme on the parent, so for those five the test asserts the parent value differs from the mirrored value; every other mirrored property must compute empty. Parent/frame `data-vite-dev-id` checks are as planned (frame check excludes `/launcher-core/` ids since the mirrored sheet also ends in `/src/styles/index.css`).
+- Ready state resets only on unmount, not on iframe `load` (ready can precede `load`).
+- Unfixed review notes: F2 (model throw maps silently to idle), F4 (e2e asserts the AC6 reason non-empty, exact text covered by unit test), F5 (model rebuilt each render re-posts an identical slide; harmless), F6 (no `onLoad` fallback for a lost ready; unlikely).
+- Prettier run over `mirror-runtime/` touched line endings only (no content diff).
+
+tiers: D 4 / hard 1 · review default · cycles 0 · agents 6
