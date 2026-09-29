@@ -1,7 +1,7 @@
 ---
 id: 028
 title: Contributor quickstart for the studio
-status: ready # draft -> ready -> in-progress -> done
+status: done # draft -> ready -> in-progress -> done
 created: 2026-09-13
 ---
 
@@ -18,17 +18,17 @@ Concept: [Q2 Content Studio](../concepts/content-studio.md) — CS-26.
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — `studio/README.md` documents the path from a fresh clone to a previewed post:
+- [x] **AC1** — `studio/README.md` documents the path from a fresh clone to a previewed post:
       install, start, create, write, preview, validate, publish.
-- [ ] **AC2** — It names the prerequisites — the Node version and nothing else — and states
+- [x] **AC2** — It names the prerequisites — the Node version and nothing else — and states
       explicitly that no `q2-launcher` checkout is needed.
-- [ ] **AC3** — It explains what the studio will and will not do: it writes files in the working
+- [x] **AC3** — It explains what the studio will and will not do: it writes files in the working
       tree, and it never commits, pushes or publishes anything.
-- [ ] **AC4** — The repository `README.md` and `news/_templates/README.md` link to it, so a
+- [x] **AC4** — The repository `README.md` and `news/_templates/README.md` link to it, so a
       contributor arriving at either finds it.
-- [ ] **AC5** — It states where the preview's fidelity comes from and what a stale mirror warning
+- [x] **AC5** — It states where the preview's fidelity comes from and what a stale mirror warning
       means, in one short paragraph.
-- [ ] **AC6** — A test proves the documented commands exist as named, so the quickstart cannot drift
+- [x] **AC6** — A test proves the documented commands exist as named, so the quickstart cannot drift
       out of date silently.
 
 ## Open Questions
@@ -170,4 +170,3 @@ through the real surface.
 
 ## Done
 
-<Filled by `/build 028`.>

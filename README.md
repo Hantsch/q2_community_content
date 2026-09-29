@@ -32,6 +32,7 @@ studio/              local authoring and validation tool — never fetched by th
 
 `news/`, `engines/`, `gamedata/`, `packs/`, `mods/` and `config_templates/` are the published
 surface the launcher fetches; `studio/` is local tooling for contributors and is never fetched.
+To write a post with the studio, start with the [quickstart](studio/README.md#quickstart).
 
 `engines/manifest.json` and `gamedata/manifest.json` each list downloadable packages (id, version,
 size, checksum, source URL and mirrors) that the launcher's download module reads to offer engine

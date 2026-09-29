@@ -67,3 +67,4 @@ second roadmap.
 - 025 — New entry from the templates kit · S05 · Added a New entry dialog that creates a draft from a kit template through a create-only bridge write, with slug/date/file-name and collision refusals, proven by seven scratch-repo e2e and unit tests.
 - 026 — Adding an image to an entry · S05 · Added a guarded image write route, README-derived dimension checks, an image adder in the editor and a measured cover safe-zone overlay, proven by unit tests and eleven scratch/read-only e2e.
 - 027 — Reordering entries and publishing a draft · S05 · drag-and-drop reorder with gap/renumber rule, publish/unpublish with drop pre-check, all via a guarded batch write that keeps index.json and frontmatter in agreement
+- 028 — Contributor quickstart for the studio · S05 · studio/README.md gains a seven-step quickstart (install to publish), linked from both READMEs and guarded by a text-shape test.

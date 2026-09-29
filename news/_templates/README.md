@@ -4,7 +4,8 @@ Four templates, one folder each. Copy the `template.md` from the folder that mat
 posting, fill in its frontmatter, drop an image under `../img/` if the template needs one, add one
 row to `../index.json`, and you are done. Each folder's own `README.md` has the complete field set,
 image requirements and a worked example — this page is only the one-screen map to get you to the
-right folder.
+right folder. To write and preview with the studio instead of by hand, see the
+[studio quickstart](../../studio/README.md#quickstart).
 
 ## Which template?
 

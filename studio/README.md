@@ -5,15 +5,69 @@ tooling only — per `CLAUDE.md`, the launcher never fetches it; the published s
 (`news/`, `engines/`, `gamedata/`, and the reserved `packs/`, `mods/`, `config_templates/`)
 is content only.
 
-## Getting started
+## Quickstart
 
-From a fresh clone, run the following from the repository root, in this order:
+### Prerequisites
+
+- Node 22 or newer.
+
+No `q2-launcher` checkout is needed, and no Electron build. This assumes the repository is
+already cloned.
+
+The studio reads and writes files in your working tree only. It never commits, pushes or publishes
+anything on its own; what leaves your machine is your own deliberate act.
+
+### 1. Install
+
+Run `npm install` from the repository root.
+
+### 2. Start
+
+Run `npm run studio`, then open the URL Vite prints (by default http://localhost:5173).
+
+### 3. Create
+
+Press **New entry**, pick a template, give the entry a title and press **Create**. To choose the
+right template, see [the news templates](../news/_templates/README.md).
+
+### 4. Write
+
+Fill in the fields in the **Frontmatter** editor and write the text in the **Body** editor.
+Use **Save** to write the entry to disk. **Add an image** attaches an image to the entry.
+
+### 5. Preview
+
+The **Draft preview** shows the slide as the launcher would render it. Use the **Preview width**
+switch to try different widths. Drafts preview without being published.
+
+### 6. Validate
+
+The **Entry findings** panel lists what is wrong with the entry you are editing, and the
+**Repository findings** panel covers the whole repository. `npm run validate` gives you the same
+verdict on the command line.
+
+### 7. Publish
+
+Use **Publish** on a draft in the library (**Unpublish** takes it back out), and arrange entries
+in the **Order** list. Publishing here means a row in `news/index.json`; committing and pushing
+stays yours.
+
+The preview renders the launcher's own slide components, mirrored verbatim into
+`studio/src/launcher-core/` and hash-locked in `studio/launcher-core.lock.json`. If **Mirror
+provenance** reads "out of sync", the mirror no longer matches its lock, so the preview is not
+evidence until it is re-synced (see "Syncing the launcher mirror" below).
+
+## Running the tests
+
+Studio developers run the tests from the repository root. Contributors writing posts do not need
+this section; Playwright and the end-to-end suite are not a prerequisite for the quickstart. From
+a fresh clone, in this order:
 
 1. `npm install` — installs dependencies for the whole workspace, including `studio`.
 2. `npm run e2e:install` — fetches the Chromium browser Playwright needs to run the
    end-to-end suite.
 3. `npm run e2e` — runs the end-to-end test suite. This starts the dev server itself;
-   there is no separate `npm run dev` step to run first.
+   there is no separate dev-server step to run first.
 
 ## Syncing the launcher mirror
 
