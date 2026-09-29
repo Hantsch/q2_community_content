@@ -17,6 +17,24 @@ already cloned.
 The studio reads and writes files in your working tree only. It never commits, pushes or publishes
 anything on its own; what leaves your machine is your own deliberate act.
 
+### The flow at a glance
+
+<!-- flow-steps:start -->
+
+1. **Install** — the dependencies, once.
+2. **Start** — the studio in your browser.
+3. **Create** — a new entry from a template.
+4. **Write** — the body text of the entry.
+5. **Frontmatter** — the fields that describe the entry.
+6. **Image** — attach a cover or body image.
+7. **Preview** — the slide as the launcher renders it.
+8. **Validate** — the findings for the entry and the repository.
+9. **Publish** — put the entry into the news index.
+
+<!-- flow-steps:end -->
+
+The numbered steps below cover the same ground in detail.
+
 ### 1. Install
 
 Run `npm install` from the repository root.
@@ -42,8 +60,8 @@ switch to try different widths. Drafts preview without being published.
 
 ### 6. Validate
 
-The **Entry findings** panel lists what is wrong with the entry you are editing, and the
-**Repository findings** panel covers the whole repository. `npm run validate` gives you the same
+For a draft, the verdict is in the **Draft preview** region; the **Entry findings** panel covers a
+published entry. The **Repository findings** panel covers the whole repository. `npm run validate` gives you the same
 verdict on the command line.
 
 ### 7. Publish

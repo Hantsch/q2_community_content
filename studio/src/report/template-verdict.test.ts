@@ -162,4 +162,32 @@ describe('template fallback verdicts', () => {
       message: 'declared image "img/missing.png" not found',
     })
   })
+
+  it('matches a declared img/ path against the bare file name the repository reader lists', () => {
+    const { index, documents } = buildNewsTreeFixture([
+      {
+        id: 'split-1',
+        template: 'split',
+        title: 'T',
+        body: 'Body',
+        image: 'img/foo.png',
+        order: '1',
+      },
+    ])
+    const reportWith = (names: string[]) =>
+      buildNewsReport({
+        index,
+        documents,
+        now: NOW,
+        images: names.map((name) => ({ name, size: 42 })),
+      })
+
+    expect(reportWith(['foo.png']).entries[0].findings).toHaveLength(0)
+    expect(reportWith(['other.png']).entries[0].findings).toEqual([
+      expect.objectContaining({
+        kind: 'declared-image-missing',
+        message: 'declared image "img/foo.png" not found',
+      }),
+    ])
+  })
 })

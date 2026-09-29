@@ -28,7 +28,14 @@ function statusText(dirty: boolean, blocking: number): string {
   return parts.join(' · ')
 }
 
-export function FrontmatterEditor(): React.JSX.Element | null {
+export interface FrontmatterEditorProps {
+  /** Called once an added image is stored, so the caller can re-read the repository it now lives in. */
+  readonly onImageAdded?: () => void
+}
+
+export function FrontmatterEditor({
+  onImageAdded,
+}: FrontmatterEditorProps = {}): React.JSX.Element | null {
   const { draft, update, isDirty, issues } = useEntryDraft()
   if (!draft) return null
 
@@ -84,7 +91,13 @@ export function FrontmatterEditor(): React.JSX.Element | null {
             onChange={(next) => update({ image: next })}
             issues={issuesOf(issues, 'image')}
           />
-          <ImageAdder template={fields.template} onAdded={(value) => update({ image: value })} />
+          <ImageAdder
+            template={fields.template}
+            onAdded={(value) => {
+              update({ image: value })
+              onImageAdded?.()
+            }}
+          />
         </>
       )}
       <TextField

@@ -1,7 +1,10 @@
-import { existsSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createServer, type ViteDevServer } from 'vite'
-import { afterAll, beforeAll, expect, test } from 'vitest'
+import { SCRATCH_MARKER, SCRATCH_ROOT_ENV } from '../src/bridge/scratch-repo-root'
+import { afterAll, afterEach, beforeAll, expect, test } from 'vitest'
 
 /**
  * Story 015, D3: boots a real Vite dev server the same way `dev-server.test.ts` does, against the
@@ -79,6 +82,69 @@ test(
 
     expect(resolvedUrls.local.some((url) => url.includes('127.0.0.1'))).toBe(true)
     expect(resolvedUrls.network).toEqual([])
+  },
+  SERVER_TIMEOUT_MS,
+)
+
+// STUDIO_E2E_REPO_ROOT is read once while the server boots, so these tests start their own servers.
+const savedRepoRoot = process.env[SCRATCH_ROOT_ENV]
+afterEach(() => {
+  if (savedRepoRoot === undefined) delete process.env[SCRATCH_ROOT_ENV]
+  else process.env[SCRATCH_ROOT_ENV] = savedRepoRoot
+})
+
+test(
+  "STUDIO_E2E_REPO_ROOT serves the sandbox's news, not the repository's",
+  async () => {
+    const sandbox = mkdtempSync(join(tmpdir(), 'studio-sandbox-'))
+    let sandboxServer: ViteDevServer | undefined
+    try {
+      mkdirSync(join(sandbox, 'studio'))
+      mkdirSync(join(sandbox, 'news'))
+      writeFileSync(join(sandbox, SCRATCH_MARKER), '')
+      const sandboxIndex = '{"sandbox":"distinct-sandbox-news"}\n'
+      writeFileSync(join(sandbox, 'news', 'index.json'), sandboxIndex)
+      const repoIndex = readFileSync(
+        fileURLToPath(new URL('../../news/index.json', import.meta.url)),
+        'utf8',
+      )
+      expect(repoIndex).not.toBe(sandboxIndex)
+
+      process.env[SCRATCH_ROOT_ENV] = sandbox
+      sandboxServer = await createServer({ root: studioRoot, logLevel: 'warn' })
+      await sandboxServer.listen()
+      const base = sandboxServer.resolvedUrls?.local[0]
+      if (typeof base !== 'string') throw new Error('the sandbox server reported no local URL')
+
+      const response = await fetch(`${base}__studio/fs/file?path=news/index.json`)
+      expect(response.status).toBe(200)
+      const body = (await response.json()) as { text: string }
+      expect(body.text).toBe(sandboxIndex)
+    } finally {
+      await sandboxServer?.close()
+      rmSync(sandbox, { recursive: true, force: true })
+    }
+  },
+  SERVER_TIMEOUT_MS,
+)
+
+test(
+  'a STUDIO_E2E_REPO_ROOT without the scratch marker is refused',
+  async () => {
+    const unmarked = mkdtempSync(join(tmpdir(), 'studio-unmarked-'))
+    process.env[SCRATCH_ROOT_ENV] = unmarked
+    let refused: unknown
+    let refusedServer: ViteDevServer | undefined
+    try {
+      refusedServer = await createServer({ root: studioRoot, logLevel: 'silent' })
+    } catch (error) {
+      refused = error
+    } finally {
+      await refusedServer?.close()
+      rmSync(unmarked, { recursive: true, force: true })
+    }
+    expect(refused).toBeInstanceOf(Error)
+    expect((refused as Error).message).toContain(SCRATCH_MARKER)
   },
   SERVER_TIMEOUT_MS,
 )

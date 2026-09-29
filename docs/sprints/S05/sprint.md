@@ -41,7 +41,7 @@ v1 (was S07)
 
 - [x] 028 — Contributor quickstart for the studio
 - [x] 029 — Guide for adding a content type
-- [ ] 030 — v1 acceptance — the full authoring flow
+- [x] 030 — v1 acceptance — the full authoring flow
 
 ## Notes
 

@@ -1,7 +1,7 @@
 ---
 id: 030
 title: v1 acceptance — the full authoring flow
-status: ready # draft -> ready -> in-progress -> done
+status: done # draft -> ready -> in-progress -> done
 created: 2026-09-13
 ---
 
@@ -19,18 +19,18 @@ Concept: [Q2 Content Studio](../concepts/content-studio.md) — CS-28.
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — An end-to-end run walks the full flow through the studio's real surface: create from
+- [x] **AC1** — An end-to-end run walks the full flow through the studio's real surface: create from
       a template, write the body, fill the frontmatter, add an image, preview it, validate it,
       publish it.
-- [ ] **AC2** — The run exercises the failure the project exists to prevent: an entry that would
+- [x] **AC2** — The run exercises the failure the project exists to prevent: an entry that would
       silently fall back is caught and reported before publishing, and the run shows it being fixed.
-- [ ] **AC3** — The flow writes only inside a fixture content tree; the repository's own `news/` is
+- [x] **AC3** — The flow writes only inside a fixture content tree; the repository's own `news/` is
       byte-identical before and after the run.
-- [ ] **AC4** — After the flow, the `validate` command reports the new entry as delivered exactly as
+- [x] **AC4** — After the flow, the `validate` command reports the new entry as delivered exactly as
       declared.
-- [ ] **AC5** — The documented quickstart and this flow describe the same sequence of steps, checked
+- [x] **AC5** — The documented quickstart and this flow describe the same sequence of steps, checked
       rather than assumed.
-- [ ] **AC6** — The run performs no git operation and reaches nothing beyond localhost.
+- [x] **AC6** — The run performs no git operation and reaches nothing beyond localhost.
 
 ## Open Questions
 
@@ -158,7 +158,7 @@ changes.
     `binDir` to `PATH`.
 
   Tests in `studio/tests/v1-flow-harness.test.ts`:
-  - "the sandbox holds the fixture news, the real kit and a studio marker, outside the repository"
+  - "the sandbox holds the fixture news, the real kit and the scratch marker, outside the repository"
   - "snapshotTree detects a one-byte change"
   - "the network guard records a non-loopback connect and ignores 127.0.0.1"
   - "the git shim records an invocation found through PATH"
@@ -243,8 +243,8 @@ changes.
 - AC3 → e2e `studio/e2e/v1-acceptance-flow.spec.ts` › "v1: create, write, illustrate, preview,
   validate and publish a post in a fixture tree" (the `news/` snapshot comparison in afterAll),
   plus unit `studio/tests/v1-flow-harness.test.ts` › "snapshotTree detects a one-byte change" and
-  › "the sandbox holds the fixture news, the real kit and a studio marker, outside the repository",
-  plus unit `studio/tests/file-bridge-dev-server.test.ts` › "STUDIO_REPO_ROOT serves the sandbox's
+  › "the sandbox holds the fixture news, the real kit and the scratch marker, outside the repository",
+  plus unit `studio/tests/file-bridge-dev-server.test.ts` › "STUDIO_E2E_REPO_ROOT serves the sandbox's
   news, not the repository's".
 - AC4 → e2e `studio/e2e/v1-acceptance-flow.spec.ts` › "v1: create, write, illustrate, preview,
   validate and publish a post in a fixture tree" (the spawned `validate --json` shows the entry
@@ -272,4 +272,23 @@ Coverage gate: every criterion has a deliverable and a test.
 
 ## Done
 
-<Filled by `/build 030`.>
+Story 030 walks create-write-frontmatter-image-preview-validate-publish through one running studio
+(Vite `createServer` on a temp fixture tree, real UI only), then runs the `validate --json` CLI on the
+sandbox. Guards prove the repo's `news/` is byte-identical, nothing beyond localhost is reached and no
+git is called. The flow surfaced two real product defects, fixed with tests (see Decisions).
+
+Commit message: `030: v1 acceptance flow (fixture-tree e2e over the quickstart steps, flow harness, step contract, image-refresh and declared-image fixes)`
+
+Decisions:
+- Seam: story 025's `STUDIO_E2E_REPO_ROOT` is reused (tmpdir + scratch marker); an own `STUDIO_REPO_ROOT` was built first and removed after the hard review found it weaker. `createFlowSandbox` writes the marker. AC3 test lines now name the reused seam.
+- Product fixes (real defects the flow exposed): `template-verdict.ts` compared bare image names with declared `img/x.png`; adding an image did not refresh the repository read (`FrontmatterEditor` `onImageAdded` -> `refresh`, keeps unsaved edits).
+- AC2 deviation: the mirrored launcher pipeline keeps `cover` for a declared-but-missing image (it never gets the image list), so the run asserts delivered cover + missing-image finding naming `img/v1-flow-cover.png` + no loaded cover image before the fix, and all gone after. It never shows declared != delivered; this is the mirror's behaviour, launcher-core stays untouched.
+- Draft verdicts live in the "Draft preview" region; after publish the step re-selects the published row before asserting Entry findings. The Order field is read-only, so the kit's order collision is left to publish.
+- AC5: the marked "flow at a glance" list is checked against `FLOW_STEP_NAMES`; a second test ties 028's quickstart headings in order to it. README Validate text corrected for drafts.
+- AC6: Windows `spawn('git')` skips `git.cmd`, so an in-process `spawn-guard.ts` (child_process patch) complements the shim; both have positive and negative controls.
+- Fixture `.md` fails prettier like the real `news/*.md`; left as-is. Vite ignores `port: 0` and falls back to a free port.
+
+Verification (narrow gate): `npm run build`, `typecheck`, studio eslint, prettier on changed files green; `npm run test --workspace studio -- --changed HEAD` 121 tests green (+ explicit runs of the named files); `npm run e2e --workspace studio -- studio/e2e/v1-acceptance-flow.spec.ts` 1 passed. Repo-wide `npm run lint` prettier and the known pre-existing red were not this story's. Full gate not run (sprint's).
+AC -> test: AC1, AC2, AC4 -> flow e2e passed; AC3 -> flow e2e + harness "snapshotTree..." + "the sandbox holds..." + dev-server seam test passed; AC5 -> quickstart unit tests + flow e2e passed; AC6 -> flow e2e + guard/shim harness tests passed. No manual residue.
+Review: default PASS with caveats (body persistence gap fixed); hard review FAIL, found what the default missed (weaker second seam, Windows git blind spot, vacuous assertions, README/AC5 tie); all fixed and re-verified narrow; no third review round run.
+tiers: D 4 / hard 1 · review default+hard · cycles 2 · agents 13

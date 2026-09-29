@@ -177,3 +177,28 @@
 - 2026-09-29 16:15:06 · 029 · verify · started
 - 2026-09-29 16:15:30 · 029 · verify · done
 - 2026-09-29 16:15:40 · 029 · story · done
+- 2026-09-29 16:15:57 · 030 · build · started
+- 2026-09-29 16:16:16 · 030 · D1 STUDIO_REPO_ROOT seam · started
+- 2026-09-29 16:17:38 · 030 · D1 STUDIO_REPO_ROOT seam · done
+- 2026-09-29 16:17:43 · 030 · D2 flow harness · started
+- 2026-09-29 16:17:43 · 030 · D3 quickstart step contract · started
+- 2026-09-29 16:20:12 · 030 · D2 flow harness · done
+- 2026-09-29 16:20:12 · 030 · D3 quickstart step contract · done
+- 2026-09-29 16:20:15 · 030 · D4 v1 acceptance flow spec · started
+- 2026-09-29 16:27:47 · 030 · D4 v1 acceptance flow spec · partial (product bugs found), re-dispatching
+- 2026-09-29 16:32:52 · 030 · D4 v1 acceptance flow spec · done
+- 2026-09-29 16:32:52 · 030 · verify · started
+- 2026-09-29 16:35:09 · 030 · verify · done
+- 2026-09-29 16:35:09 · 030 · review 1 · started
+- 2026-09-29 16:36:14 · 030 · review 1 · done
+- 2026-09-29 16:36:14 · 030 · D5 body persistence fix · started
+- 2026-09-29 16:37:45 · 030 · D5 body persistence fix · done
+- 2026-09-29 16:37:45 · 030 · review 2 (hard) · started
+- 2026-09-29 16:42:57 · 030 · review 2 (hard) · done
+- 2026-09-29 16:42:57 · 030 · D6 seam reuse + README contract · started
+- 2026-09-29 16:44:12 · 030 · D6 seam reuse + README contract · done
+- 2026-09-29 16:44:12 · 030 · D7 git spawn guard + spec assertions · started
+- 2026-09-29 16:46:10 · 030 · D7 git spawn guard + spec assertions · done
+- 2026-09-29 16:46:10 · 030 · verify · started
+- 2026-09-29 16:47:03 · 030 · verify · done
+- 2026-09-29 16:47:28 · 030 · story · done

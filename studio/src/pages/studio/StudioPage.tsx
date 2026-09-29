@@ -212,7 +212,9 @@ function NewsLibrary({
         <DraftPreviewNotice verdict={draftVerdict} deliveredCount={deliveredCount} />
       )}
       <SlidePreview model={previewModel} />
-      <FrontmatterEditor />
+      {/* Story 026: a stored image changes the repository, so the preview and verdicts re-read it;
+          the draft survives because its document text is unchanged. */}
+      <FrontmatterEditor onImageAdded={refresh} />
       <BodyPanel />
       {draft !== null && !('unreadable' in draft) && (
         <SaveEntryControls

@@ -50,7 +50,10 @@ export function buildDeclaredImageMissingFinding(
 ): Finding | undefined {
   if (images === undefined) return undefined
   if (declaredImage === undefined) return undefined
-  if (images.some((image) => image.name === declaredImage)) return undefined
+  // The repository reader lists `news/img/` files by bare name (`foo.png`), while documents
+  // declare them the way this repository's real posts do (`img/foo.png`); both spellings count.
+  if (images.some((image) => image.name === declaredImage || `img/${image.name}` === declaredImage))
+    return undefined
 
   return {
     severity: 'warning',
