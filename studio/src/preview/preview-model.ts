@@ -10,12 +10,19 @@ import { resolveFeed, type NewsSlide } from '../contract/launcher-contract'
 import { toNewsReportInput } from '../content-types/descriptors'
 import type { ContentSourceRead } from '../content-types/descriptor'
 import { thumbnailUrlFor } from '../library/use-news-library'
-import type { ContentReport } from '../report/report-types'
+import type { ContentReport, EntryVerdict } from '../report/report-types'
 
 export type SlidePreviewModel =
   | { state: 'idle' }
   | { state: 'slide'; slide: NewsSlide & { imageUrl?: string } }
-  | { state: 'nothing'; reason: string }
+  | { state: 'nothing'; reason: string; held?: HeldSlide }
+
+/** A scheduled or expired entry the launcher withholds: its verdict, and the slide the pipeline
+ * resolved for it (before `filterAndSortSlides()`), which the story 021 override may render. */
+export interface HeldSlide {
+  verdict: EntryVerdict
+  slide: NewsSlide & { imageUrl?: string }
+}
 
 export interface BuildSlidePreviewModelInput {
   read: ContentSourceRead | null
@@ -48,14 +55,6 @@ function build({ read, report, entryId }: BuildSlidePreviewModelInput): SlidePre
     return nothing(reasons.length > 0 ? reasons.join('; ') : DROPPED_FALLBACK)
   }
 
-  const { visibility } = verdict
-  if (visibility.state === 'scheduled') {
-    return nothing(`Scheduled — the launcher shows it from ${visibility.visibleFrom}.`)
-  }
-  if (visibility.state === 'expired') {
-    return nothing(`Expired — the launcher stopped showing it at ${visibility.visibleUntil}.`)
-  }
-
   // `resolveFeed()` reads no clock, so the read's own `now` is irrelevant here.
   const { index, documents } = toNewsReportInput(read, new Date(0))
   const slide = resolveFeed({ index, documents }).slides.find(
@@ -69,7 +68,24 @@ function build({ read, report, entryId }: BuildSlidePreviewModelInput): SlidePre
   const imageInRepository =
     image !== undefined && read.images.some((entry) => entry.name === bareName(image))
   const imageUrl = imageInRepository ? thumbnailUrlFor({ image }) : undefined
-  return { state: 'slide', slide: imageUrl === undefined ? slide : { ...slide, imageUrl } }
+  const previewed = imageUrl === undefined ? slide : { ...slide, imageUrl }
+
+  const { visibility } = verdict
+  if (visibility.state === 'scheduled') {
+    return {
+      state: 'nothing',
+      reason: `Scheduled — the launcher shows it from ${visibility.visibleFrom}.`,
+      held: { verdict, slide: previewed },
+    }
+  }
+  if (visibility.state === 'expired') {
+    return {
+      state: 'nothing',
+      reason: `Expired — the launcher stopped showing it at ${visibility.visibleUntil}.`,
+      held: { verdict, slide: previewed },
+    }
+  }
+  return { state: 'slide', slide: previewed }
 }
 
 export function buildSlidePreviewModel(input: BuildSlidePreviewModelInput): SlidePreviewModel {

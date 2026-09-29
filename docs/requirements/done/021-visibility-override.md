@@ -1,7 +1,7 @@
 ---
 id: 021
 title: Preview an entry outside its visibility window
-status: ready # draft -> ready -> in-progress -> done
+status: done # draft -> ready -> in-progress -> done
 created: 2026-09-13
 ---
 
@@ -21,14 +21,14 @@ Concept: [Q2 Content Studio](../concepts/content-studio.md) — CS-19.
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — An entry with a `visibleFrom` in the future can be previewed as if it were visible.
-- [ ] **AC2** — An entry with a `visibleUntil` in the past can be previewed the same way.
-- [ ] **AC3** — While the override is active it is visibly an override, on the preview itself — it
+- [x] **AC1** — An entry with a `visibleFrom` in the future can be previewed as if it were visible.
+- [x] **AC2** — An entry with a `visibleUntil` in the past can be previewed the same way.
+- [x] **AC3** — While the override is active it is visibly an override, on the preview itself — it
       can never be mistaken for the entry's real state.
-- [ ] **AC4** — The override changes nothing in the repository.
-- [ ] **AC5** — The validation report keeps stating the entry's real visibility regardless of the
+- [x] **AC4** — The override changes nothing in the repository.
+- [x] **AC5** — The validation report keeps stating the entry's real visibility regardless of the
       override; the report and the preview never disagree about the facts.
-- [ ] **AC6** — With the override off, a scheduled or expired entry previews as what the launcher
+- [x] **AC6** — With the override off, a scheduled or expired entry previews as what the launcher
       would show, which is nothing, with the reason stated.
 
 ## Open Questions
@@ -181,4 +181,17 @@ has a deliverable and a named test; no manual residue.
 
 ## Done
 
-<Filled by `/build 021`.>
+Summary: `decidePreviewVisibility` (pure) decides render / hidden / deferred from the report's own verdict. The slide preview gets a "Preview as if visible" switch (scheduled/expired entries only) and a role=status marker outside the iframe naming the real state. Held slides come from `resolveFeed()` (pre-visibility-filter), so a scheduled split without image still shows as text.
+
+Commit message: `021: visibility override in preview (toggle, marker outside frame, real state kept)`
+
+Decisions:
+- `preview-model.ts` `nothing` state gained an optional `held` ({verdict, slide}) for scheduled/expired entries, to carry the resolved slide; existing shape unchanged (needed by D2, not listed in Plan).
+- D1 returns kind `deferred` for dropped/not-applicable, and also when a scheduled/expired verdict has no matching finding (no invented reason).
+- Override state resets during render when the held entry id changes; the iframe stays mounted.
+- Unfixed review notes (minor, no AC impact): SlidePreview falls back to `model.reason` in a practically unreachable branch; no unit test on `held` (covered by e2e); switch focus ring uses focus-within; no test compares preview `now` with report `now` (fixtures use 2099/2000).
+
+Verification (narrow gate): build, typecheck green; `npm run test --workspace studio -- --changed HEAD` green; `npm run e2e --workspace studio -- e2e/visibility-override.spec.ts` 6/6 green. Lint: one eslint error in the new component test was fixed (eslint + prettier clean on all 021 files); repo-wide prettier failures on untouched files are pre-existing.
+AC -> test, all passed: AC1 e2e "a scheduled entry previews as if visible with the override on" + unit; AC2 e2e "an expired entry ..."; AC3 e2e "the override is marked on the preview and names the real state" + component test; AC4 e2e "toggling the override writes nothing to the repository"; AC5 e2e "the validation panel and library keep the real visibility ..." + unit "never modifies the verdict"; AC6 e2e "with the override off ..." + unit. No manual residue. Review: default stage, PASS. Full gate pending (sprint).
+
+tiers: D 2 / hard 0 · review default · cycles 0 · agents 5

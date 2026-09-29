@@ -42,3 +42,16 @@
 - 2026-09-29 13:53:57 · 020 · review 1 · started
 - 2026-09-29 13:54:51 · 020 · review 1 · done
 - 2026-09-29 13:55:01 · 020 · story · done
+- 2026-09-29 13:55:15 · 021 · build · started
+- 2026-09-29 13:55:30 · 021 · D1 decision model · started
+- 2026-09-29 13:56:22 · 021 · D1 decision model · done
+- 2026-09-29 13:56:22 · 021 · D2 toggle marker e2e · started
+- 2026-09-29 13:58:59 · 021 · D2 toggle marker e2e · done
+- 2026-09-29 13:58:59 · 021 · verify · started
+- 2026-09-29 14:00:00 · 021 · verify · blocked: eslint no-unnecessary-type-assertion in VisibilityOverrideControl.test.tsx
+- 2026-09-29 14:00:00 · 021 · D2 lint fix · started
+- 2026-09-29 14:00:48 · 021 · D2 lint fix · done
+- 2026-09-29 14:00:48 · 021 · verify · done
+- 2026-09-29 14:00:48 · 021 · review 1 · started
+- 2026-09-29 14:02:00 · 021 · review 1 · done
+- 2026-09-29 14:02:04 · 021 · story · done

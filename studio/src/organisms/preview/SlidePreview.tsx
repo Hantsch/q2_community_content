@@ -14,15 +14,17 @@
  *   wider than the window.
  * - Only a `ready` from this component's own frame window, on this origin, is accepted.
  */
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { usePreviewWidth } from '../../context/preview-width-context'
 import { PreviewWidthSwitcher } from '../../molecules/preview/PreviewWidthSwitcher'
 import type { SlidePreviewModel } from '../../preview/preview-model'
+import { decidePreviewVisibility } from '../../preview/visibility-override'
 import {
   PREVIEW_FRAME_PATH,
   isReadyMessage,
   type PreviewRenderMessage,
 } from '../../preview/preview-protocol'
+import { VisibilityOverrideMarker, VisibilityOverrideSwitch } from './VisibilityOverrideControl'
 
 /** The launcher's hero slot height. */
 export const HERO_HEIGHT_PX = 320
@@ -44,7 +46,20 @@ export function SlidePreview({ model }: SlidePreviewProps): React.JSX.Element {
   const frameReadyRef = useRef(false)
   const { width, setWidth } = usePreviewWidth()
 
-  const slide = model.state === 'slide' ? model.slide : null
+  // Story 021: the override is local to this preview and lasts for one held entry only. It is
+  // never stored, put in the URL or handed to anything the library or validation panel reads.
+  const held = model.state === 'nothing' ? model.held : undefined
+  const heldId = held?.verdict.id ?? null
+  const [override, setOverride] = useState(false)
+  const [overrideFor, setOverrideFor] = useState<string | null>(null)
+  if (overrideFor !== heldId) {
+    setOverrideFor(heldId)
+    setOverride(false)
+  }
+  const decision = held ? decidePreviewVisibility(held.verdict, override) : undefined
+  const overridden = decision?.kind === 'render' && decision.override ? decision : undefined
+
+  const slide = model.state === 'slide' ? model.slide : (overridden && held?.slide) || null
 
   useEffect(() => {
     slideRef.current = slide
@@ -73,12 +88,18 @@ export function SlidePreview({ model }: SlidePreviewProps): React.JSX.Element {
     <section aria-label="Slide preview" className="flex min-w-0 flex-col gap-2">
       <PreviewWidthSwitcher width={width} onChange={setWidth} />
       {model.state === 'idle' && <p className="text-text-muted">Select an entry to preview it.</p>}
-      {model.state === 'nothing' && (
+      {model.state === 'nothing' && !overridden && (
         <div role="status" className="flex flex-col gap-1">
           <h2 className="font-medium">Nothing would be shown</h2>
-          <p className="text-text-muted">{model.reason}</p>
+          <p className="text-text-muted">
+            {decision?.kind === 'hidden' ? decision.reason : model.reason}
+          </p>
         </div>
       )}
+      {decision?.overrideAvailable && (
+        <VisibilityOverrideSwitch checked={override} onChange={setOverride} />
+      )}
+      {overridden && <VisibilityOverrideMarker realState={overridden.realState} />}
       <div data-testid="preview-scroll" className="max-w-full overflow-x-auto">
         <iframe
           ref={frameRef}
@@ -86,7 +107,7 @@ export function SlidePreview({ model }: SlidePreviewProps): React.JSX.Element {
           src={PREVIEW_FRAME_PATH}
           width={width}
           height={HERO_HEIGHT_PX}
-          hidden={model.state !== 'slide'}
+          hidden={slide === null}
           className="block shrink-0 border-0"
           // Dynamic value: no utility class can carry a runtime px, and min-width is what stops a
           // flex/grid ancestor shrinking the frame below its real viewport width.
