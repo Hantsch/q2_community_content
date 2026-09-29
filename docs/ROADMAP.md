@@ -12,9 +12,9 @@ links to it. Maintained by `/sprint`, `/concept` and `/roadmap`; the rules are i
   composition function with `npm run validate` — see [S04 review](sprints/S04/review.md).
 - A dev-server-only, read-only file bridge (story 015) now lets the browser read the repository
   through a narrow, path-guarded, localhost-only surface; its confinement rules are what the
-  writing stories in S06 will build on.
-- Next step: `/sprint S05` — preview (the post as the launcher renders it, at 940/1280/1920,
-  drafts included).
+  writing stories in S05 (024 onward) will build on.
+- Next step: `/sprint S05` — the former S05–S07 bundled into one sprint (13 stories: preview,
+  authoring, v1).
 - Waiting on the user: the launcher-side change from story 004's handoff spec, the
   `index.json` formatting policy that blocks story 024, and merging `sprint/S04` into
   `feature/studio`.
@@ -36,8 +36,8 @@ Concept: [Q2 Content Studio](concepts/content-studio.md).
 | M3 | Validation | done 2026-09-14 | [S03 review](sprints/S03/review.md) | `npm run validate`'s repository-findings count stays 0 until a follow-up wires story 013's findings into the CLI. |
 | M4 | The studio shows the repository | done 2026-09-14 | [S04 review](sprints/S04/review.md) | Library and validation panel, driven by a content-type registry. |
 | M5 | Preview | planned | [S05](sprints/S05/sprint.md) | The post as the launcher renders it, at 940/1280/1920, drafts included. |
-| M6 | Authoring | planned | [S06](sprints/S06/sprint.md) | Create, edit, illustrate, order and publish — the first writes to the repository. |
-| M7 | v1 | planned | [S07](sprints/S07/sprint.md) | Quickstart, extension guide and one end-to-end proof of the whole flow. |
+| M6 | Authoring | planned | [S05](sprints/S05/sprint.md) | Create, edit, illustrate, order and publish — the first writes to the repository. |
+| M7 | v1 | planned | [S05](sprints/S05/sprint.md) | Quickstart, extension guide and one end-to-end proof of the whole flow. |
 
 ## Open / unprioritised
 
