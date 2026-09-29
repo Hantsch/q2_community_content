@@ -106,3 +106,15 @@
 - 2026-09-29 14:56:19 · 024 · review 1 · started
 - 2026-09-29 14:58:50 · 024 · review 1 · done
 - 2026-09-29 14:59:01 · 024 · story · done
+- 2026-09-29 14:59:19 · 025 · build · started
+- 2026-09-29 14:59:41 · 025 · D1 new-entry core · started
+- 2026-09-29 15:01:26 · 025 · D1 new-entry core · done
+- 2026-09-29 15:01:30 · 025 · D2 create-only bridge write · started
+- 2026-09-29 15:03:17 · 025 · D2 create-only bridge write · done
+- 2026-09-29 15:03:31 · 025 · D3 new-entry dialog and e2e · started
+- 2026-09-29 15:09:15 · 025 · D3 new-entry dialog and e2e · done
+- 2026-09-29 15:09:27 · 025 · verify · started
+- 2026-09-29 15:10:51 · 025 · verify · done
+- 2026-09-29 15:10:54 · 025 · review 1 · started
+- 2026-09-29 15:12:44 · 025 · review 1 · done
+- 2026-09-29 15:13:07 · 025 · story · done

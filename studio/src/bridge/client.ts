@@ -13,7 +13,9 @@
 import type { ContentSourceRead, ContentTypeSource } from '../content-types/descriptor'
 import {
   BRIDGE_PREFIX,
+  type BridgeCreateResult,
   type BridgeErrorResponse,
+  type BridgeFileResponse,
   type BridgeReadResponse,
   type BridgeWriteItem,
   type BridgeWriteResponse,
@@ -23,6 +25,10 @@ import {
 export interface BridgeClient extends ContentTypeSource {
   /** `POST /__studio/fs/write`. Never throws: a failure resolves to `{ ok: false, ... }`. */
   write(writes: readonly BridgeWriteItem[]): Promise<BridgeWriteResult>
+  /** Create-only `POST /__studio/fs/write`: never overwrites. Never throws. */
+  createFile(path: string, text: string): Promise<BridgeCreateResult>
+  /** `GET /__studio/fs/file`: one repository text file, or `undefined` when it cannot be read. */
+  readText(path: string): Promise<string | undefined>
 }
 
 function messageOf(error: unknown): string {
@@ -118,6 +124,35 @@ export function createBridgeClient(fetchImpl: typeof fetch = fetch): BridgeClien
         status: response.status,
         error: typeof failure.error === 'string' ? failure.error : `HTTP ${response.status}`,
       }
+    },
+
+    async readText(path: string): Promise<string | undefined> {
+      try {
+        const response = await fetchImpl(`${BRIDGE_PREFIX}file?path=${encodeURIComponent(path)}`)
+        if (!response.ok) return undefined
+        const body = (await response.json()) as Partial<BridgeFileResponse>
+        return typeof body.text === 'string' ? body.text : undefined
+      } catch {
+        return undefined
+      }
+    },
+
+    async createFile(path: string, text: string): Promise<BridgeCreateResult> {
+      let response: Response
+      try {
+        response = await fetchImpl(`${BRIDGE_PREFIX}write`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ writes: [{ path, text, expected: null }], createOnly: true }),
+        })
+      } catch (cause) {
+        return { ok: false, status: 0, message: messageOf(cause) }
+      }
+      if (response.ok) {
+        return { ok: true }
+      }
+      const detail = await errorBodyMessage(response)
+      return { ok: false, status: response.status, message: detail ?? `HTTP ${response.status}` }
     },
   }
 }

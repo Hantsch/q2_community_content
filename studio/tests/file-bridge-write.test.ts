@@ -273,4 +273,73 @@ describe('file bridge write route', () => {
     const offline = createBridgeClient(() => Promise.reject(new Error('down')))
     expect(await offline.write([])).toEqual({ ok: false, status: 0, error: 'down' })
   })
+
+  function create(path: string, text: string) {
+    return rawRequest(
+      baseUrl,
+      'POST',
+      '/__studio/fs/write',
+      { Origin: ORIGIN, 'Content-Type': 'application/json' },
+      JSON.stringify({ writes: [{ path, text, expected: null }], createOnly: true }),
+    )
+  }
+
+  test('create-only writes a new file under news/', async () => {
+    const response = await create('news/new.md', 'new\n')
+    expect(response.status).toBe(200)
+    expect(readFileSync(join(root, 'news', 'new.md'), 'utf8')).toBe('new\n')
+    expect(readdirSync(join(root, 'news')).sort()).toEqual([
+      '_templates',
+      'a.md',
+      'b.md',
+      'img',
+      'new.md',
+    ])
+  })
+
+  test('create-only refuses an existing file and leaves it byte-identical', async () => {
+    const before = readFileSync(join(root, 'news', 'a.md'))
+    const response = await create('news/a.md', 'overwritten\n')
+    expect(response.status).toBe(409)
+    expect(String(response.json.error)).toContain('news/a.md')
+    expect(readFileSync(join(root, 'news', 'a.md')).equals(before)).toBe(true)
+  })
+
+  test('create-only refuses a path outside the declared directories', async () => {
+    for (const path of ['engines/x.md', 'README.md', 'news/../studio/x.md', 'news/missing/x.md']) {
+      const response = await create(path, 'x\n')
+      expect(response.status, path).toBeGreaterThanOrEqual(400)
+    }
+    expect(existsSync(join(root, 'engines', 'x.md'))).toBe(false)
+    expect(existsSync(join(root, 'studio', 'x.md'))).toBe(false)
+    expect(existsSync(join(root, 'news', 'missing'))).toBe(false)
+    expect(readFileSync(join(root, 'README.md'), 'utf8')).toBe('readme\n')
+  })
+
+  test('create-only leaves index.json byte-identical', async () => {
+    const index = '{"entries":[]}' + String.fromCharCode(13, 10)
+    writeFileSync(join(root, 'news', 'index.json'), index)
+    const before = readFileSync(join(root, 'news', 'index.json'))
+    expect((await create('news/new.md', 'new\n')).status).toBe(200)
+    expect((await create('news/index.json', '{}\n')).status).toBe(409)
+    expect(readFileSync(join(root, 'news', 'index.json')).equals(before)).toBe(true)
+  })
+
+  it('the client createFile() resolves ok, conflict and network failure without throwing', async () => {
+    const client = createBridgeClient((input, init) =>
+      fetch(`${baseUrl}${input as string}`, {
+        ...init,
+        headers: { ...(init?.headers as Record<string, string>), Origin: ORIGIN },
+      }),
+    )
+    expect(await client.createFile('news/n.md', 'n\n')).toEqual({ ok: true })
+    expect(await client.createFile('news/n.md', 'm\n')).toMatchObject({ ok: false, status: 409 })
+    expect(readFileSync(join(root, 'news', 'n.md'), 'utf8')).toBe('n\n')
+    const offline = createBridgeClient(() => Promise.reject(new Error('down')))
+    expect(await offline.createFile('news/n.md', 'x')).toEqual({
+      ok: false,
+      status: 0,
+      message: 'down',
+    })
+  })
 })

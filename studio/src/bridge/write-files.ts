@@ -162,3 +162,63 @@ export function writeFiles({
   }
   return { ok: true, written }
 }
+
+export interface CreateFileOptions {
+  readonly repoRoot: string
+  readonly writableDirectories: readonly string[]
+  readonly path: string
+  readonly text: string
+}
+
+export type CreateFileResult =
+  | { readonly ok: true; readonly written: readonly string[] }
+  | { readonly ok: false; readonly status: 400 | 403 | 409 | 500; readonly error: string }
+
+/**
+ * Create-only write: the same path guard and content-path rule as `writeFiles`, but the file is
+ * made with an exclusive create (`wx`), so an existing file is never touched (409) and no parent
+ * directory is ever created (the target must sit directly under an existing directory).
+ */
+export function createFile({
+  repoRoot,
+  writableDirectories,
+  path,
+  text,
+}: CreateFileOptions): CreateFileResult {
+  let realRoot: string
+  try {
+    realRoot = realpathSync(resolve(repoRoot))
+  } catch {
+    return { ok: false, status: 403, error: `${repoRoot}: repository root could not be resolved` }
+  }
+  const resolved = resolveBridgePath({
+    repoRoot,
+    directories: writableDirectories,
+    requestPath: path,
+  })
+  let absolutePath: string
+  if (resolved.ok) {
+    absolutePath = resolved.absolutePath
+  } else if (resolved.reason.endsWith(': not found')) {
+    absolutePath = resolve(realRoot, path)
+  } else {
+    return { ok: false, status: 403, error: resolved.reason }
+  }
+  const relativePath = relative(realRoot, absolutePath).split(sep).join('/')
+  if (!isWritableContentPath(relativePath, writableDirectories)) {
+    return { ok: false, status: 403, error: `${path}: not a writable content path` }
+  }
+  try {
+    writeFileSync(absolutePath, restoreConventions(text, null), { encoding: 'utf8', flag: 'wx' })
+  } catch (cause) {
+    const code = (cause as NodeJS.ErrnoException).code
+    if (code === 'EEXIST') {
+      return { ok: false, status: 409, error: `${path}: already exists` }
+    }
+    if (code === 'ENOENT') {
+      return { ok: false, status: 400, error: `${path}: parent directory does not exist` }
+    }
+    return { ok: false, status: 500, error: `${path}: ${messageOf(cause)}` }
+  }
+  return { ok: true, written: [path] }
+}

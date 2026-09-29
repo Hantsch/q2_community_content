@@ -40,6 +40,12 @@ export interface BridgeWriteItem {
 /** `POST /__studio/fs/write` request body. */
 export interface BridgeWriteRequest {
   readonly writes: readonly BridgeWriteItem[]
+  /**
+   * Story 025 D2: create-only mode. `writes` must then hold exactly one item with
+   * `expected: null`; the file is created exclusively (an existing file answers `409`) and no
+   * parent directory is created.
+   */
+  readonly createOnly?: true
 }
 
 /** `200` answer: the repo-relative paths written, in request order. */
@@ -77,3 +83,7 @@ export type BridgeWriteResult =
 export interface BridgeErrorResponse {
   readonly error: string
 }
+
+/** What `client.createFile()` resolves to; it never throws. */
+export type BridgeCreateResult =
+  { readonly ok: true } | { readonly ok: false; readonly status: number; readonly message: string }

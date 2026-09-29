@@ -33,7 +33,7 @@ import {
   type BridgeWriteItem,
 } from './bridge-protocol'
 import { resolveBridgePath } from './resolve-bridge-path'
-import { writeFiles } from './write-files'
+import { createFile, writeFiles } from './write-files'
 
 /**
  * The image route (`GET /news-img/<filename>`, story 015 D3) deliberately keeps the URL prefix
@@ -182,6 +182,29 @@ function handleWrite(
     const writes = (parsed as { writes?: unknown } | null)?.writes
     if (!Array.isArray(writes) || !writes.every(isWriteItem)) {
       sendError(res, 400, 'body must be { writes: [{ path, text, expected }] }', 'POST')
+      return
+    }
+    if ((parsed as { createOnly?: unknown }).createOnly === true) {
+      const only = writes[0]
+      if (writes.length !== 1 || only === undefined || only.expected !== null) {
+        sendError(res, 400, 'createOnly needs exactly one write with expected null', 'POST')
+        return
+      }
+      try {
+        const created = createFile({
+          repoRoot,
+          writableDirectories,
+          path: only.path,
+          text: only.text,
+        })
+        if (created.ok) {
+          sendJson(res, 200, { written: created.written }, 'POST')
+        } else {
+          sendError(res, created.status, created.error, 'POST')
+        }
+      } catch (cause) {
+        sendError(res, 500, cause instanceof Error ? cause.message : String(cause), 'POST')
+      }
       return
     }
     try {

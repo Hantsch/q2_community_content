@@ -43,6 +43,8 @@ import { SaveEntryControls } from '../../organisms/editor/SaveEntryControls'
 import { DraftPreviewNotice } from '../../organisms/preview/DraftPreviewNotice'
 import { SlidePreview } from '../../organisms/preview/SlidePreview'
 import { buildSlidePreviewModel } from '../../preview/preview-model'
+import { useNewEntry } from '../../new-entry/use-new-entry'
+import { NewEntryDialog } from '../../organisms/new-entry/NewEntryDialog'
 import { LibraryView } from '../../organisms/library/LibraryView'
 import { ValidationPanel } from '../../organisms/ValidationPanel'
 import { buildPanelModel, type ValidationPanelModel } from '../../validate/panel-model'
@@ -53,6 +55,13 @@ const EMPTY_PANEL_MODEL: ValidationPanelModel = {
   entry: undefined,
   repositoryFindings: [],
   allClear: true,
+}
+
+/** Story 025 D3: today as `YYYY-MM-DD` in local time. */
+function localToday(): string {
+  const now = new Date()
+  const pad = (n: number): string => String(n).padStart(2, '0')
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
 }
 
 /** Story 024 D6: the one path a save takes to disk. */
@@ -115,6 +124,7 @@ function NewsLibrary({
     write: writeThroughBridge,
     onSaved: refresh,
   })
+  const [bridge] = useState(() => createBridgeClient())
   const [provenance, setProvenance] = useState<MirrorProvenance | undefined>(undefined)
 
   useEffect(() => {
@@ -171,6 +181,8 @@ function NewsLibrary({
     if (confirmDiscard()) selectEntryUnguarded(id)
   }
 
+  const newEntry = useNewEntry({ client: bridge, refresh, selectEntry })
+
   const handleRecheck = (): void => {
     if (!confirmDiscard()) return
     reset()
@@ -197,6 +209,15 @@ function NewsLibrary({
           onCancel={saveEntry.cancel}
         />
       )}
+      {newEntry.open && (
+        <NewEntryDialog
+          guidance={newEntry.guidance}
+          rows={model?.state === 'ready' ? [...model.entries, ...model.drafts] : []}
+          today={localToday()}
+          onCreate={newEntry.create}
+          onCancel={newEntry.closeDialog}
+        />
+      )}
       <div className="flex gap-8">
         <LibraryView
           model={model}
@@ -204,6 +225,7 @@ function NewsLibrary({
           selectedId={currentEntryId}
           onSelect={selectEntry}
           thumbnailUrlFor={thumbnailUrlFor}
+          onNewEntry={newEntry.openDialog}
         />
         <div className="flex flex-col gap-4">
           <button type="button" onClick={handleRecheck} className="self-start">

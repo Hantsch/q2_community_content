@@ -22,6 +22,8 @@ export interface LibraryViewProps {
   /** Resolves a row's thumbnail URL, or `undefined` when the row has none — e.g.
    * `useNewsLibrary()`'s `thumbnailUrlFor`. Optional so existing callers/tests need not supply it. */
   readonly thumbnailUrlFor?: (row: LibraryRow) => string | undefined
+  /** Story 025 D3: opens the new-entry dialog; the button is absent without it. */
+  readonly onNewEntry?: () => void
 }
 
 export function LibraryView({
@@ -30,6 +32,7 @@ export function LibraryView({
   selectedId,
   onSelect,
   thumbnailUrlFor,
+  onNewEntry,
 }: LibraryViewProps): React.JSX.Element {
   if (loading || !model) {
     return <LibraryStateNotice state="loading" />
@@ -41,6 +44,15 @@ export function LibraryView({
 
   return (
     <div className="flex flex-col gap-6">
+      {onNewEntry && (
+        <button
+          type="button"
+          onClick={onNewEntry}
+          className="min-h-11 min-w-11 self-start rounded-md border border-muted-border px-4 font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-selected"
+        >
+          New entry
+        </button>
+      )}
       <section aria-label="Entries">
         <h2 className="font-medium">Entries</h2>
         <ul className="flex flex-col gap-2">

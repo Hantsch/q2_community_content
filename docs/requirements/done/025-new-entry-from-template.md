@@ -1,7 +1,7 @@
 ---
 id: 025
 title: New entry from the templates kit
-status: ready # draft -> ready -> in-progress -> done
+status: done # draft -> ready -> in-progress -> done
 created: 2026-09-13
 ---
 
@@ -19,18 +19,18 @@ Concept: [Q2 Content Studio](../concepts/content-studio.md) — CS-23.
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — A new entry is created by picking one of the four templates, with the same
+- [x] **AC1** — A new entry is created by picking one of the four templates, with the same
       one-screen guidance the kit's README gives about which to choose.
-- [ ] **AC2** — The new file's contents come from `news/_templates/<template>/template.md`; the
+- [x] **AC2** — The new file's contents come from `news/_templates/<template>/template.md`; the
       studio holds no second copy of the starter content.
-- [ ] **AC3** — The file name follows the repository's convention, `YYYY-MM-DD-slug.md`, with the
+- [x] **AC3** — The file name follows the repository's convention, `YYYY-MM-DD-slug.md`, with the
       slug derived from the title and editable before creation.
-- [ ] **AC4** — The new entry starts as a draft — the file is written, `index.json` is untouched —
+- [x] **AC4** — The new entry starts as a draft — the file is written, `index.json` is untouched —
       until it is published by story 027.
-- [ ] **AC5** — A file name that already exists is refused, with the existing entry named.
-- [ ] **AC6** — A slug that collides with an existing entry's `id` is refused, since the launcher
+- [x] **AC5** — A file name that already exists is refused, with the existing entry named.
+- [x] **AC6** — A slug that collides with an existing entry's `id` is refused, since the launcher
       would keep only one of them.
-- [ ] **AC7** — The created file opens in the editor with its template's required fields visible and
+- [x] **AC7** — The created file opens in the editor with its template's required fields visible and
       empty rather than pre-filled with placeholder text that could be published by accident.
 
 ## Open Questions
@@ -227,31 +227,31 @@ Order: D1 → D2 → D3. UI files follow `/frontend-guidelines` and `/design-tok
 
 ## Acceptance Tests
 
-- AC1 → e2e `studio/e2e/new-entry.spec.ts` › "the new-entry dialog offers the four templates with
+- AC1 → e2e `studio/e2e/authoring/new-entry.spec.ts` › "the new-entry dialog offers the four templates with
   the kit's guidance". It asserts the four names and each README table row's use-case text, parsed in
   Node from the real `news/_templates/README.md`. Plus unit
   `studio/src/new-entry/template-guidance.test.ts` › "the kit README's guidance lists the four
   templates".
-- AC2 → unit `studio/src/new-entry/new-entry.test.ts` › "the studio source holds no copy of the
-  starter content". Plus e2e `studio/e2e/new-entry.spec.ts` › "a new entry is written from its kit
+- AC2 → unit `studio/src/new-entry/template-guidance.test.ts` › "the studio source holds no copy of the
+  starter content". Plus e2e `studio/e2e/authoring/new-entry.spec.ts` › "a new entry is written from its kit
   template", which asserts that the created file's text equals
   `buildNewEntryText(<real template.md>, title)` and keeps the template's comment lines.
-- AC3 → e2e `studio/e2e/new-entry.spec.ts` › "the file name is dated and slugged from the title,
+- AC3 → e2e `studio/e2e/authoring/new-entry.spec.ts` › "the file name is dated and slugged from the title,
   and the slug is editable". Plus unit `studio/src/new-entry/new-entry.test.ts` › "slugify derives a
   safe slug from a title".
-- AC4 → e2e `studio/e2e/new-entry.spec.ts` › "a new entry is a draft and index.json is untouched".
+- AC4 → e2e `studio/e2e/authoring/new-entry.spec.ts` › "a new entry is a draft and index.json is untouched".
   It checks `news/index.json` bytes before and after, and that the library row shows status `draft`.
-  Plus unit `studio/tests/file-bridge-server.test.ts` › "create-only leaves index.json
+  Plus unit `studio/tests/file-bridge-write.test.ts` › "create-only leaves index.json
   byte-identical".
-- AC5 → e2e `studio/e2e/new-entry.spec.ts` › "an existing file name is refused naming the existing
-  entry", using date `2026-09-10` and slug `how-news-reaches-the-launcher`. Plus unit
+- AC5 → e2e `studio/e2e/authoring/new-entry.spec.ts` › "an existing file name is refused naming the existing
+  entry", using the scratch entry `alpha` (date `2026-01-01`, slug `alpha`). Plus unit
   `studio/src/new-entry/new-entry.test.ts` › "an existing file name is refused naming the entry",
-  and unit `studio/tests/file-bridge-server.test.ts` › "create-only refuses an existing file and
+  and unit `studio/tests/file-bridge-write.test.ts` › "create-only refuses an existing file and
   leaves it byte-identical".
-- AC6 → e2e `studio/e2e/new-entry.spec.ts` › "a slug that matches an existing id is refused", using
-  a different date with slug `welcome-to-the-community`. Plus unit
+- AC6 → e2e `studio/e2e/authoring/new-entry.spec.ts` › "a slug that matches an existing id is refused", using
+  a different date with slug `beta` (scratch id). Plus unit
   `studio/src/new-entry/new-entry.test.ts` › "a slug equal to an existing id is refused".
-- AC7 → e2e `studio/e2e/new-entry.spec.ts` › "the created entry opens in the editor with required
+- AC7 → e2e `studio/e2e/authoring/new-entry.spec.ts` › "the created entry opens in the editor with required
   fields empty". For `cover`, the editor shows the typed title, an empty `image` field marked
   required, and no `<` placeholder text in any field or in the body. Plus unit
   `studio/src/new-entry/new-entry.test.ts` › "every kit template yields a new entry with no
@@ -259,4 +259,19 @@ Order: D1 → D2 → D3. UI files follow `/frontend-guidelines` and `/design-tok
 
 ## Done
 
-<Filled by `/build 025`.>
+**Summary.** "New entry" in the library opens a dialog: pick one of the four kit templates (guidance parsed from the README table), type a title, edit slug/date, see the live file name. Create fetches the kit's `template.md`, clears placeholders, writes the file create-only through the bridge (409 on an existing file), refreshes the library and opens the draft. `index.json` stays untouched.
+
+**Commit message:** `025: new entry from kit template (pure core, create-only bridge write, dialog, scratch e2e)`
+
+**Verification (narrow gate).** build, typecheck green; `test-story` (`--changed HEAD`) 64 tests green; `e2e-story` (`e2e/authoring/new-entry.spec.ts`) 7/7 green; lint: eslint clean, prettier failures only on untouched files (line endings). Review: default stage only, PASS, minor findings fixed or noted below. Full gate not run (sprint's).
+AC to test (all ran and passed): AC1 e2e "dialog offers four templates" + unit guidance test; AC2 unit "no copy of the starter content" + e2e "written from its kit template"; AC3 e2e "dated and slugged" + unit slugify; AC4 e2e "draft and index.json untouched" + unit "create-only leaves index.json byte-identical"; AC5 e2e "existing file name refused" + 2 units; AC6 e2e "slug matches existing id" + unit; AC7 e2e "opens with required fields empty" + unit "no placeholder left". No manual residue.
+
+**Decisions.**
+- Spec lives in `studio/e2e/authoring/` (024's write-safe scratch project), not `studio/e2e/`; collisions use scratch entries `alpha`/`beta`; `resetScratch` copies the real `news/_templates` in (no second copy).
+- 024's write tests are in `studio/tests/file-bridge-write.test.ts`; create-only tests added there. The "no copy of starter content" test sits in `template-guidance.test.ts`. Acceptance Tests lines corrected.
+- Added `readText` (GET `file` route) to the bridge client; create-only is `createOnly: true` on the write request, needing one item with `expected: null`; missing parent gives 400.
+- e2e runs `buildNewEntryText` in the page (Playwright cannot import launcher-core in Node); LF-normalises the CRLF checkout for the comparison.
+- `slugify` follows the spec literally (`ß` becomes `-`); `TemplateChoice` placed in `molecules/new-entry/` per the sub-folder rule; dialog uses `bg-muted-soft` (no neutral surface token exists).
+- Unfixed minor findings: `create()` selects right after `refresh()` (works in e2e; a cancelled unsaved-changes prompt leaves the file written but unselected); draft-slug collision and 409 have unit coverage only.
+
+tiers: D 3 / hard 0 · review default · cycles 1 · agents 5

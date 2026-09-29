@@ -33,7 +33,7 @@ Authoring (was S06, the first writes)
 - [x] 022 — Frontmatter editor with live validation
 - [x] 023 — Body editor with live preview
 - [x] 024 — Saving an entry writes the document and its index row
-- [ ] 025 — New entry from the templates kit
+- [x] 025 — New entry from the templates kit
 - [ ] 026 — Adding an image to an entry
 - [ ] 027 — Reordering entries and publishing a draft
 
