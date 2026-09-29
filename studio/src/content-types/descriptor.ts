@@ -17,6 +17,8 @@
  *   plugin, so the port is a `Promise` from the start; making it synchronous now would force every
  *   caller to change when the real source arrives.
  *
+ * How to add a content type: `docs/systems/content-types.md`
+ *
  * Nothing here knows about Node: `node:fs` must not reach this directory, because the studio runs
  * this code in the browser.
  */

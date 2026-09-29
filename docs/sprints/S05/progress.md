@@ -165,3 +165,15 @@
 - 2026-09-29 16:06:59 · 028 · review 1 · started
 - 2026-09-29 16:08:01 · 028 · review 1 · done
 - 2026-09-29 16:08:21 · 028 · story · done
+- 2026-09-29 16:08:37 · 029 · build · started
+- 2026-09-29 16:08:55 · 029 · D1 content-type guide and anti-drift test · started
+- 2026-09-29 16:11:17 · 029 · D1 content-type guide and anti-drift test · done
+- 2026-09-29 16:11:17 · 029 · verify · started
+- 2026-09-29 16:12:25 · 029 · verify · done
+- 2026-09-29 16:12:25 · 029 · review 1 · started
+- 2026-09-29 16:13:53 · 029 · review 1 · done
+- 2026-09-29 16:13:53 · 029 · D1 fix from review 1 · started
+- 2026-09-29 16:15:06 · 029 · D1 fix from review 1 · done
+- 2026-09-29 16:15:06 · 029 · verify · started
+- 2026-09-29 16:15:30 · 029 · verify · done
+- 2026-09-29 16:15:40 · 029 · story · done

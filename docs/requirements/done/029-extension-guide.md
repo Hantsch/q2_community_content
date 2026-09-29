@@ -1,7 +1,7 @@
 ---
 id: 029
 title: Guide for adding a content type
-status: ready # draft -> ready -> in-progress -> done
+status: done # draft -> ready -> in-progress -> done
 created: 2026-09-13
 ---
 
@@ -19,16 +19,16 @@ Concept: [Q2 Content Studio](../concepts/content-studio.md) — CS-27, section 8
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — A guide explains how to add a content type as a descriptor: every field it declares
+- [x] **AC1** — A guide explains how to add a content type as a descriptor: every field it declares
       and what each one is for.
-- [ ] **AC2** — It names every place a new type touches, so nothing is discovered halfway through.
-- [ ] **AC3** — It uses the `news` descriptor as the worked example, pointing at the real files
+- [x] **AC2** — It names every place a new type touches, so nothing is discovered halfway through.
+- [x] **AC3** — It uses the `news` descriptor as the worked example, pointing at the real files
       rather than restating them.
-- [ ] **AC4** — It states what a content type must not do: no presentation in the published surface,
+- [x] **AC4** — It states what a content type must not do: no presentation in the published surface,
       no writing outside its declared directory, no second implementation of a contract rule.
-- [ ] **AC5** — It explains how a type moves from "reserved" to implemented, and what has to exist
+- [x] **AC5** — It explains how a type moves from "reserved" to implemented, and what has to exist
       before that is possible — starting with a contract the launcher agrees to.
-- [ ] **AC6** — The guide's claims about the descriptor shape are checked by a test, so it cannot
+- [x] **AC6** — The guide's claims about the descriptor shape are checked by a test, so it cannot
       quietly describe an older interface.
 
 ## Open Questions
@@ -207,4 +207,16 @@ deliverable and a named test; no manual residue.
 
 ## Done
 
-<Filled by `/build 029`.>
+Summary: Added `docs/systems/content-types.md` (descriptor field table, states, touch points marked generic/news-specific, news worked example by pointers, three must-not rules, reserved -> launcher-reads -> implemented path) and `studio/tests/content-type-guide.test.ts` (8 anti-drift tests). `descriptor.ts` header gained a one-line pointer to the guide.
+
+Commit message: `029: content-type extension guide (docs/systems/content-types.md, anti-drift test, descriptor pointer)`
+
+Verification: narrow gate only (full gate is the sprint's). `npm run build` green, `npm run typecheck` green, `npm run test --workspace studio -- --changed HEAD` green (1 file, 8/8), named file run green 8/8, prettier clean on the two new files, eslint clean. `npm run lint` red only from pre-existing prettier failures on untouched files; `descriptor.ts` is flagged because its working copy is CRLF (line endings only, pre-existing, left untouched). No e2e (none mapped).
+AC -> test as verified: AC1, AC6 -> fields test + states test + field-check self-check; AC2 -> touch-point scan + cited-paths test; AC3 -> worked-example test; AC4 -> three-rules test; AC5 -> reserved-to-implemented test. All passed. No manual residue.
+Review: 1 default cycle, verdict UNCLEAR; fixed: write confinement wording (only `implemented` directories are writable), missing touch points (client.ts, bridge-protocol.ts, launcher-safe-names.ts, library/authoring/publishing/images modules), tests now compare the `required` column with `?`, cite all four worked-example files and assert row shape.
+
+Decisions:
+- Touch points beyond the story list were added from the code as it stands (bridge write/image/batch routes, write-files, resolve-bridge-path, news feature modules), each marked generic or news-specific.
+- Review points left unfixed: purpose cells are only checked non-empty and the touch-point check is substring-based (generic/news-specific label untestable without prose parsing); the AC5 ordering check uses first occurrence over the section. Accepted as the story's specified test shape.
+
+tiers: D 1 / hard 0 · review default · cycles 1 · agents 5
