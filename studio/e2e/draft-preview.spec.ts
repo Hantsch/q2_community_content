@@ -25,7 +25,7 @@ function frameOf(page: Page) {
 
 async function selectEntry(page: Page, title: string): Promise<void> {
   const region = page.getByRole('region', { name: 'Drafts' })
-  await region.getByRole('listitem').filter({ hasText: title }).getByRole('button').click()
+  await region.getByRole('listitem').filter({ hasText: title }).getByRole('button').filter({ hasNotText: /^(Un)?publish$/i }).click()
 }
 
 function hashTree(dir: string, prefix = ''): Record<string, string> {
@@ -114,7 +114,7 @@ test('a draft preview carries a draft marker outside the slide frame and a publi
   await published
     .getByRole('listitem')
     .filter({ hasText: PUBLISHED_ONE_TITLE })
-    .getByRole('button')
+    .getByRole('button').filter({ hasNotText: /^(Un)?publish$/i })
     .click()
   await expect(frameOf(page).locator('.home-hero-slide-text')).toContainText(PUBLISHED_ONE_TITLE)
   await expect(marker).toHaveCount(0)

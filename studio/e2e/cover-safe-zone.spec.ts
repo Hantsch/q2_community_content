@@ -19,7 +19,7 @@ function frameOf(page: Page) {
 
 async function selectEntry(page: Page, title: string): Promise<void> {
   const region = page.getByRole('region', { name: 'Entries' })
-  await region.getByRole('listitem').filter({ hasText: title }).getByRole('button').click()
+  await region.getByRole('listitem').filter({ hasText: title }).getByRole('button').filter({ hasNotText: /^(Un)?publish$/i }).click()
 }
 
 function widthButton(page: Page, name: string) {

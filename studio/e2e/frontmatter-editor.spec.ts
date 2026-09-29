@@ -10,7 +10,7 @@ import { FULL_TITLE, stubEditorFeed, UNKNOWN_TEMPLATE_TITLE } from './fixtures/e
 async function openEntry(page: Page, title: string) {
   await stubEditorFeed(page)
   await page.goto('/')
-  await page.getByRole('region', { name: 'Entries' }).getByRole('button', { name: title }).click()
+  await page.getByRole('region', { name: 'Entries' }).getByRole('button', { name: title }).filter({ hasNotText: /^(Un)?publish$/i }).click()
   return page.getByRole('region', { name: 'Frontmatter editor' })
 }
 
@@ -160,21 +160,21 @@ test('leaving a dirty entry asks first and keeps the edits when declined', async
     void (accept ? dialog.accept() : dialog.dismiss())
   })
 
-  await entries.getByRole('button', { name: UNKNOWN_TEMPLATE_TITLE }).click()
+  await entries.getByRole('button', { name: UNKNOWN_TEMPLATE_TITLE }).filter({ hasNotText: /^(Un)?publish$/i }).click()
   expect(messages).toEqual(['Discard unsaved changes to full-entry.md?'])
   await expect(editor.getByLabel('Title')).toHaveValue('Edited title')
 
   // Picking the entry that is already open is not leaving it.
-  await entries.getByRole('button', { name: FULL_TITLE }).click()
+  await entries.getByRole('button', { name: FULL_TITLE }).filter({ hasNotText: /^(Un)?publish$/i }).click()
   expect(messages).toHaveLength(1)
 
   accept = true
-  await entries.getByRole('button', { name: UNKNOWN_TEMPLATE_TITLE }).click()
+  await entries.getByRole('button', { name: UNKNOWN_TEMPLATE_TITLE }).filter({ hasNotText: /^(Un)?publish$/i }).click()
   await expect(editor.getByLabel('Title')).toHaveValue(UNKNOWN_TEMPLATE_TITLE)
   expect(messages).toHaveLength(2)
 
   // The dropped draft is gone: coming back shows the entry as read, and asks nothing.
-  await entries.getByRole('button', { name: FULL_TITLE }).click()
+  await entries.getByRole('button', { name: FULL_TITLE }).filter({ hasNotText: /^(Un)?publish$/i }).click()
   await expect(editor.getByLabel('Title')).toHaveValue(FULL_TITLE)
   await expect(editor.getByText('Unsaved changes')).toHaveCount(0)
   expect(messages).toHaveLength(2)

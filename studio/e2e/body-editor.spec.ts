@@ -15,7 +15,7 @@ import {
 async function openEntry(page: Page, name: string = TEXT_TITLE) {
   await stubBodyEditorFeed(page)
   await page.goto('/')
-  await page.getByRole('region', { name: 'Entries' }).getByRole('button', { name }).click()
+  await page.getByRole('region', { name: 'Entries' }).getByRole('button', { name }).filter({ hasNotText: /^(Un)?publish$/i }).click()
   return page.getByTestId('body-editor').getByLabel('Body')
 }
 

@@ -12,6 +12,6 @@ test('the authoring server reads the scratch repository, not the checkout', asyn
   const drafts = page.getByRole('region', { name: 'Drafts' })
   await expect(region.getByText('Alpha', { exact: true })).toBeVisible()
   await expect(region.getByText('Beta', { exact: true })).toBeVisible()
-  await expect(drafts.getByRole('button', { name: /Draft/ })).toBeVisible()
+  await expect(drafts.getByRole('button', { name: /Draft/ }).filter({ hasNotText: /^(Un)?publish$/i })).toBeVisible()
   await expect(region.getByText('Welcome to the Quake II community')).toHaveCount(0)
 })

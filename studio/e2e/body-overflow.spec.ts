@@ -38,7 +38,7 @@ function message(px: number): string {
 async function openEntry(page: Page, title: string) {
   await stubBodyEditorFeed(page)
   await page.goto('/')
-  await page.getByRole('region', { name: 'Entries' }).getByRole('button', { name: title }).click()
+  await page.getByRole('region', { name: 'Entries' }).getByRole('button', { name: title }).filter({ hasNotText: /^(Un)?publish$/i }).click()
   await expect(frameOf(page).locator('.home-hero-body')).toBeVisible()
   return page.getByTestId('body-editor').getByLabel('Body')
 }

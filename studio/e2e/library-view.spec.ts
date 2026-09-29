@@ -148,7 +148,7 @@ test('selecting an entry marks it as the current entry', async ({ page }) => {
 
   const region = page.getByRole('region', { name: 'Entries' })
   const firstRow = region.getByRole('listitem').first()
-  const firstButton = firstRow.getByRole('button')
+  const firstButton = firstRow.getByRole('button').filter({ hasNotText: /^(Un)?publish$/i })
 
   await expect(firstButton).not.toHaveAttribute('aria-current', 'true')
   await firstButton.click()

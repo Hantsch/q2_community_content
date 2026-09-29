@@ -94,7 +94,7 @@ test('AC1: the panel shows the selected entry declared and delivered form with i
 
   const region = page.getByRole('region', { name: 'Entries' })
   const rowA = region.getByRole('listitem').filter({ hasText: ENTRY_A_TITLE })
-  await rowA.getByRole('button').click()
+  await rowA.getByRole('button').filter({ hasNotText: /^(Un)?publish$/i }).click()
 
   const entrySection = page.getByRole('region', { name: 'Entry findings' })
   await expect(entrySection).toContainText(ENTRY_A_TITLE)
@@ -108,7 +108,7 @@ test('AC2: a missing image names the rule and the field to fix', async ({ page }
 
   const region = page.getByRole('region', { name: 'Entries' })
   const rowA = region.getByRole('listitem').filter({ hasText: ENTRY_A_TITLE })
-  await rowA.getByRole('button').click()
+  await rowA.getByRole('button').filter({ hasNotText: /^(Un)?publish$/i }).click()
 
   const entrySection = page.getByRole('region', { name: 'Entry findings' })
   // The finding's own message names both the rule ("declared image ... not found" is
@@ -124,7 +124,7 @@ test('AC3: repository-level findings are listed in their own region, separate fr
 
   const region = page.getByRole('region', { name: 'Entries' })
   const rowA = region.getByRole('listitem').filter({ hasText: ENTRY_A_TITLE })
-  await rowA.getByRole('button').click()
+  await rowA.getByRole('button').filter({ hasNotText: /^(Un)?publish$/i }).click()
 
   const entrySection = page.getByRole('region', { name: 'Entry findings' })
   const repoSection = page.getByRole('region', { name: 'Repository findings' })
@@ -144,9 +144,9 @@ test('clicking a finding selects its entry', async ({ page }) => {
   const region = page.getByRole('region', { name: 'Entries' })
   const rowA = region.getByRole('listitem').filter({ hasText: ENTRY_A_TITLE })
   const rowB = region.getByRole('listitem').filter({ hasText: ENTRY_B_TITLE })
-  await rowA.getByRole('button').click()
-  await expect(rowA.getByRole('button')).toHaveAttribute('aria-current', 'true')
-  await expect(rowB.getByRole('button')).not.toHaveAttribute('aria-current', 'true')
+  await rowA.getByRole('button').filter({ hasNotText: /^(Un)?publish$/i }).click()
+  await expect(rowA.getByRole('button').filter({ hasNotText: /^(Un)?publish$/i })).toHaveAttribute('aria-current', 'true')
+  await expect(rowB.getByRole('button').filter({ hasNotText: /^(Un)?publish$/i })).not.toHaveAttribute('aria-current', 'true')
 
   const repoSection = page.getByRole('region', { name: 'Repository findings' })
   const orderMismatchFinding = repoSection
@@ -154,8 +154,8 @@ test('clicking a finding selects its entry', async ({ page }) => {
     .filter({ hasText: 'news/index.json declares order 5' })
   await orderMismatchFinding.click()
 
-  await expect(rowB.getByRole('button')).toHaveAttribute('aria-current', 'true')
-  await expect(rowA.getByRole('button')).not.toHaveAttribute('aria-current', 'true')
+  await expect(rowB.getByRole('button').filter({ hasNotText: /^(Un)?publish$/i })).toHaveAttribute('aria-current', 'true')
+  await expect(rowA.getByRole('button').filter({ hasNotText: /^(Un)?publish$/i })).not.toHaveAttribute('aria-current', 'true')
 
   const entrySection = page.getByRole('region', { name: 'Entry findings' })
   await expect(entrySection).toContainText(ENTRY_B_TITLE)
@@ -205,7 +205,7 @@ test('AC7: the panel and npm run validate --json agree for the same repository',
 
     const expectedTitle = verdict.declared.title ?? verdict.file
     const row = region.getByRole('listitem').filter({ hasText: expectedTitle })
-    await row.getByRole('button').click()
+    await row.getByRole('button').filter({ hasNotText: /^(Un)?publish$/i }).click()
 
     const entrySection = page.getByRole('region', { name: 'Entry findings' })
     await expect(entrySection).toContainText(expectedTitle)
