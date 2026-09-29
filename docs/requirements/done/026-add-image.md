@@ -1,7 +1,7 @@
 ---
 id: 026
 title: Adding an image to an entry
-status: ready # draft -> ready -> in-progress -> done
+status: done # draft -> ready -> in-progress -> done
 created: 2026-09-13
 ---
 
@@ -20,19 +20,19 @@ Concept: [Q2 Content Studio](../concepts/content-studio.md) — CS-24.
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — An image can be added to `news/img/` from the studio, by picking a file or dropping
+- [x] **AC1** — An image can be added to `news/img/` from the studio, by picking a file or dropping
       one onto the entry.
-- [ ] **AC2** — A file name or extension the launcher would reject is refused before anything is
+- [x] **AC2** — A file name or extension the launcher would reject is refused before anything is
       written, naming the rule it breaks.
-- [ ] **AC3** — The entry's `image` field is set to the correct path relative to the document.
-- [ ] **AC4** — The template's own image guidance, taken from `news/_templates/<template>/README.md`,
+- [x] **AC3** — The entry's `image` field is set to the correct path relative to the document.
+- [x] **AC4** — The template's own image guidance, taken from `news/_templates/<template>/README.md`,
       is shown while choosing.
-- [ ] **AC5** — An image whose dimensions do not match the template's expectation is warned about,
+- [x] **AC5** — An image whose dimensions do not match the template's expectation is warned about,
       with the expected and actual values, and is not silently accepted.
-- [ ] **AC6** — For `cover`, the preview makes the text safe zone visible, so an author can see
+- [x] **AC6** — For `cover`, the preview makes the text safe zone visible, so an author can see
       whether the subject of the image is about to sit under the scrim.
-- [ ] **AC7** — Adding an image writes only into `news/img/` and the entry being edited.
-- [ ] **AC8** — Replacing an entry's image does not delete the previous file; an image that becomes
+- [x] **AC7** — Adding an image writes only into `news/img/` and the entry being edited.
+- [x] **AC8** — Replacing an entry's image does not delete the previous file; an image that becomes
       unreferenced is reported by story 013 rather than removed automatically.
 
 ## Open Questions
@@ -122,7 +122,7 @@ and 019 (preview iframe and width switch). Story 013's `orphan-image` finding al
    name field, the README guidance, the actual and expected dimensions, an "add anyway"
    acknowledgement when a warning shows, and the bridge's refusal text. When the write succeeds,
    the editor's `image` field is set to `img/<name>`. The e2e tests for AC1–AC5, AC7 and AC8 are
-   in `studio/e2e/add-image.spec.ts` and run against the writable fixture root.
+   in `studio/e2e/authoring/add-image.spec.ts` and run against the writable fixture root.
 4. **Cover safe zone (D4).** `studio/src/organisms/preview/CoverSafeZoneOverlay.tsx` sits over
    story 018's iframe whenever the delivered template is `cover`. Its box is the text column's box
    measured inside the frame, and it re-measures on resize and width switch. The e2e test is in
@@ -133,7 +133,7 @@ parallel with D1–D3.
 
 ## Deliverables
 
-- [ ] **D1 — Image write route in the file bridge, plus its client function.** Files:
+- [x] **D1 — Image write route in the file bridge, plus its client function.** Files:
   `studio/src/bridge/create-file-bridge.ts`, `studio/src/bridge/file-bridge-plugin.ts`,
   `studio/src/bridge/bridge-protocol.ts`, `studio/src/bridge/client.ts`,
   `studio/src/bridge/resolve-bridge-path.ts` (only if story 024 did not already add a way to resolve
@@ -196,7 +196,7 @@ parallel with D1–D3.
     - "no delete or rename API is imported under studio/src/bridge/"
     - "the image route refuses a non-octet-stream content type and a cross-origin Origin"
 
-- [ ] **D2 — Image expectations and README guidance, as pure functions.** Files:
+- [x] **D2 — Image expectations and README guidance, as pure functions.** Files:
   `studio/src/images/image-expectations.ts`, `studio/src/images/image-expectations.test.ts`. It
   imports `MAX_IMAGE_BYTES` and `MAX_IMAGE_DIMENSION_PX` from `studio/src/images/image-limits.ts`
   (D1). If D1 has not created that file yet, create it with exactly those two constants: 5 MiB and
@@ -231,10 +231,10 @@ parallel with D1–D3.
     - "the expectations match the kit READMEs": each README contains its recommended `W×H`,
       `5 MB` and `4000 px`.
 
-- [ ] **D3 — The image adder in the entry editor.** Files: new
+- [x] **D3 — The image adder in the entry editor.** Files: new
   `studio/src/organisms/image/ImageAdder.tsx` and `ImageAdder.test.tsx` (jsdom). Also the entry
   editor organism from story 022: find it by where it renders the `image` field, and add
-  `<ImageAdder>` beside that field. New `studio/e2e/add-image.spec.ts`. Uses `addNewsImage` and
+  `<ImageAdder>` beside that field. New `studio/e2e/authoring/add-image.spec.ts`. Uses `addNewsImage` and
   `readBridgeText` from `studio/src/bridge/client.ts` and `checkImage`, `imageFieldValue` and
   `extractImageGuidance` from `studio/src/images/image-expectations.ts`. Styling uses design tokens
   only (read the `frontend-guidelines` and `design-tokens` skills first). Mirror the component
@@ -288,7 +288,7 @@ parallel with D1–D3.
       `orphan-image`. Reload the page if the library does not refresh after a save.
   - Unit test in `ImageAdder.test.tsx`: "the image adder is absent for the text template"
 
-- [ ] **D4 — Cover text safe zone in the preview.** Files: new
+- [x] **D4 — Cover text safe zone in the preview.** Files: new
   `studio/src/organisms/preview/CoverSafeZoneOverlay.tsx`, plus the preview organism from story
   018 that hosts the iframe (find it by the `<iframe>` it renders, and wrap the frame in a
   relatively positioned box). New `studio/e2e/cover-safe-zone.spec.ts`. Design tokens only.
@@ -331,28 +331,28 @@ parallel with D1–D3.
 
 ## Acceptance Tests
 
-- AC1 → e2e `studio/e2e/add-image.spec.ts` › "an image picked in the studio lands in news/img/"
+- AC1 → e2e `studio/e2e/authoring/add-image.spec.ts` › "an image picked in the studio lands in news/img/"
   **and** › "an image dropped onto the entry lands in news/img/" (D3, route from D1)
-- AC2 → e2e `studio/e2e/add-image.spec.ts` › "a name the launcher would reject is refused before
+- AC2 → e2e `studio/e2e/authoring/add-image.spec.ts` › "a name the launcher would reject is refused before
   anything is written, naming the rule" (D3) **and** unit `studio/tests/file-bridge-server.test.ts`
   › "an unsafe image name is refused naming the rule and nothing is written" (D1)
-- AC3 → e2e `studio/e2e/add-image.spec.ts` › "adding an image sets the entry's image field to
+- AC3 → e2e `studio/e2e/authoring/add-image.spec.ts` › "adding an image sets the entry's image field to
   img/<name> and saving writes it" (D3) **and** unit `studio/src/images/image-expectations.test.ts`
   › "the image field value is relative to the document" (D2)
-- AC4 → e2e `studio/e2e/add-image.spec.ts` › "the template's image guidance from its kit README is
+- AC4 → e2e `studio/e2e/authoring/add-image.spec.ts` › "the template's image guidance from its kit README is
   shown while choosing" (D3) **and** unit `studio/src/images/image-expectations.test.ts` › "the
   image guidance is the README's Image requirements section" (D2)
-- AC5 → e2e `studio/e2e/add-image.spec.ts` › "a mismatched image is warned about with expected and
+- AC5 → e2e `studio/e2e/authoring/add-image.spec.ts` › "a mismatched image is warned about with expected and
   actual size and needs a deliberate confirmation" (D3) **and** unit
   `studio/src/images/image-expectations.test.ts` › "a mismatched image yields a warning with
   expected and actual values" (D2)
 - AC6 → e2e `studio/e2e/cover-safe-zone.spec.ts` › "the cover preview outlines the text safe zone at
   the measured text column" **and** › "the safe-zone overlay adds nothing inside the preview frame"
   (D4)
-- AC7 → e2e `studio/e2e/add-image.spec.ts` › "adding an image writes only into news/img/ and the
+- AC7 → e2e `studio/e2e/authoring/add-image.spec.ts` › "adding an image writes only into news/img/ and the
   entry being edited" (D3) **and** unit `studio/tests/file-bridge-server.test.ts` › "a valid image
   is written to news/img/ only and answers its image field value" (D1)
-- AC8 → e2e `studio/e2e/add-image.spec.ts` › "replacing an image keeps the old file and the
+- AC8 → e2e `studio/e2e/authoring/add-image.spec.ts` › "replacing an image keeps the old file and the
   validation panel reports it as unreferenced" (D3) **and** unit
   `studio/tests/file-bridge-server.test.ts` › "no delete or rename API is imported under
   studio/src/bridge/" (D1)
@@ -365,4 +365,17 @@ AC7 → D1+D3, AC8 → D1+D3. Every criterion has a deliverable and a named test
 
 ## Done
 
-<Filled by `/build 026`.>
+Adds an image adder to the entry editor (file picker plus labelled drop zone, editable target name, README guidance, decoded and expected dimensions, refusal and warning findings, add-anyway gate). A guarded `POST /__studio/fs/image` bridge route writes only new files into `news/img/`; the `cover` preview gets a measured text safe-zone overlay with a toggle.
+
+Commit message: `026: add image to entry (guarded image write route, expectations + README guidance, image adder, cover safe-zone overlay)`
+
+Verification (narrow gate): `npm run build`, `npm run typecheck` green; `npm run test --workspace studio -- --changed HEAD` green (10 files, 77 tests); `npm run e2e --workspace studio -- e2e/authoring/add-image.spec.ts e2e/cover-safe-zone.spec.ts` 11/11 green. Lint: eslint clean on all story files after one fix cycle; `npm run lint` still red on pre-existing prettier failures of untouched files. Full regression gate pending (sprint's). Review: default tier, PASS; findings fixed: undefined design-token class names in ImageAdder replaced with defined tokens. AC -> test mapping as in `## Acceptance Tests` (all named tests ran and passed); no manual residue.
+
+Decisions:
+- `add-image.spec.ts` lives in `studio/e2e/authoring/` (the scratch-root Playwright project), not `studio/e2e/`; mapping updated. `prepare-scratch.ts` now creates an empty `news/img/` because the route never creates directories.
+- `readBridgeText` not added: `client.readText` already reads `GET /__studio/fs/file`.
+- `write-files.ts` (024) already imports `renameSync`/`rmSync` for its temp-then-rename save, so the source-scan test allows exactly those two there; all other bridge files ban all eight delete/rename/copy names, and `createWriteStream`/`open`/`openSync` are banned outside `write-files.ts`. The binary write is `createImageFile` in `write-files.ts`.
+- Refusal rules extended beyond the spec with `origin`, `content-type`, `confinement`, `write-failed` (client adds `http`); every error starts with `<rule>: `. Hard limits apply to any template; warnings only to cover/banner/split.
+- Unfixed, accepted: source-scan misses aliased/namespace imports; the `wx` race and symlinked-`img/` confinement are implemented but untested; README guidance region is empty without message if the read fails.
+
+tiers: D 4 / hard 1 · review default · cycles 1 · agents 7

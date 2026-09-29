@@ -1,6 +1,6 @@
 import { expect, test, vi } from 'vitest'
 import type { ContentRepoRead } from '../content-repo/read-content-repo'
-import { createBridgeClient } from './client'
+import { addNewsImage, createBridgeClient } from './client'
 
 const CANNED_READ: ContentRepoRead = {
   repoRoot: '/repo',
@@ -54,4 +54,61 @@ test('a fetch rejection falls back to a well-formed empty read without throwing'
   expect(read.findings).toHaveLength(1)
   expect(read.findings[0].severity).toBe('error')
   expect(read.findings[0].message).toContain('network down')
+})
+
+test('addNewsImage posts the raw bytes as octet-stream and answers the image field value', async () => {
+  const fetchImpl = vi.fn(
+    () =>
+      new Response(JSON.stringify({ path: 'news/img/a b.png', image: 'img/a b.png' }), {
+        status: 201,
+      }),
+  )
+  const bytes = new Blob([new Uint8Array([1, 2, 3])])
+
+  const result = await addNewsImage('a b.png', bytes, fetchImpl as unknown as typeof fetch)
+
+  expect(result).toEqual({ ok: true, image: 'img/a b.png' })
+  expect(fetchImpl).toHaveBeenCalledWith('/__studio/fs/image?name=a%20b.png', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/octet-stream' },
+    body: bytes,
+  })
+})
+
+test('addNewsImage resolves a refusal to its rule and error', async () => {
+  const fetchImpl = vi.fn(
+    () =>
+      new Response(
+        JSON.stringify({ error: 'exists: news/img/a.png already exists', rule: 'exists' }),
+        {
+          status: 409,
+        },
+      ),
+  )
+
+  const result = await addNewsImage('a.png', new Blob([]), fetchImpl as unknown as typeof fetch)
+
+  expect(result).toEqual({
+    ok: false,
+    rule: 'exists',
+    error: 'exists: news/img/a.png already exists',
+  })
+})
+
+test('addNewsImage resolves a fetch rejection to the network rule without throwing', async () => {
+  const fetchImpl = vi.fn(() => {
+    throw new Error('network down')
+  })
+
+  const result = await addNewsImage('a.png', new Blob([]), fetchImpl)
+
+  expect(result).toEqual({ ok: false, rule: 'network', error: 'network down' })
+})
+
+test('addNewsImage resolves an answer without a rule to the http rule', async () => {
+  const fetchImpl = vi.fn(() => new Response('not json', { status: 403 }))
+
+  const result = await addNewsImage('a.png', new Blob([]), fetchImpl as unknown as typeof fetch)
+
+  expect(result).toEqual({ ok: false, rule: 'http', error: 'HTTP 403' })
 })

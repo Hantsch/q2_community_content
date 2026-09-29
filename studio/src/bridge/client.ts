@@ -12,10 +12,13 @@
  */
 import type { ContentSourceRead, ContentTypeSource } from '../content-types/descriptor'
 import {
+  type AddNewsImageResult,
   BRIDGE_PREFIX,
   type BridgeCreateResult,
   type BridgeErrorResponse,
   type BridgeFileResponse,
+  type BridgeImageRefusalResponse,
+  type BridgeImageWriteResponse,
   type BridgeReadResponse,
   type BridgeWriteItem,
   type BridgeWriteResponse,
@@ -61,6 +64,43 @@ async function errorBodyMessage(response: Response): Promise<string | undefined>
     return typeof body.error === 'string' ? body.error : undefined
   } catch {
     return undefined
+  }
+}
+
+/**
+ * Story 026 D1: `POST /__studio/fs/image?name=<name>` with the raw image bytes. Never throws: a
+ * refusal resolves to the route's `rule` and `error`, a request that got no answer to `network`,
+ * and an answer without an image-route rule (e.g. a Host guard refusal) to `http`.
+ */
+export async function addNewsImage(
+  name: string,
+  bytes: Blob,
+  fetchImpl: typeof fetch = fetch,
+): Promise<AddNewsImageResult> {
+  let response: Response
+  try {
+    response = await fetchImpl(`${BRIDGE_PREFIX}image?name=${encodeURIComponent(name)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/octet-stream' },
+      body: bytes,
+    })
+  } catch (cause) {
+    return { ok: false, rule: 'network', error: messageOf(cause) }
+  }
+
+  let body: Partial<BridgeImageWriteResponse & BridgeImageRefusalResponse>
+  try {
+    body = (await response.json()) as typeof body
+  } catch {
+    return { ok: false, rule: 'http', error: `HTTP ${response.status}` }
+  }
+  if (response.ok && typeof body.image === 'string') {
+    return { ok: true, image: body.image }
+  }
+  return {
+    ok: false,
+    rule: typeof body.rule === 'string' ? body.rule : 'http',
+    error: typeof body.error === 'string' ? body.error : `HTTP ${response.status}`,
   }
 }
 

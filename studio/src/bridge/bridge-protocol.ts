@@ -84,6 +84,47 @@ export interface BridgeErrorResponse {
   readonly error: string
 }
 
+/**
+ * Story 026 D1: why `POST /__studio/fs/image?name=<file name>` refused an image. `unsafe-name`,
+ * `extension`, `too-large`, `exists` and `confinement` are checked in that order before anything
+ * touches disk; `origin` and `content-type` guard the request itself; `write-failed` is an I/O
+ * failure on the one exclusive create.
+ */
+export type ImageRefusalRule =
+  | 'origin'
+  | 'content-type'
+  | 'unsafe-name'
+  | 'extension'
+  | 'too-large'
+  | 'exists'
+  | 'confinement'
+  | 'write-failed'
+
+/** Non-2xx answer of the image route; `error` starts with the rule's name. */
+export interface BridgeImageRefusalResponse extends BridgeErrorResponse {
+  readonly rule: ImageRefusalRule
+}
+
+/** `201` answer of the image route. */
+export interface BridgeImageWriteResponse {
+  /** Repo-relative path written, e.g. `news/img/cover.png`. */
+  readonly path: string
+  /** The value an entry's `image` field takes, e.g. `img/cover.png`. */
+  readonly image: string
+}
+
+/**
+ * What `addNewsImage()` resolves to; it never throws. `network` means the request never got an
+ * answer; `http` means an answer without an image-route rule (e.g. a Host guard refusal).
+ */
+export type AddNewsImageResult =
+  | { readonly ok: true; readonly image: string }
+  | {
+      readonly ok: false
+      readonly rule: ImageRefusalRule | 'network' | 'http'
+      readonly error: string
+    }
+
 /** What `client.createFile()` resolves to; it never throws. */
 export type BridgeCreateResult =
   { readonly ok: true } | { readonly ok: false; readonly status: number; readonly message: string }

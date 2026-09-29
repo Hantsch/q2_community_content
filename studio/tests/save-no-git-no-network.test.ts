@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, test } from 'vitest'
 
 import { createFileBridge } from '../src/bridge/create-file-bridge'
+import * as imageRules from '../src/contract/launcher-safe-names'
 import { createGitFixture, type GitFixture } from './git-fixture'
 
 const srcRoot = fileURLToPath(new URL('../src', import.meta.url))
@@ -77,6 +78,7 @@ describe('save path isolation', () => {
       repoRoot: fixture.dir,
       directories: ['news'],
       writableDirectories: ['news'],
+      imageRules,
     })
     const server = createServer((req, res) => middleware(req, res, () => res.end()))
     await new Promise<void>((resolvePromise) => server.listen(0, '127.0.0.1', resolvePromise))

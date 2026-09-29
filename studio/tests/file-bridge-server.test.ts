@@ -22,7 +22,7 @@ import { connect } from 'node:net'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { afterAll, afterEach, beforeAll, describe, expect, it, test } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, test } from 'vitest'
 
 import type {
   BridgeErrorResponse,
@@ -31,6 +31,7 @@ import type {
   BridgeReadResponse,
 } from '../src/bridge/bridge-protocol'
 import { createFileBridge } from '../src/bridge/create-file-bridge'
+import * as imageRules from '../src/contract/launcher-safe-names'
 import { readContentRepo } from '../src/content-repo/read-content-repo'
 import { readMirrorProvenance } from '../src/mirror/read-provenance'
 import { createGitFixture, type GitFixture } from './git-fixture'
@@ -49,7 +50,7 @@ async function startBridge(options: {
   readonly repoRoot: string
   readonly directories: readonly string[]
 }): Promise<RunningBridge> {
-  const middleware = createFileBridge(options)
+  const middleware = createFileBridge({ ...options, imageRules })
   const server: Server = createServer((req, res) => {
     middleware(req, res, () => {
       res.statusCode = 404
@@ -449,6 +450,9 @@ describe('no write API is imported under studio/src/bridge/', () => {
     'rename',
     'copyFileSync',
     'copyFile',
+    'createWriteStream',
+    'openSync',
+    'open',
   ]
 
   function listTsFiles(dir: string): string[] {
@@ -473,7 +477,8 @@ describe('no write API is imported under studio/src/bridge/', () => {
     expect(files.length).toBeGreaterThan(0)
 
     for (const file of files) {
-      // Story 024 D4: `write-files.ts` is the one sanctioned writer (behind `POST .../write`).
+      // Story 024 D4: `write-files.ts` is the one sanctioned writer (behind `POST .../write`, and,
+      // story 026 D1, `POST .../image`).
       if (file.endsWith('write-files.ts')) {
         continue
       }
@@ -489,5 +494,230 @@ describe('no write API is imported under studio/src/bridge/', () => {
         }
       }
     }
+  })
+})
+
+describe('image write route', () => {
+  const ORIGIN = 'http://localhost:5173'
+  const MAX_IMAGE_BYTES = 5 * 1024 * 1024
+  let tmpRoot: string
+  let repoRoot: string
+  let bridge: RunningBridge
+
+  /** Every file under `root`, repo-relative, mapped to its bytes as base64. */
+  function snapshotTree(root: string): Record<string, string> {
+    const tree: Record<string, string> = {}
+    const walk = (dir: string, prefix: string): void => {
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        const relativePath = `${prefix}${entry.name}`
+        if (entry.isDirectory()) {
+          walk(join(dir, entry.name), `${relativePath}/`)
+        } else {
+          tree[relativePath] = readFileSync(join(dir, entry.name)).toString('base64')
+        }
+      }
+    }
+    walk(root, '')
+    return tree
+  }
+
+  function postImage(
+    name: string,
+    bytes: Uint8Array<ArrayBuffer>,
+    headers: Record<string, string> = {},
+  ): Promise<Response> {
+    return fetch(`${bridge.baseUrl}/__studio/fs/image?name=${encodeURIComponent(name)}`, {
+      method: 'POST',
+      headers: { origin: ORIGIN, 'content-type': 'application/octet-stream', ...headers },
+      body: bytes,
+    })
+  }
+
+  /** A chunked POST with no Content-Length, so only the streaming count can catch the size. */
+  function streamImage(name: string, chunkCount: number, chunkSize: number): Promise<number> {
+    const url = new URL(`/__studio/fs/image?name=${encodeURIComponent(name)}`, bridge.baseUrl)
+    return new Promise((resolvePromise, rejectPromise) => {
+      const req = httpRequest(
+        {
+          hostname: url.hostname,
+          port: url.port,
+          path: `${url.pathname}${url.search}`,
+          method: 'POST',
+          headers: {
+            origin: ORIGIN,
+            'content-type': 'application/octet-stream',
+            'transfer-encoding': 'chunked',
+          },
+        },
+        (res) => {
+          res.resume()
+          res.on('end', () => resolvePromise(res.statusCode ?? 0))
+        },
+      )
+      req.on('error', rejectPromise)
+      const chunk = Buffer.alloc(chunkSize, 7)
+      for (let index = 0; index < chunkCount; index += 1) {
+        req.write(chunk)
+      }
+      req.end()
+    })
+  }
+
+  beforeEach(async () => {
+    tmpRoot = realpathSync(mkdtempSync(join(tmpdir(), 'bridge-img-write-')))
+    repoRoot = join(tmpRoot, 'repo')
+    mkdirSync(join(repoRoot, 'news', 'img'), { recursive: true })
+    writeFileSync(join(repoRoot, 'news', 'index.json'), '{"entries":[]}', 'utf8')
+    writeFileSync(join(repoRoot, 'news', 'img', 'keep.png'), 'keep-bytes', 'utf8')
+    bridge = await startBridge({ repoRoot, directories: ['news'] })
+  }, SERVER_TIMEOUT_MS)
+
+  afterEach(async () => {
+    await bridge?.close()
+    rmSync(tmpRoot, { recursive: true, force: true })
+  }, SERVER_TIMEOUT_MS)
+
+  test('an unsafe image name is refused naming the rule and nothing is written', async () => {
+    const before = snapshotTree(repoRoot)
+    const cases: ReadonlyArray<readonly [string, 'unsafe-name' | 'extension']> = [
+      ['a b.png', 'unsafe-name'],
+      ['.hidden.png', 'unsafe-name'],
+      ['sub/a.png', 'unsafe-name'],
+      ['..%2Fa.png', 'unsafe-name'],
+      [`${'a'.repeat(197)}.png`, 'unsafe-name'],
+      ['a.gif', 'extension'],
+      ['a.svg', 'extension'],
+      ['a.PNG', 'extension'],
+      ['noext', 'extension'],
+    ]
+    expect(cases[4]?.[0]).toHaveLength(201)
+
+    for (const [name, rule] of cases) {
+      const response = await postImage(name, new Uint8Array([1, 2, 3]))
+      expect(response.status, `${name} should have been refused`).toBe(400)
+      const body = await asJson<{ error: string; rule: string }>(response)
+      expect(body.rule, name).toBe(rule)
+      expect(body.error, name).toContain(rule)
+    }
+    expect(snapshotTree(repoRoot)).toEqual(before)
+  })
+
+  test('an image over 5 MiB is refused as too-large and nothing is written', async () => {
+    const before = snapshotTree(repoRoot)
+
+    const declared = await postImage('big.png', new Uint8Array(MAX_IMAGE_BYTES + 1))
+    expect(declared.status).toBe(413)
+    const body = await asJson<{ error: string; rule: string }>(declared)
+    expect(body.rule).toBe('too-large')
+    expect(body.error).toContain('too-large')
+
+    const streamed = await streamImage('streamed.png', 6, 1024 * 1024)
+    expect(streamed).toBe(413)
+
+    expect(snapshotTree(repoRoot)).toEqual(before)
+  })
+
+  test('an existing image is never overwritten', async () => {
+    const response = await postImage('keep.png', new Uint8Array([9, 9, 9]))
+    expect(response.status).toBe(409)
+    const body = await asJson<{ error: string; rule: string }>(response)
+    expect(body.rule).toBe('exists')
+    expect(body.error).toContain('exists')
+    expect(readFileSync(join(repoRoot, 'news', 'img', 'keep.png'), 'utf8')).toBe('keep-bytes')
+  })
+
+  test('a valid image is written to news/img/ only and answers its image field value', async () => {
+    const before = snapshotTree(repoRoot)
+    const bytes = new Uint8Array([137, 80, 78, 71, 0, 255])
+
+    const response = await postImage('cover-1.png', bytes)
+    expect(response.status).toBe(201)
+    expect(await response.json()).toEqual({
+      path: 'news/img/cover-1.png',
+      image: 'img/cover-1.png',
+    })
+
+    expect(snapshotTree(repoRoot)).toEqual({
+      ...before,
+      'news/img/cover-1.png': Buffer.from(bytes).toString('base64'),
+    })
+  })
+
+  test('writing a second image leaves the first in place', async () => {
+    const first = await postImage('first.webp', new Uint8Array([1]))
+    expect(first.status).toBe(201)
+    const second = await postImage('second.jpg', new Uint8Array([2]))
+    expect(second.status).toBe(201)
+
+    expect([...readFileSync(join(repoRoot, 'news', 'img', 'first.webp'))]).toEqual([1])
+    expect([...readFileSync(join(repoRoot, 'news', 'img', 'second.jpg'))]).toEqual([2])
+    expect(readFileSync(join(repoRoot, 'news', 'img', 'keep.png'), 'utf8')).toBe('keep-bytes')
+  })
+
+  test('no delete or rename API is imported under studio/src/bridge/', () => {
+    const deleteOrRename = [
+      'rmSync',
+      'rm',
+      'unlinkSync',
+      'unlink',
+      'renameSync',
+      'rename',
+      'copyFileSync',
+      'copyFile',
+    ]
+    // Story 024's text save writes a hidden temp file and renames it over the target (removing the
+    // temp file on failure). That one module may import exactly those two names and nothing else.
+    const story024TempRename = new Set(['renameSync', 'rmSync'])
+    const bridgeDir = fileURLToPath(new URL('../src/bridge', import.meta.url))
+    const files = readdirSync(bridgeDir, { recursive: true, encoding: 'utf8' })
+      .filter((file) => file.endsWith('.ts') && !file.endsWith('.test.ts'))
+      .map((file) => join(bridgeDir, file))
+    expect(files.length).toBeGreaterThan(0)
+
+    for (const file of files) {
+      const text = readFileSync(file, 'utf8')
+      const importBlocks = text.match(/import[^;]*from\s+['"]node:fs(\/promises)?['"]/g) ?? []
+      for (const block of importBlocks) {
+        for (const banned of deleteOrRename) {
+          if (file.endsWith('write-files.ts') && story024TempRename.has(banned)) {
+            continue
+          }
+          const pattern = new RegExp(`[{,]\\s*${banned}\\s*[,}]`)
+          expect(pattern.test(block), `${file} imports ${banned} from node:fs`).toBe(false)
+        }
+      }
+    }
+  })
+
+  test('the image route refuses a non-octet-stream content type and a cross-origin Origin', async () => {
+    const before = snapshotTree(repoRoot)
+
+    const wrongType = await postImage('a.png', new Uint8Array([1]), { 'content-type': 'image/png' })
+    expect(wrongType.status).toBe(415)
+    const wrongTypeBody = await asJson<{ error: string; rule: string }>(wrongType)
+    expect(wrongTypeBody.rule).toBe('content-type')
+
+    const crossOrigin = await postImage('a.png', new Uint8Array([1]), {
+      origin: 'https://evil.example.com',
+    })
+    expect(crossOrigin.status).toBe(403)
+    expect(await asJson<BridgeErrorResponse>(crossOrigin)).toEqual({
+      error: 'cross-origin request refused',
+    })
+
+    const noOrigin = await fetch(`${bridge.baseUrl}/__studio/fs/image?name=a.png`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/octet-stream' },
+      body: new Uint8Array([1]),
+    })
+    expect(noOrigin.status).toBe(403)
+    expect((await asJson<{ rule: string }>(noOrigin)).rule).toBe('origin')
+
+    for (const method of ['GET', 'PUT', 'PATCH', 'DELETE']) {
+      const response = await fetch(`${bridge.baseUrl}/__studio/fs/image?name=a.png`, { method })
+      expect(response.status, method).toBe(405)
+    }
+
+    expect(snapshotTree(repoRoot)).toEqual(before)
   })
 })

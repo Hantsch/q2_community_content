@@ -14,10 +14,13 @@
  *   wider than the window.
  * - Only a `ready` from this component's own frame window, on this origin, is accepted.
  *
+ * Story 026 D4: a delivered `cover` gets a measured text safe zone overlay (`CoverSafeZoneOverlay`)
+ * as a sibling of the frame, inside a relative box; the frame itself stays untouched.
+ *
  * Story 023 D4: whether the body is cut off is measured in the frame document itself (same
  * origin), see `useBodyOverflow`. The notice sits in studio chrome, outside the frame.
  */
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { usePreviewWidth } from '../../context/preview-width-context'
 import { measureBodyOverflow } from '../../editor/measure-body-overflow'
 import { PreviewWidthSwitcher } from '../../molecules/preview/PreviewWidthSwitcher'
@@ -28,6 +31,7 @@ import {
   isReadyMessage,
   type PreviewRenderMessage,
 } from '../../preview/preview-protocol'
+import { CoverSafeZoneOverlay } from './CoverSafeZoneOverlay'
 import { VisibilityOverrideMarker, VisibilityOverrideSwitch } from './VisibilityOverrideControl'
 
 /** The launcher's hero slot height. */
@@ -113,7 +117,12 @@ function useBodyOverflow(
 }
 
 export function SlidePreview({ model }: SlidePreviewProps): React.JSX.Element {
-  const frameRef = useRef<HTMLIFrameElement>(null)
+  const frameRef = useRef<HTMLIFrameElement | null>(null)
+  const [frameEl, setFrameEl] = useState<HTMLIFrameElement | null>(null)
+  const attachFrame = useCallback((element: HTMLIFrameElement | null) => {
+    frameRef.current = element
+    setFrameEl(element)
+  }, [])
   const slideRef = useRef<PreviewedSlide | null>(null)
   const frameReadyRef = useRef(false)
   const [frameDoc, setFrameDoc] = useState<Document | null>(null)
@@ -134,6 +143,8 @@ export function SlidePreview({ model }: SlidePreviewProps): React.JSX.Element {
 
   const slide = model.state === 'slide' ? model.slide : (overridden && held?.slide) || null
   const overflow = useBodyOverflow(frameDoc, slide, width)
+  const [showSafeZone, setShowSafeZone] = useState(true)
+  const isCover = slide?.template === 'cover'
 
   useEffect(() => {
     slideRef.current = slide
@@ -184,19 +195,36 @@ export function SlidePreview({ model }: SlidePreviewProps): React.JSX.Element {
           Body is cut off at {width}px — the launcher shows only what fits
         </p>
       )}
+      {isCover && (
+        <label className="flex min-h-11 w-fit cursor-pointer items-center gap-2 rounded-md border border-muted-border px-3 text-text focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-selected">
+          <input
+            type="checkbox"
+            role="switch"
+            checked={showSafeZone}
+            onChange={(event) => setShowSafeZone(event.target.checked)}
+            className="size-5 shrink-0"
+          />
+          <span>Show text safe zone</span>
+        </label>
+      )}
       <div data-testid="preview-scroll" className="max-w-full overflow-x-auto">
-        <iframe
-          ref={frameRef}
-          title="Slide preview"
-          src={PREVIEW_FRAME_PATH}
-          width={width}
-          height={HERO_HEIGHT_PX}
-          hidden={slide === null}
-          className="block shrink-0 border-0"
-          // Dynamic value: no utility class can carry a runtime px, and min-width is what stops a
-          // flex/grid ancestor shrinking the frame below its real viewport width.
-          style={{ minWidth: width }}
-        />
+        <div className="relative w-fit">
+          <iframe
+            ref={attachFrame}
+            title="Slide preview"
+            src={PREVIEW_FRAME_PATH}
+            width={width}
+            height={HERO_HEIGHT_PX}
+            hidden={slide === null}
+            className="block shrink-0 border-0"
+            // Dynamic value: no utility class can carry a runtime px, and min-width is what stops a
+            // flex/grid ancestor shrinking the frame below its real viewport width.
+            style={{ minWidth: width }}
+          />
+          {isCover && showSafeZone && (
+            <CoverSafeZoneOverlay frame={frameEl} frameDoc={frameDoc} slide={slide} width={width} />
+          )}
+        </div>
       </div>
     </section>
   )

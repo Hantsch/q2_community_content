@@ -7,6 +7,7 @@
 import { useEntryDraft } from '../../context/entry-draft-context'
 import { fieldsFor } from '../../editor/frontmatter-draft'
 import type { FieldIssue, FieldName } from '../../editor/field-rules'
+import { ImageAdder } from '../image/ImageAdder'
 import { ButtonListField } from '../../molecules/editor/ButtonListField'
 import { SelectField } from '../../molecules/editor/SelectField'
 import { TextField } from '../../molecules/editor/TextField'
@@ -75,13 +76,16 @@ export function FrontmatterEditor(): React.JSX.Element | null {
         note="Reordering happens in the library"
       />
       {image !== 'none' && (
-        <TextField
-          id="field-image"
-          label={image === 'required' ? 'Image (required)' : 'Image (optional)'}
-          value={fields.image}
-          onChange={(next) => update({ image: next })}
-          issues={issuesOf(issues, 'image')}
-        />
+        <>
+          <TextField
+            id="field-image"
+            label={image === 'required' ? 'Image (required)' : 'Image (optional)'}
+            value={fields.image}
+            onChange={(next) => update({ image: next })}
+            issues={issuesOf(issues, 'image')}
+          />
+          <ImageAdder template={fields.template} onAdded={(value) => update({ image: value })} />
+        </>
       )}
       <TextField
         id="field-visible-from"

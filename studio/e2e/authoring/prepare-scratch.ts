@@ -24,6 +24,8 @@ export function resetScratch(root: string = SCRATCH_ROOT): void {
   cpSync(join(studioDir, 'launcher-core.lock.json'), join(root, 'studio/launcher-core.lock.json'))
   rmSync(join(root, 'news'), { recursive: true, force: true })
   cpSync(FIXTURE_NEWS, join(root, 'news'), { recursive: true })
+  // The image route never creates directories; the real repository always has `news/img/`.
+  mkdirSync(join(root, 'news/img'), { recursive: true })
   cpSync(KIT_TEMPLATES, join(root, 'news/_templates'), { recursive: true })
 }
 

@@ -22,18 +22,22 @@ import { extname } from 'node:path'
 import { URL } from 'node:url'
 
 import { readContentRepo } from '../content-repo/read-content-repo'
+import { MAX_IMAGE_BYTES } from '../images/image-limits'
 import { readMirrorProvenance } from '../mirror/read-provenance'
 import { NEWS_IMAGE_URL_PREFIX } from '../mirror-runtime/newsImageUrl'
 import {
   BRIDGE_PREFIX,
   type BridgeErrorResponse,
   type BridgeFileResponse,
+  type BridgeImageRefusalResponse,
+  type BridgeImageWriteResponse,
   type BridgeWriteConflictResponse,
   type BridgeWriteFailureResponse,
   type BridgeWriteItem,
+  type ImageRefusalRule,
 } from './bridge-protocol'
 import { resolveBridgePath } from './resolve-bridge-path'
-import { createFile, writeFiles } from './write-files'
+import { createFile, createImageFile, writeFiles } from './write-files'
 
 /**
  * The image route (`GET /news-img/<filename>`, story 015 D3) deliberately keeps the URL prefix
@@ -60,6 +64,19 @@ export interface CreateFileBridgeOptions {
   readonly directories: readonly string[]
   /** Directories `POST /__studio/fs/write` may write into; none by default (read-only bridge). */
   readonly writableDirectories?: readonly string[]
+  /** The launcher's image-name rules `POST /__studio/fs/image` checks a file name against. */
+  readonly imageRules: ImageRules
+}
+
+/**
+ * Story 026 D1: the two mirrored predicates from `contract/launcher-safe-names.ts`. Injected, never
+ * imported here: that module's graph reaches `launcher-core/` files that only resolve through the
+ * dev server's plugins, and this file is loaded by Vite's plugin-less config loader - see
+ * `file-bridge-plugin.ts`, which loads them with `ssrLoadModule`.
+ */
+export interface ImageRules {
+  readonly isSafeDeclaredImagePath: (path: string) => boolean
+  readonly SAFE_NEWS_IMAGE_EXTENSIONS: readonly string[]
 }
 
 /** Largest accepted `write` request body. */
@@ -234,6 +251,98 @@ function handleWrite(
   })
 }
 
+function sendImageRefusal(
+  res: ServerResponse,
+  status: number,
+  rule: ImageRefusalRule,
+  detail: string,
+): void {
+  const body: BridgeImageRefusalResponse = { error: `${rule}: ${detail}`, rule }
+  sendJson(res, status, body, 'POST')
+}
+
+/**
+ * `POST /__studio/fs/image?name=<file name>` (story 026 D1): raw image bytes written to
+ * `news/img/<name>`. Host was already checked. Name, extension and size are all refused before
+ * anything touches disk; the size cap is counted while the body streams in, so an oversized body
+ * is never held in full; existence and confinement are `createImageFile`'s.
+ */
+function handleImageWrite(
+  req: IncomingMessage,
+  res: ServerResponse,
+  url: URL,
+  repoRoot: string,
+  imageRules: ImageRules,
+): void {
+  const origin = headerValue(req.headers.origin)
+  if (origin === undefined || !isLoopbackOrigin(origin)) {
+    sendImageRefusal(res, 403, 'origin', 'a loopback Origin header is required')
+    return
+  }
+  const mediaType = (headerValue(req.headers['content-type']) ?? '').split(';')[0]?.trim()
+  if (mediaType?.toLowerCase() !== 'application/octet-stream') {
+    sendImageRefusal(res, 415, 'content-type', 'Content-Type must be application/octet-stream')
+    return
+  }
+  const name = url.searchParams.get('name') ?? ''
+  if (/[/\\]/.test(name) || !imageRules.isSafeDeclaredImagePath(`img/${name}`)) {
+    sendImageRefusal(
+      res,
+      400,
+      'unsafe-name',
+      `${JSON.stringify(name)} is not a safe image file name`,
+    )
+    return
+  }
+  const dot = name.lastIndexOf('.')
+  if (dot === -1 || !imageRules.SAFE_NEWS_IMAGE_EXTENSIONS.includes(name.slice(dot + 1))) {
+    const allowed = imageRules.SAFE_NEWS_IMAGE_EXTENSIONS.join(', ')
+    sendImageRefusal(res, 400, 'extension', `${name}: the extension must be one of ${allowed}`)
+    return
+  }
+  const tooLarge = `the image is larger than ${MAX_IMAGE_BYTES} bytes`
+  if (Number(headerValue(req.headers['content-length'])) > MAX_IMAGE_BYTES) {
+    sendImageRefusal(res, 413, 'too-large', tooLarge)
+    return
+  }
+
+  const chunks: Buffer[] = []
+  let size = 0
+  let refused = false
+  const onData = (chunk: Buffer): void => {
+    size += chunk.length
+    if (size > MAX_IMAGE_BYTES) {
+      refused = true
+      chunks.length = 0
+      // Stop counting and keeping anything: the rest of the body is drained and discarded.
+      req.removeListener('data', onData)
+      req.resume()
+      sendImageRefusal(res, 413, 'too-large', tooLarge)
+      return
+    }
+    chunks.push(chunk)
+  }
+  req.on('data', onData)
+  req.on('error', () => undefined)
+  req.on('end', () => {
+    if (refused) {
+      return
+    }
+    try {
+      const result = createImageFile({ repoRoot, fileName: name, bytes: Buffer.concat(chunks) })
+      if (result.ok) {
+        const body: BridgeImageWriteResponse = { path: result.path, image: `img/${name}` }
+        sendJson(res, 201, body, 'POST')
+      } else {
+        sendImageRefusal(res, result.status, result.rule, result.error)
+      }
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : String(cause)
+      sendImageRefusal(res, 500, 'write-failed', message)
+    }
+  })
+}
+
 /**
  * Creates the file bridge's connect-style middleware. `repoRoot`/`directories` are bound once at
  * construction time; a `repoRoot`/`root` query parameter on any request is deliberately never
@@ -243,6 +352,7 @@ export function createFileBridge({
   repoRoot,
   directories,
   writableDirectories = [],
+  imageRules,
 }: CreateFileBridgeOptions): FileBridgeMiddleware {
   return function fileBridgeMiddleware(req, res, next) {
     const rawUrl = req.url
@@ -253,12 +363,13 @@ export function createFileBridge({
       return
     }
 
-    // Checked before any routing: the only non-read request a bridge route accepts is `POST` on
-    // the `write` route; every other method/route pair is refused.
+    // Checked before any routing: the only non-read requests a bridge route accepts are `POST` on
+    // the `write` and `image` routes; every other method/route pair is refused.
     const method = req.method ?? 'GET'
-    const isWriteRoute =
-      isBridgeRoute && new URL(rawUrl, 'http://bridge.local').pathname === `${BRIDGE_PREFIX}write`
-    if (method !== 'GET' && method !== 'HEAD' && !(method === 'POST' && isWriteRoute)) {
+    const bridgePathname = isBridgeRoute ? new URL(rawUrl, 'http://bridge.local').pathname : ''
+    const acceptsPost =
+      bridgePathname === `${BRIDGE_PREFIX}write` || bridgePathname === `${BRIDGE_PREFIX}image`
+    if (method !== 'GET' && method !== 'HEAD' && !(method === 'POST' && acceptsPost)) {
       sendError(res, 405, 'method not allowed')
       return
     }
@@ -357,6 +468,15 @@ export function createFileBridge({
         return
       }
       handleWrite(req, res, repoRoot, writableDirectories)
+      return
+    }
+
+    if (route === 'image') {
+      if (method !== 'POST') {
+        sendError(res, 405, 'method not allowed', method)
+        return
+      }
+      handleImageWrite(req, res, url, repoRoot, imageRules)
       return
     }
 

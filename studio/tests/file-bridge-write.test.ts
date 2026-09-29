@@ -22,6 +22,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, test } from 'vit
 import type { BridgeWriteItem } from '../src/bridge/bridge-protocol'
 import { createBridgeClient } from '../src/bridge/client'
 import { createFileBridge } from '../src/bridge/create-file-bridge'
+import * as imageRules from '../src/contract/launcher-safe-names'
 
 const ORIGIN = 'http://localhost:5173'
 
@@ -67,6 +68,7 @@ beforeAll(async () => {
     repoRoot: root,
     directories: ['news', 'engines'],
     writableDirectories: ['news'],
+    imageRules,
   })
   server = createServer((req, res) => {
     middleware(req, res, () => {

@@ -118,3 +118,18 @@
 - 2026-09-29 15:10:54 · 025 · review 1 · started
 - 2026-09-29 15:12:44 · 025 · review 1 · done
 - 2026-09-29 15:13:07 · 025 · story · done
+- 2026-09-29 15:13:26 · 026 · build · started
+- 2026-09-29 15:13:45 · 026 · D1 image write route · started
+- 2026-09-29 15:20:37 · 026 · D1 image write route · done
+- 2026-09-29 15:20:37 · 026 · D2 image expectations · started
+- 2026-09-29 15:21:31 · 026 · D2 image expectations · done
+- 2026-09-29 15:21:32 · 026 · D3 image adder UI · started
+- 2026-09-29 15:27:23 · 026 · D3 image adder UI · done
+- 2026-09-29 15:27:23 · 026 · D4 cover safe zone · started
+- 2026-09-29 15:29:08 · 026 · D4 cover safe zone · done
+- 2026-09-29 15:29:08 · 026 · verify · started
+- 2026-09-29 15:30:34 · 026 · verify · blocked: eslint errors in 4 story files
+- 2026-09-29 15:33:16 · 026 · verify · done
+- 2026-09-29 15:33:16 · 026 · review 1 · started
+- 2026-09-29 15:35:14 · 026 · review 1 · done
+- 2026-09-29 15:36:09 · 026 · story · done

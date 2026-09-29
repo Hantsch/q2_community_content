@@ -1,6 +1,6 @@
 import type { Plugin } from 'vite'
 
-import { createFileBridge } from './create-file-bridge'
+import { createFileBridge, type ImageRules } from './create-file-bridge'
 import { resolveBridgeRepoRoot } from './scratch-repo-root'
 
 /**
@@ -57,7 +57,14 @@ export function fileBridgePlugin(): Plugin {
       const writableDirectories = createContentTypeRegistry()
         .filter((descriptor) => descriptor.state === 'implemented')
         .map((descriptor) => descriptor.directory)
-      server.middlewares.use(createFileBridge({ repoRoot, directories, writableDirectories }))
+      // Story 026 D1: the image route's name rules come from the mirror, loaded the same way and
+      // for the same reason as the registry above; `ImageRules` is the local shape of that module.
+      const imageRules = (await server.ssrLoadModule(
+        '/src/contract/launcher-safe-names.ts',
+      )) as ImageRules
+      server.middlewares.use(
+        createFileBridge({ repoRoot, directories, writableDirectories, imageRules }),
+      )
     },
   }
 }

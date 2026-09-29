@@ -6,6 +6,8 @@
  * directory and be a content file (`<dir>/index.json` or a `.md` outside `_templates/` and `img/`),
  * and every `expected` must match the normalised disk text. Only then are the files written, in
  * request order, each through a hidden sibling temp file renamed over the target.
+ *
+ * `createImageFile` (story 026 D1) is the binary sibling behind `POST /__studio/fs/image`.
  */
 import { lstatSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { basename, dirname, join, relative, resolve, sep } from 'node:path'
@@ -221,4 +223,61 @@ export function createFile({
     return { ok: false, status: 500, error: `${path}: ${messageOf(cause)}` }
   }
   return { ok: true, written: [path] }
+}
+
+export interface CreateImageFileOptions {
+  readonly repoRoot: string
+  /** A bare file name the caller has already checked: no separator, safe, allowed extension. */
+  readonly fileName: string
+  readonly bytes: Uint8Array
+}
+
+export type CreateImageFileResult =
+  | { readonly ok: true; readonly path: string }
+  | {
+      readonly ok: false
+      readonly status: 403 | 409 | 500
+      readonly rule: 'exists' | 'confinement' | 'write-failed'
+      readonly error: string
+    }
+
+/**
+ * Story 026 D1: exclusive create of `news/img/<fileName>` behind `POST /__studio/fs/image`. The
+ * target must resolve inside `news/img` (so a symlinked `img/` cannot redirect the write) and must
+ * not exist; the write itself uses `wx`, so a file that appears between the check and the write is
+ * still never overwritten (409). No directory is ever created.
+ */
+export function createImageFile({
+  repoRoot,
+  fileName,
+  bytes,
+}: CreateImageFileOptions): CreateImageFileResult {
+  const path = `news/img/${fileName}`
+  let realRoot: string
+  try {
+    realRoot = realpathSync(resolve(repoRoot))
+  } catch {
+    return {
+      ok: false,
+      status: 403,
+      rule: 'confinement',
+      error: `${repoRoot}: repository root could not be resolved`,
+    }
+  }
+  const resolved = resolveBridgePath({ repoRoot, directories: ['news/img'], requestPath: path })
+  if (resolved.ok) {
+    return { ok: false, status: 409, rule: 'exists', error: `${path} already exists` }
+  }
+  if (!resolved.reason.endsWith(': not found')) {
+    return { ok: false, status: 403, rule: 'confinement', error: resolved.reason }
+  }
+  try {
+    writeFileSync(resolve(realRoot, 'news', 'img', fileName), bytes, { flag: 'wx' })
+  } catch (cause) {
+    if ((cause as NodeJS.ErrnoException).code === 'EEXIST') {
+      return { ok: false, status: 409, rule: 'exists', error: `${path} already exists` }
+    }
+    return { ok: false, status: 500, rule: 'write-failed', error: `${path}: ${messageOf(cause)}` }
+  }
+  return { ok: true, path }
 }
