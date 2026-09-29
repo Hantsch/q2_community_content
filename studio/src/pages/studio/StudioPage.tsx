@@ -35,6 +35,8 @@ import { fetchMirrorProvenance } from '../../mirror-runtime/provenance-client'
 import type { MirrorProvenance } from '../../mirror/provenance'
 import { ContentTypeNav } from '../../organisms/ContentTypeNav'
 import { ContentTypeStateNotice } from '../../organisms/ContentTypeStateNotice'
+import { withBody } from '../../editor/body-document'
+import { BodyEditor } from '../../organisms/editor/BodyEditor'
 import { FrontmatterEditor } from '../../organisms/editor/FrontmatterEditor'
 import { DraftPreviewNotice } from '../../organisms/preview/DraftPreviewNotice'
 import { SlidePreview } from '../../organisms/preview/SlidePreview'
@@ -66,6 +68,13 @@ function findRow(
   return model.entries.find((row) => row.id === id) ?? model.drafts.find((row) => row.id === id)
 }
 
+/** The body of the selected entry, bound to the working copy; absent when nothing editable. */
+function BodyPanel(): React.JSX.Element | null {
+  const { draft, body, setBody } = useEntryDraft()
+  if (draft === null || 'unreadable' in draft) return null
+  return <BodyEditor value={body} onChange={setBody} />
+}
+
 /** Bridges `useNewsLibrary(descriptor)` into `LibraryView` and `ValidationPanel`, reading the
  * current entry from context rather than page state (Decisions (Sprint)) — separated from
  * `StudioPage` only so it can sit beneath `CurrentEntryProvider` and call `useCurrentEntry()`. */
@@ -85,9 +94,10 @@ function NewsLibrary({
     thumbnailUrlFor,
     refresh,
     draftPreviewFor,
+    workingPreviewFor,
   } = useNewsLibrary(descriptor)
   const { currentEntryId, selectEntry: selectEntryUnguarded } = useCurrentEntry()
-  const { confirmDiscard, reset } = useEntryDraft()
+  const { confirmDiscard, reset, body, bodyChanged } = useEntryDraft()
   const [provenance, setProvenance] = useState<MirrorProvenance | undefined>(undefined)
 
   useEffect(() => {
@@ -103,12 +113,23 @@ function NewsLibrary({
   // Story 020 D2: a selected draft feeds the same preview the synthetic read/report it would have
   // as a published row; when that cannot be built the input stays the published one, which yields
   // 018's own "not in index" state for the draft's id.
+  // Story 023 D3: a changed body is substituted into the on-disk document text, so the preview
+  // follows the typing through the same pipeline. Frontmatter edits are not previewed yet.
+  const workingText =
+    bodyChanged && selectedDocument ? withBody(selectedDocument.text, body) : undefined
   const draftPreview =
     selectedRow?.status === 'draft' && currentEntryId !== null
-      ? draftPreviewFor(currentEntryId)
+      ? draftPreviewFor(currentEntryId, workingText)
+      : undefined
+  const workingPreview =
+    selectedRow?.status !== 'draft' &&
+    selectedDocument &&
+    currentEntryId !== null &&
+    workingText !== undefined
+      ? workingPreviewFor(selectedDocument.file, currentEntryId, workingText)
       : undefined
   const previewModel = buildSlidePreviewModel(
-    draftPreview ?? { read, report, entryId: currentEntryId },
+    draftPreview ?? workingPreview ?? { read, report, entryId: currentEntryId },
   )
   const draftVerdict = draftPreview?.report?.entries.find(
     (entry) => entry.id === draftPreview.entryId,
@@ -147,6 +168,7 @@ function NewsLibrary({
       )}
       <SlidePreview model={previewModel} />
       <FrontmatterEditor />
+      <BodyPanel />
       <div className="flex gap-8">
         <LibraryView
           model={model}

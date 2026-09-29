@@ -14,12 +14,17 @@ import {
   type EntryDraft,
   type UnreadableDraft,
 } from '../editor/frontmatter-draft'
+import { splitDocument } from '../editor/body-document'
 import { canSave as canSaveDraft, validateDraft, type FieldIssue } from '../editor/field-rules'
 
 export interface EntryDraftContextValue {
   /** `null` while no document is selected; `{ unreadable: true }` when its frontmatter cannot be
    * read. */
   readonly draft: EntryDraft | UnreadableDraft | null
+  /** Story 023 D3: the body as typed; `initialBody` is what the document holds on disk. */
+  readonly body: string
+  readonly setBody: (body: string) => void
+  readonly bodyChanged: boolean
   readonly update: (patch: Partial<DraftFields>) => void
   readonly isDirty: boolean
   readonly issues: readonly FieldIssue[]
@@ -44,6 +49,10 @@ function initialDraft(file: string | null, text: string | undefined) {
   return file === null || text === undefined ? null : draftFromDocument(file, text)
 }
 
+function initialBody(text: string | undefined): string {
+  return text === undefined ? '' : splitDocument(text).body
+}
+
 function isEntryDraft(draft: EntryDraft | UnreadableDraft | null): draft is EntryDraft {
   return draft !== null && !('unreadable' in draft)
 }
@@ -53,39 +62,53 @@ export function EntryDraftProvider({
   text,
   children,
 }: EntryDraftProviderProps): React.JSX.Element {
-  const [state, setState] = useState(() => ({ file, text, draft: initialDraft(file, text) }))
+  const [state, setState] = useState(() => ({
+    file,
+    text,
+    draft: initialDraft(file, text),
+    body: initialBody(text),
+  }))
 
   // Adjusting state while rendering, as `useNewsLibrary` does: a changed selection or text starts
   // a fresh draft without an extra render pass through an effect.
   if (state.file !== file || state.text !== text) {
-    setState({ file, text, draft: initialDraft(file, text) })
+    setState({ file, text, draft: initialDraft(file, text), body: initialBody(text) })
   }
 
-  const { draft } = state
+  const { draft, body } = state
+  const bodyChanged = isEntryDraft(draft) && body !== initialBody(state.text)
   const value = useMemo<EntryDraftContextValue>(() => {
     const editable = isEntryDraft(draft)
     return {
       draft,
+      body,
+      bodyChanged,
+      setBody: (next) =>
+        setState((current) => (isEntryDraft(current.draft) ? { ...current, body: next } : current)),
       update: (patch) =>
         setState((current) =>
           isEntryDraft(current.draft)
             ? { ...current, draft: updateDraft(current.draft, patch) }
             : current,
         ),
-      isDirty: editable && isDraftDirty(draft),
+      isDirty: editable && (isDraftDirty(draft) || bodyChanged),
       issues: editable ? validateDraft(draft) : [],
       canSave: editable && canSaveDraft(draft),
       reset: () =>
         setState((current) =>
           isEntryDraft(current.draft)
-            ? { ...current, draft: { ...current.draft, fields: current.draft.initialFields } }
+            ? {
+                ...current,
+                draft: { ...current.draft, fields: current.draft.initialFields },
+                body: initialBody(current.text),
+              }
             : current,
         ),
       confirmDiscard: () =>
-        !(editable && isDraftDirty(draft)) ||
+        !(editable && (isDraftDirty(draft) || bodyChanged)) ||
         window.confirm(`Discard unsaved changes to ${draft.file}?`),
     }
-  }, [draft])
+  }, [draft, body, bodyChanged])
 
   // The browser's own "leave site?" prompt, registered only while there is something to lose.
   const dirty = value.isDirty

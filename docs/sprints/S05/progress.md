@@ -69,3 +69,22 @@
 - 2026-09-29 14:12:41 · 022 · review 1 · started
 - 2026-09-29 14:13:57 · 022 · review 1 · done
 - 2026-09-29 14:14:02 · 022 · story · done
+- 2026-09-29 14:14:20 · 023 · build · started
+- 2026-09-29 14:14:39 · 023 · D1 body split and lint · started
+- 2026-09-29 14:16:41 · 023 · D1 body split and lint · done
+- 2026-09-29 14:16:41 · 023 · D2 BodyEditor · started
+- 2026-09-29 14:17:27 · 023 · D2 BodyEditor · done
+- 2026-09-29 14:17:27 · 023 · D3 wiring and e2e · started
+- 2026-09-29 14:20:55 · 023 · D3 wiring and e2e · blocked: contract-single-source red and visibility-override strict-mode, fix dispatched
+- 2026-09-29 14:20:55 · 023 · D3 fixes · started
+- 2026-09-29 14:22:04 · 023 · D3 fixes · done
+- 2026-09-29 14:22:04 · 023 · D4 overflow indicator (hard) · started
+- 2026-09-29 14:28:57 · 023 · D4 overflow indicator (hard) · done
+- 2026-09-29 14:28:57 · 023 · verify · started
+- 2026-09-29 14:30:01 · 023 · verify · blocked: 3 eslint errors in body-lint.ts and BodyEditor.test.tsx
+- 2026-09-29 14:30:01 · 023 · D-fix lint · started
+- 2026-09-29 14:30:45 · 023 · D-fix lint · done
+- 2026-09-29 14:30:45 · 023 · verify · done
+- 2026-09-29 14:30:45 · 023 · review 1 · started
+- 2026-09-29 14:32:49 · 023 · review 1 · done
+- 2026-09-29 14:35:15 · 023 · story · done

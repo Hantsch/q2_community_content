@@ -1,7 +1,7 @@
 ---
 id: 023
 title: Body editor with live preview
-status: ready # draft -> ready -> in-progress -> done
+status: done # draft -> ready -> in-progress -> done
 created: 2026-09-13
 ---
 
@@ -18,14 +18,14 @@ Concept: [Q2 Content Studio](../concepts/content-studio.md) — CS-21.
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — The body is editable as markdown, as plain text the author controls.
-- [ ] **AC2** — The preview updates as the body changes, without a save and without a reload.
-- [ ] **AC3** — An empty body is flagged as the drop cause it is, in the editor, not only in the
+- [x] **AC1** — The body is editable as markdown, as plain text the author controls.
+- [x] **AC2** — The preview updates as the body changes, without a save and without a reload.
+- [x] **AC3** — An empty body is flagged as the drop cause it is, in the editor, not only in the
       report.
-- [ ] **AC4** — The editor never inserts HTML, styling or layout into the body.
-- [ ] **AC5** — Markdown the launcher does not render is flagged, so an author does not write
+- [x] **AC4** — The editor never inserts HTML, styling or layout into the body.
+- [x] **AC5** — Markdown the launcher does not render is flagged, so an author does not write
       something that will appear as literal characters on the slide.
-- [ ] **AC6** — A body long enough to overflow its template is visible as such in the preview, at
+- [x] **AC6** — A body long enough to overflow its template is visible as such in the preview, at
       every preview width.
 
 ## Open Questions
@@ -234,4 +234,17 @@ component, `studio/e2e/body-editor*.spec.ts`, `studio/e2e/fixtures/body-editor-f
 
 ## Done
 
-<Filled by `/build 023`.>
+Body editing is wired end to end: a plain `<textarea>` `BodyEditor` (raw bytes, no toolbar) sits under the frontmatter form, the working copy carries `body` (counts as unsaved), and the preview re-derives from `withBody(onDiskText, body)` on every keystroke. A hand-written lint flags an empty body (error) and every markdown construct the launcher shows literally (warnings), pinned by a drift guard on the mirrored slides. `SlidePreview` measures the frame's `.home-hero-body` after `fonts.ready`, on body and width changes, and shows "Body is cut off at <width>px" in chrome.
+
+Commit message: `023: body editor (raw textarea, live preview, empty/literal-markdown lint, overflow indicator at every width)`
+
+Verification (narrow gate; the full gate is the sprint's): `npm run build` and `typecheck` green; `lint` clean on all touched files (only pre-existing prettier warnings on untouched files remain); `npm run test --workspace studio -- --changed HEAD` green (full unit run showed only the 5 known pre-existing red); `npm run e2e --workspace studio -- e2e/body-editor.spec.ts e2e/body-overflow.spec.ts` 9/9 green (preview-width, slide-preview, visibility-override, draft-preview, frontmatter-editor specs also green during D3/D4). AC -> test mapping as in `## Acceptance Tests`: every named test existed, ran and passed; no manual residue. Review: default stage, PASS, no blocking findings.
+
+Decisions (implementation):
+- Frontmatter edits are not yet previewed: the preview substitutes only the body into the on-disk text (`withBody`), and only once the body has changed.
+- D1 spec wording kept: the empty-body message says the launcher drops the entry. The launcher drops only entries with neither title nor body, so for a titled entry the message overstates; the empty-body e2e uses an untitled fixture entry (`untitled-entry.md`), and the cover fixture is named "Cover Piece" to keep button names unambiguous. Candidate for a wording follow-up.
+- `parseFrontmatter` normalises CRLF, `splitDocument` keeps bytes; the agreement test compares modulo CRLF.
+- 022's `<p role="status">` collided with the override marker in `visibility-override.spec.ts` (missed by the changed-only gate); the spec now scopes `getByRole('status')` to the "Slide preview" region, assertions unchanged. The overflow notice uses `aria-live`, not `role=status`, for the same reason.
+- Known gap: no test forces a late font load alone; the hero-clip branch of `measureBodyOverflow` is covered by stubbed geometry only.
+
+tiers: D 4 / hard 1 · review default · cycles 0 · agents 9

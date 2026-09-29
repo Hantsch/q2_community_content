@@ -30,6 +30,11 @@ async function selectEntry(page: Page, title: string): Promise<void> {
   await region.getByRole('listitem').filter({ hasText: title }).getByRole('button').click()
 }
 
+/** The preview's own status (override marker or nothing notice), not the frontmatter editor's. */
+function previewStatus(page: Page) {
+  return page.getByRole('region', { name: 'Slide preview' }).getByRole('status')
+}
+
 function overrideSwitch(page: Page) {
   return page.getByRole('switch', { name: 'Preview as if visible' })
 }
@@ -79,7 +84,7 @@ test('the override is marked on the preview and names the real state', async ({ 
   await selectEntry(page, SCHEDULED_TITLE)
   await overrideSwitch(page).check()
 
-  const marker = page.getByRole('status')
+  const marker = previewStatus(page)
   await expect(marker).toBeVisible()
   await expect(marker).toContainText('Override — previewing as if visible.')
   await expect(marker).toContainText('Real state:')
@@ -100,7 +105,7 @@ test('toggling the override writes nothing to the repository', async ({ page }) 
 
   await selectEntry(page, SCHEDULED_TITLE)
   await overrideSwitch(page).check()
-  await expect(page.getByRole('status')).toContainText('Override')
+  await expect(previewStatus(page)).toContainText('Override')
   await overrideSwitch(page).uncheck()
   await selectEntry(page, EXPIRED_TITLE)
   await overrideSwitch(page).check()
@@ -119,7 +124,7 @@ test('the validation panel and library keep the real visibility while the overri
 }) => {
   await selectEntry(page, SCHEDULED_TITLE)
   await overrideSwitch(page).check()
-  await expect(page.getByRole('status')).toContainText('Override')
+  await expect(previewStatus(page)).toContainText('Override')
 
   const row = page
     .getByRole('region', { name: 'Entries' })
@@ -139,7 +144,7 @@ test('with the override off a scheduled or expired entry previews as nothing wit
   const frame = page.locator('iframe[title="Slide preview"]')
 
   await selectEntry(page, SCHEDULED_TITLE)
-  const notice = page.getByRole('status')
+  const notice = previewStatus(page)
   await expect(notice.getByText('Nothing would be shown')).toBeVisible()
   await expect(notice).toContainText(SCHEDULED_VISIBLE_FROM)
   await expect(frame).toBeHidden()

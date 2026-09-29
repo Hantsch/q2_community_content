@@ -51,6 +51,15 @@ export interface UseNewsLibraryResult {
    * loading, without a reader/validators, or when the draft cannot be folded in. */
   readonly draftPreviewFor: (
     draftId: string,
+    workingText?: string,
+  ) => { read: ContentSourceRead; report: ContentReport; entryId: string } | undefined
+  /** Story 023 D3: a published entry with `workingText` in place of its document text, run through
+   * the same validators and clock; `workingText` also replaces the draft's text in
+   * `draftPreviewFor`. */
+  readonly workingPreviewFor: (
+    file: string,
+    entryId: string,
+    workingText: string,
   ) => { read: ContentSourceRead; report: ContentReport; entryId: string } | undefined
 }
 
@@ -188,16 +197,38 @@ export function useNewsLibrary(
 
   const { read: builtRead, builtAt } = state
   const draftPreviewFor = useCallback(
-    (draftId: string) => {
+    (draftId: string, workingText?: string) => {
       const validators = descriptor.validators
       if (!builtRead || !builtAt || !validators) return undefined
-      const synthetic = withDraftAsPublished(builtRead, draftId)
+      const base =
+        workingText === undefined
+          ? builtRead
+          : {
+              ...builtRead,
+              drafts: builtRead.drafts.map((d) =>
+                d.path === draftId ? { ...d, text: workingText } : d,
+              ),
+            }
+      const synthetic = withDraftAsPublished(base, draftId)
       if (!synthetic) return undefined
       return {
         read: synthetic.read,
         report: validators.buildReport(synthetic.read, builtAt),
         entryId: synthetic.entryId,
       }
+    },
+    [descriptor, builtRead, builtAt],
+  )
+
+  const workingPreviewFor = useCallback(
+    (file: string, entryId: string, workingText: string) => {
+      const validators = descriptor.validators
+      if (!builtRead || !builtAt || !validators || !builtRead.documents[file]) return undefined
+      const read = {
+        ...builtRead,
+        documents: { ...builtRead.documents, [file]: { text: workingText } },
+      }
+      return { read, report: validators.buildReport(read, builtAt), entryId }
     },
     [descriptor, builtRead, builtAt],
   )
@@ -211,5 +242,6 @@ export function useNewsLibrary(
     thumbnailUrlFor,
     refresh,
     draftPreviewFor,
+    workingPreviewFor,
   }
 }

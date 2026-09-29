@@ -13,9 +13,13 @@
  * - The frame is `width` px wide at a real viewport (no scaling); the wrapper scrolls when that is
  *   wider than the window.
  * - Only a `ready` from this component's own frame window, on this origin, is accepted.
+ *
+ * Story 023 D4: whether the body is cut off is measured in the frame document itself (same
+ * origin), see `useBodyOverflow`. The notice sits in studio chrome, outside the frame.
  */
 import { useEffect, useRef, useState } from 'react'
 import { usePreviewWidth } from '../../context/preview-width-context'
+import { measureBodyOverflow } from '../../editor/measure-body-overflow'
 import { PreviewWidthSwitcher } from '../../molecules/preview/PreviewWidthSwitcher'
 import type { SlidePreviewModel } from '../../preview/preview-model'
 import { decidePreviewVisibility } from '../../preview/visibility-override'
@@ -40,10 +44,79 @@ function postRender(frame: HTMLIFrameElement, slide: PreviewedSlide): void {
   frame.contentWindow?.postMessage(message, window.location.origin)
 }
 
+interface OverflowVerdict {
+  readonly width: number
+  readonly cut: boolean
+}
+
+/**
+ * Re-measures the frame's body after each of three independent triggers, because any one of them
+ * can change the verdict on its own:
+ * - a render inside the frame (the body changed) - a MutationObserver on the frame document, since
+ *   the frame renders asynchronously after the `render` message and the parent cannot know when;
+ * - a width change - the frame window's `resize`, plus the `width` dependency itself;
+ * - a font load - every measurement first waits for `document.fonts.ready` of the frame, and a
+ *   later `loadingdone` measures again, since swapping in the launcher font re-wraps the text.
+ * Every trigger takes a new token; a measurement whose token is no longer the latest (for example
+ * a font promise resolving after a newer render or width) is discarded. The verdict records the
+ * width it was measured at, and is only shown while that is still the current width.
+ */
+function useBodyOverflow(
+  frameDoc: Document | null,
+  slide: PreviewedSlide | null,
+  width: number,
+): OverflowVerdict | null {
+  const [verdict, setVerdict] = useState<OverflowVerdict | null>(null)
+  const widthRef = useRef(width)
+  const tokenRef = useRef(0)
+  const scheduleRef = useRef<() => void>(() => undefined)
+
+  useEffect(() => {
+    const view = frameDoc?.defaultView
+    if (!frameDoc || !view) return
+    const fonts = frameDoc.fonts as FontFaceSet | undefined // jsdom has no FontFaceSet
+    let active = true
+    function schedule(): void {
+      const token = ++tokenRef.current
+      void (fonts?.ready ?? Promise.resolve()).then(() => {
+        if (!active || token !== tokenRef.current || !frameDoc) return
+        setVerdict({ width: widthRef.current, cut: measureBodyOverflow(frameDoc) })
+      })
+    }
+    scheduleRef.current = schedule
+
+    // The frame realm's own constructor: a node of another document is observed from its realm.
+    const observer = new view.MutationObserver(schedule)
+    observer.observe(frameDoc, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    })
+    view.addEventListener('resize', schedule)
+    fonts?.addEventListener('loadingdone', schedule)
+    schedule()
+    return () => {
+      observer.disconnect()
+      view.removeEventListener('resize', schedule)
+      fonts?.removeEventListener('loadingdone', schedule)
+      scheduleRef.current = () => undefined
+      active = false
+    }
+  }, [frameDoc])
+
+  useEffect(() => {
+    widthRef.current = width
+    scheduleRef.current()
+  }, [slide, width])
+
+  return verdict && verdict.width === width ? verdict : null
+}
+
 export function SlidePreview({ model }: SlidePreviewProps): React.JSX.Element {
   const frameRef = useRef<HTMLIFrameElement>(null)
   const slideRef = useRef<PreviewedSlide | null>(null)
   const frameReadyRef = useRef(false)
+  const [frameDoc, setFrameDoc] = useState<Document | null>(null)
   const { width, setWidth } = usePreviewWidth()
 
   // Story 021: the override is local to this preview and lasts for one held entry only. It is
@@ -60,6 +133,7 @@ export function SlidePreview({ model }: SlidePreviewProps): React.JSX.Element {
   const overridden = decision?.kind === 'render' && decision.override ? decision : undefined
 
   const slide = model.state === 'slide' ? model.slide : (overridden && held?.slide) || null
+  const overflow = useBodyOverflow(frameDoc, slide, width)
 
   useEffect(() => {
     slideRef.current = slide
@@ -73,6 +147,7 @@ export function SlidePreview({ model }: SlidePreviewProps): React.JSX.Element {
       if (!frame || event.source !== frame.contentWindow) return
       if (event.origin !== window.location.origin || !isReadyMessage(event.data)) return
       frameReadyRef.current = true
+      setFrameDoc(frame.contentDocument)
       if (slideRef.current) postRender(frame, slideRef.current)
     }
 
@@ -100,6 +175,15 @@ export function SlidePreview({ model }: SlidePreviewProps): React.JSX.Element {
         <VisibilityOverrideSwitch checked={override} onChange={setOverride} />
       )}
       {overridden && <VisibilityOverrideMarker realState={overridden.realState} />}
+      {slide !== null && overflow?.cut && (
+        <p
+          data-testid="body-overflow"
+          aria-live="polite"
+          className="rounded-md border border-severity-warning-border bg-severity-warning-soft px-3 py-2 text-severity-warning"
+        >
+          Body is cut off at {width}px — the launcher shows only what fits
+        </p>
+      )}
       <div data-testid="preview-scroll" className="max-w-full overflow-x-auto">
         <iframe
           ref={frameRef}
