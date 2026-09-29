@@ -24,8 +24,9 @@ Concept: [Q2 Content Studio](../concepts/content-studio.md) — CS-26.
       explicitly that no `q2-launcher` checkout is needed.
 - [x] **AC3** — It explains what the studio will and will not do: it writes files in the working
       tree, and it never commits, pushes or publishes anything.
-- [x] **AC4** — The repository `README.md` and `news/_templates/README.md` link to it, so a
-      contributor arriving at either finds it.
+- [x] **AC4** — The repository `README.md` links to it, and the quickstart links back to
+      `news/_templates/README.md`. (The link is not placed inside `news/_templates/README.md`: the
+      published-surface guard forbids any change under `news/`.)
 - [x] **AC5** — It states where the preview's fidelity comes from and what a stale mirror warning
       means, in one short paragraph.
 - [x] **AC6** — A test proves the documented commands exist as named, so the quickstart cannot drift
@@ -78,8 +79,7 @@ quickstart honest. The test belongs to the deliverable.
    checkout" sentence, a "what the studio does and does not do" paragraph, the seven steps as
    `### 1. Install` … `### 7. Publish`, and the fidelity/out-of-sync paragraph. Rename the existing
    "Getting started" to "Running the tests". Leave the other sections unchanged.
-2. `README.md` and `news/_templates/README.md`: add one sentence each that links to
-   `studio/README.md` (relative link).
+2. `README.md`: add one sentence that links to `studio/README.md` (relative link).
 3. `studio/tests/contributor-quickstart.test.ts`: text-shape assertions for AC1–AC5, plus the
    command-existence check for AC6. It follows the `readRepoFile` pattern in
    `studio/tests/repo-contract.test.ts`.
@@ -88,8 +88,8 @@ Order: D1 only. Build it after 027, so the create/publish controls it names alre
 
 ## Deliverables
 
-- **D1 — Quickstart in `studio/README.md`, linked from both READMEs, plus its guard test.**
-  Files: `studio/README.md`, `README.md`, `news/_templates/README.md`, new
+- **D1 — Quickstart in `studio/README.md`, linked from the root README, plus its guard test.**
+  Files: `studio/README.md`, `README.md`, new
   `studio/tests/contributor-quickstart.test.ts` (mirror the file-reading helper of
   `studio/tests/repo-contract.test.ts`).
   - In `studio/README.md`, directly after the intro paragraph, add `## Quickstart`. It contains, in
@@ -124,9 +124,6 @@ Order: D1 only. Build it after 027, so the create/publish controls it names alre
     linking to `studio/README.md` ("To write a post with the studio, start with the
     [quickstart](studio/README.md#quickstart)."). Do not change anything else in the contract
     text.
-  - `news/_templates/README.md`: in the intro, add one sentence linking to
-    `../../studio/README.md#quickstart` for writing and previewing with the studio instead of by
-    hand.
   - Test file `studio/tests/contributor-quickstart.test.ts`, with the test names in the
     Acceptance Tests lines below:
     - AC1: extract the `### N. …` headings under `## Quickstart`. Assert they equal
@@ -136,8 +133,8 @@ Order: D1 only. Build it after 027, so the create/publish controls it names alre
       "no `q2-launcher` checkout" (case-insensitive, backticks optional).
     - AC3: the Quickstart section mentions "working tree", and matches
       /never commits, pushes or publishes/i.
-    - AC4: both READMEs contain a markdown link whose target, resolved relative to that file and
-      with the `#…` part removed, is `studio/README.md`. The `#quickstart` anchor must match the
+    - AC4: `README.md` contains a markdown link whose target, with the `#…` part removed, is
+      `studio/README.md`. The `#quickstart` anchor must match the
       heading.
     - AC5: exactly one paragraph in the Quickstart section contains both "mirror" and
       `VERDICT_LABELS['out-of-sync']` (imported from `../src/mirror/provenance`), and it is at most
@@ -164,9 +161,11 @@ through the real surface.
 - AC1 → unit `studio/tests/contributor-quickstart.test.ts` › "the quickstart walks install, start, create, write, preview, validate, publish in that order"
 - AC2 → unit `studio/tests/contributor-quickstart.test.ts` › "the only prerequisite is the Node version from engines.node, and no q2-launcher checkout is needed"
 - AC3 → unit `studio/tests/contributor-quickstart.test.ts` › "the quickstart says the studio writes the working tree and never commits, pushes or publishes"
-- AC4 → unit `studio/tests/contributor-quickstart.test.ts` › "README.md and news/_templates/README.md link to the studio quickstart"
+- AC4 → unit `studio/tests/contributor-quickstart.test.ts` › "README.md links to the studio quickstart, and the quickstart links to the templates README"
 - AC5 → unit `studio/tests/contributor-quickstart.test.ts` › "one short paragraph explains the mirror and the out-of-sync warning"
 - AC6 → unit `studio/tests/contributor-quickstart.test.ts` › "every npm command the studio README names exists as a root script"
 
 ## Done
+
+- Gate regression fix: restored `news/_templates/README.md` to its merge-base content (the published-surface guards forbid changing it); AC4 now requires the root README link plus the quickstart -> templates link only.
 

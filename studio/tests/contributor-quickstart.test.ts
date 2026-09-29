@@ -56,8 +56,8 @@ describe('contributor quickstart', () => {
     expect(quickstart).toMatch(/never commits, pushes or publishes/i)
   })
 
-  it('README.md and news/_templates/README.md link to the studio quickstart', () => {
-    for (const file of ['README.md', 'news/_templates/README.md']) {
+  it('README.md links to the studio quickstart, and the quickstart links to the templates README', () => {
+    for (const file of ['README.md']) {
       const links = [...readRepoFile(file).matchAll(/\]\(([^)\s]+)\)/g)].map((match) => match[1])
       const dir = posix.dirname(file)
       const hit = links.find(
@@ -67,6 +67,7 @@ describe('contributor quickstart', () => {
       expect(hit!.split('#')[1]).toBe('quickstart')
     }
     expect(studioReadme).toMatch(/^## Quickstart$/m)
+    expect(studioReadme).toContain('](../news/_templates/README.md)')
   })
 
   it('one short paragraph explains the mirror and the out-of-sync warning', () => {
