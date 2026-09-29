@@ -49,11 +49,13 @@ exhausted. Anything found later is a **new** story, not a reopened one.
 3. **`/build <id>`** (cheap tier) reads the `ready` requirement + plan and implements
    the **deliverables in order**, in one go (scrum-like, no giant diff at the end) — each D
    including the acceptance test named for it, written by the same agent, not afterwards. Then
-   it verifies with the project's build/test commands (plus `e2e` for criteria about user
-   actions), has the diff reviewed by a **fresh clean agent** — which also judges whether those
+   it verifies with a narrow gate — build/lint/typecheck, the tests its changes affect and
+   only its own e2e tests (full `test`/`e2e` where the profile narrows nothing) — has the diff reviewed by a **fresh clean agent** — which also judges whether those
    tests would fail on a broken implementation — fills **`Done`** (summary + a 1–2 line commit
    message), moves the file to `done/` and appends a line to `done/INDEX.md`.
-   Status → `in-progress` → `done`. **You make the commit deliberately yourself.**
+   Status → `in-progress` → `done`. **You make the commit deliberately yourself** — after
+   the full suites, which `/build <id> --full` runs for you; inside `/sprint` they run once
+   after the last story.
 
 ## Model routing
 

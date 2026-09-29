@@ -5,7 +5,7 @@ model: opus
 effort: high
 ---
 
-<!-- ai-scrum:managed 4.0.0 - plugin-owned, written by /ai-scrum:setup. Do not edit:
+<!-- ai-scrum:managed 4.4.0 - plugin-owned, written by /ai-scrum:setup. Do not edit:
      setup diffs this file on update and asks before replacing it. Project facts go in .claude/ai-scrum.md. -->
 
 Refine the story with ID **$1**.
@@ -64,7 +64,12 @@ into memory. Everything has to be reviewable in the repository.
      not everything specified from A to Z). Each `D1/D2/...` is the smallest useful result
      with its own acceptance, and **names the files it touches** — plus the file to mirror,
      where it follows an existing pattern. `/build` hands that list to the
-     implementing agent, which starts there instead of surveying the repo.
+     implementing agent, which starts there instead of surveying the repo — and hands it
+     **only this D's text plus its test lines**, with the instruction not to open the story
+     file. So a D is complete on its own: everything the implementer needs stands in the D,
+     not in the plan above it or in a sibling D. The story file is a spec, not a log:
+     measured, story files of 25–38k characters were read seven to ten times per sprint by
+     agents that had their part in the prompt already.
 
      **Size cap (cost lever #2):** a D that touches more than ~8 files, or spans more than
      one layer (core + IPC + renderer), is cut too coarsely — split it. Agent cost grows with
@@ -79,17 +84,28 @@ into memory. Everything has to be reviewable in the repository.
        (which regression, which new path, which cross-file subtlety). `/build`
        passes that justification to the agent.
 
-     **Tier discipline (cost lever #1):** `deliverable-hard` is ~5x more expensive and also
-     thinks longer — subagents are >90% of the session bill and the tier decides it. So:
-     - Mark **individual** Ds, never wholesale ("all architecture Ds → hard"). If you feel
-       like marking more than half of them hard, the cut of the Ds is probably wrong, not
-       the tier need.
-     - Hard only when you can write the justification in one sentence.
-     - Also fix the **review tier** — its own line, `Review: → default` or
-       `Review: → story-review-hard` with a one-sentence justification.
-       `/build` delegates the code review to a fresh agent that sees only spec +
-       diff; this line decides its tier. Default is the cheap tier;
-       `story-review-hard` (Opus + effort `high`) only for real risk.
+     **Tier discipline (cost lever #1):** `deliverable-hard` is ~5x more expensive —
+     subagents are >90% of the session bill and the tier decides it. Measured over seven
+     sprints in three repositories: 17–43% of all Ds were marked hard and 60% of all stories
+     got the hard review, and Opus was 50–75% of every sprint's bill. "Only for real risk"
+     did not bind, so the rule is now a budget:
+     - **At most ONE `deliverable-hard` per story**, on your own authority, with the
+       justification in one sentence (which regression, which new path, which cross-file
+       subtlety). If a second D seems to need it, the story is cut too big, not the tier too
+       low: propose the split into two stories in `## Open Questions` and leave the status
+       `draft` (inside a sprint this returns `BLOCKED: user question`). The user decides; you
+       do not mark two.
+     - Mark **individual** Ds, never wholesale ("all architecture Ds → hard").
+     - Also fix the **review line** — its own line, `Review: → default` or
+       `Review: → story-review-hard` with a one-sentence justification. `/build` always
+       delegates the code review to a fresh agent on the default tier that sees only spec +
+       diff. `story-review-hard` does **not** replace that review: it adds a **second pass**
+       on Opus after the default review has passed. Mark it only when you can name the
+       plausible-looking *wrong* implementation that would pass the tests and a default
+       review — a rigged number, a structural claim no test can see, a negative behaviour.
+       "Foundation for later stories" or "touches the scheduler" is not that sentence.
+       Measured in one repository, same sprint shape, both all-PASS: four default reviews
+       cost $3, four hard reviews $32.
    - **`## Acceptance Tests`** — the AC → test mapping, and this is what replaces the manual
      test plan. **If `ac-tests-required: true` in the profile (P1):** every entry in
      `## Acceptance Criteria` gets one line naming the test that will prove it — level, file
@@ -115,6 +131,10 @@ into memory. Everything has to be reviewable in the repository.
        carries it, otherwise map the criterion one level down *and* write the gap into this
        section and into `## Open Questions` for the sprint review. Never turn it into a manual
        step — that is exactly what this workflow is getting rid of.
+     - **An e2e line is also a run target.** `/build` runs only the story's own e2e tests,
+       by substituting the file and test name from these lines into the profile's
+       `e2e-story` template. So name them exactly as the harness selects them — the real
+       path relative to the repo root and the literal test (or flow) name — not a paraphrase.
      - **A missing trigger is a story gap, not a test problem.** If a user-facing action has no
        path through the real surface yet, plan that trigger as a deliverable.
      - **`manual residue`** (only if `manual-residue-allowed: true`) is for a criterion that

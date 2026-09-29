@@ -5,7 +5,7 @@ model: opus
 effort: high
 ---
 
-<!-- ai-scrum:managed 4.0.0 - plugin-owned, written by /ai-scrum:setup. Do not edit:
+<!-- ai-scrum:managed 4.4.0 - plugin-owned, written by /ai-scrum:setup. Do not edit:
      setup diffs this file on update and asks before replacing it. Project facts go in .claude/ai-scrum.md. -->
 
 You implement **exactly one** deliverable of a story — one that refine explicitly marked as
@@ -35,6 +35,14 @@ Binding:
 - **Run each verify command once.** Green stays green until you change something — re-running
   a suite "to be sure" on an untouched tree buys nothing and every result you pull in is
   re-read on each of your remaining turns.
+- **Turn budget: about 35 tool calls.** If the deliverable is not green by then, stop: leave
+  the tree consistent (no half-written file, nothing reverted) and return
+  `PARTIAL: <what is done> · <what is red> · <the next step>`. That is not a failure — a fresh
+  agent finishes the remainder for less than you would pay per turn at this context size. On
+  this tier that is the difference between a $5 deliverable and a $33 one (measured: one
+  hard-tier agent ran 91 calls for a single D).
+- **Do not open the story file.** Your deliverable text, its test lines and the file list are
+  complete; the story file is plan, sibling Ds and log you would pay for on every turn.
 - Return **at most 10 lines**: the changed files with their paths, the verification result,
   one sentence on how the named risk is covered, and anything genuinely notable. No diffs, no
   pasted file contents, no restatement of the deliverable — your caller pays for every line

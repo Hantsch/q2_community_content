@@ -22,8 +22,9 @@ One folder per sprint, documents deliberately split (no giant documents):
 sprints/
   _TEMPLATE/sprint.md     template
   SNN/                    running sprint
-    sprint.md             planning: goal, story list (build order), status
-    progress.md           live trail: one line per finished deliverable, while the sprint runs
+    sprint.md             planning: goal, story list (build order), status, regression gate
+    progress.md           live trail: one line per step, deliverable, verify and review, while the sprint runs
+    gate-e2e-all.log      output of the long regression suite while it runs; removed once recorded
     review.md             result: implemented stories, acceptance record, findings, blockers
     testplan.md           optional, and only the manual residue — often absent entirely
   done/SNN/               finished sprints, moved with `git mv`
@@ -36,7 +37,10 @@ sprints/
    of the next roadmap milestone with you. The stories themselves exist as `draft` in the
    requirements folder.
 2. **`/sprint SNN`** runs autonomously:
-   - **Setup:** sprint branch off the `branch-base` from `.claude/ai-scrum.md`.
+   - **Setup:** `sprint.md` is set to `in-progress` and committed on `branch-base` as
+     `SNN: sprint started` — the one commit the sprint makes there, so the base branch shows
+     that the sprint is running and where — then the sprint branch is cut from it. The first
+     chat line names the phases, their rough length and the progress file.
    - **Clarification round:** deliberately open decisions (`## Open Questions` of the
      stories) are never decided by an agent — the orchestrator puts them to you bundled via
      AskUserQuestion and records the answers as binding `(User)` decisions.
@@ -45,13 +49,21 @@ sprints/
      documented per story under `## Decisions (Sprint)`. New user questions coming out of
      refine go into a follow-up round (again via the orchestrator), then one more refine round.
    - **Build:** all stories sequentially through fresh agents, each deliverable including the
-     acceptance test named for it. Then verification (build/test/lint plus the `e2e` command
-     for criteria about user actions) and a clean-agent review that also judges whether those
+     acceptance test named for it. Then a **narrow** verification — build/lint/typecheck, the
+     tests the story's changes affect (`test-story`) and only the story's own e2e tests
+     (`e2e-story`) — and a clean-agent review that also judges whether those
      tests would actually fail on a broken implementation. After each story **one commit on the
      sprint branch** (never push, never on a protected branch). Blocked stories do not stop the
      sprint — they are marked and explained in the review doc.
+   - **Regression gate:** after the last story, the full `test`, the full `e2e` and `e2e-all`
+     run once on the finished branch — this is where stories that are each fine break each
+     other. The short suites run in an agent; a long `e2e-all` runs in the background with its
+     output in `SNN/gate-e2e-all.log`. A red result is bisected over the story commits to the
+     story that caused it, fixed there in a new commit on the sprint branch, or reported as a
+     merge blocker. The gate has a launch budget: a flaky suite is reported as flaky, not
+     relaunched until it is green.
    - **Review:** `review.md` (stories + short description, the acceptance record — which test
-     proved which criterion — findings & decisions, blockers) is written, `testplan.md` only if
+     proved which criterion — the regression gate result, findings & decisions, blockers) is written, `testplan.md` only if
      there is manual residue to walk, the roadmap gets its milestone row, its follow-up lines
      and a fresh "Where we stand" (nothing more), then committed, `status: done`.
 3. **You** read `review.md`, plan the next sprint on top of it (correction stories if needed)
@@ -64,12 +76,33 @@ first open spot based on `sprint.md` + story status.
 
 ## Watching a running sprint
 
-A sprint runs for hours and mostly says nothing, so `progress.md` is what you watch: the build
-agent appends a `started` line before and a `done`/`blocked` line after every deliverable, the
-timestamp produced by the shell in the same command. If it keeps growing, the sprint is working —
-a slow deliverable and a dead one look identical in the working tree otherwise. Ticked `- [x] D…`
-boxes in the story file are the second signal. Timestamps that run backwards or lie in the future
-mean the agent typed them instead of running the command — that is a finding, not a clock issue.
+A sprint runs for hours and is silent while an agent works, so two things carry the signal.
+
+**The chat.** Before every step longer than a few minutes the orchestrator writes one line —
+what starts, the clock, how long the last step of its kind took, the file to watch, and how to
+stop (`Esc`, then `/sprint SNN` resumes at the first open spot) — and one line with the result
+when it returns. Nothing appears in between; that is expected, not a hang. If you ask whether it
+hangs, the answer names the last trail line with its timestamp, the elapsed time against the
+expected one, and the background tasks alive — a bare "it is running" is not the answer this
+workflow gives. A question you type while an agent runs is answered when that agent returns.
+
+**`progress.md`.** The orchestrator appends a line when a step starts (`· 107 · build ·
+started`), the build agent one before and after every deliverable, around verification
+(`· verify · started/done`) and each review cycle (`· review 1 · …`), and a final `· story ·
+done` — the timestamp produced by the shell in the same command. If it keeps growing, the sprint
+is working; a slow deliverable and a dead one look identical in the working tree otherwise.
+Ticked `- [x] D…` boxes in the story file are the second signal. Timestamps that run backwards
+or lie in the future mean an agent typed them instead of running the command — that is a
+finding, not a clock issue.
+
+**The regression gate is the exception.** A full flow suite is one command, 10–20 minutes long,
+and writes no trail lines. The orchestrator runs it in the background and tells you when it
+started, how long it took last sprint and where its output lands — `SNN/gate-e2e-all.log`. Open
+it or `tail -f` it: it grows while the suite runs; a file still empty after a few minutes means
+the suite never started. Once the result is recorded in `sprint.md`, the log is deleted.
+
+**After the final report the sprint is over.** Nothing of the sprint is still running when you
+read it; a late result that arrives anyway gets one line and changes nothing.
 
 ## Numbering
 

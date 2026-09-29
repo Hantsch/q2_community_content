@@ -14,7 +14,7 @@
   update those files (`/ai-scrum:setup`). Hashes of the managed copies: .claude/ai-scrum.lock
 -->
 
-ai-scrum-version: 4.0.0
+ai-scrum-version: 4.4.0
 project: q2_community_content
 
 ## Verify
@@ -33,6 +33,35 @@ e2e: npm run e2e
   separate entry because it is usually slower than `test` and lives in its own suite.
   `none` means the project has no such harness yet — see `ui-acceptance-required` below
   for what the workflow then does instead.
+-->
+
+test-story: npm run test --workspace studio -- --changed HEAD <!-- e.g. npx vitest run --changed HEAD | npx jest --onlyChanged | pytest -q --picked | none -->
+e2e-story: npm run e2e --workspace studio -- {files} <!-- e.g. npx playwright test {files} | npm run ui:flow -- {test} | dotnet test --filter "FullyQualifiedName~{test}" | pytest -q "{file}::{test}" | none -->
+e2e-all: none <!-- e.g. npm run ui:flows | npx playwright test --project=flows | none -->
+e2e-cleanup: none <!-- e.g. taskkill /F /IM electron.exe | pkill -f electron | none — stops what a crashed or killed e2e run leaves behind; /sprint runs it before relaunching a suite. It kills your own running instance too. -->
+<!--
+  Narrow per story, broad per sprint. `/build` runs a story-sized gate; `/sprint` runs
+  the full one once, after the last story, and bisects a red result back to a story.
+
+  test-story = the tests affected by the story's changes. The story is not committed
+               yet when /build verifies, so compare against HEAD (the uncommitted diff),
+               never against the branch base. Fallback when missing or `none`: the full
+               `test`, exactly as before this key existed. Whatever the command selects, every
+               non-e2e test the story names in `## Acceptance Tests` must be among what
+               ran; if one is not, /build runs the full `test` instead. dotnet has no
+               built-in changed-file selection, so `none` is the usual value there;
+               pytest needs a plugin (`pytest-picked`, `pytest-testmon`).
+  e2e-story  = a TEMPLATE that runs only the e2e tests this story mapped its criteria to.
+               The `## Acceptance Tests` lines name file and test, not the invocation —
+               the syntax is the harness's, so it lives here, once, not in every story.
+               Placeholders: `{files}` = every distinct e2e file of the story,
+               space-separated, one run; `{file}` / `{test}` = one run per mapped line,
+               with its file and its test name. Fallback when missing or `none`: the full
+               `e2e`, as before. Ignored while `e2e` is `none`.
+  e2e-all    = every acceptance flow, where they are a suite of their own next to `e2e`
+               (e.g. `e2e` = screenshots + axe, `e2e-all` = all user flows). Runs only
+               in the sprint's regression gate, never per story. `none` = `e2e` already
+               covers them; do not set it to the same command as `e2e`.
 -->
 
 ## Conventions
@@ -66,7 +95,7 @@ changelog-path: none
 branch-base: feature/studio <!-- branch a sprint is cut from -->
 sprint-branch-pattern: sprint/{id}
 auto-commit-per-story: true <!-- /sprint commits once per story ON THE SPRINT BRANCH only -->
-protected-branches: main <!-- never commit here, never push, never merge -->
+protected-branches: main <!-- never commit here, never push, never merge — except the one `SNN: sprint started` commit /sprint makes on branch-base -->
 
 ## Acceptance
 
