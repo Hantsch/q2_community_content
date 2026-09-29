@@ -98,6 +98,9 @@ test('a draft entry with no findings reads as fine, but invisible to the launche
 
   expect(screen.getByText(/is a draft/i)).toBeDefined()
   expect(screen.getByText(/invisible to the launcher/i)).toBeDefined()
+  expect(
+    screen.getByText(/The preview shows the verdict it would receive if published\./),
+  ).toBeDefined()
   expect(screen.queryByText(/nothing selected/i)).toBeNull()
 })
 

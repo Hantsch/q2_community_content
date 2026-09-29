@@ -27,3 +27,18 @@
 - 2026-09-29 13:42:42 · 019 · review-fix AC3 readout assertion · started
 - 2026-09-29 13:43:14 · 019 · review-fix AC3 readout assertion · done
 - 2026-09-29 13:43:18 · 019 · story · done
+- 2026-09-29 13:43:38 · 020 · build · started
+- 2026-09-29 13:44:10 · 020 · D1 withDraftAsPublished · started
+- 2026-09-29 13:45:47 · 020 · D1 withDraftAsPublished · done
+- 2026-09-29 13:46:07 · 020 · D2 draft into preview · started
+- 2026-09-29 13:50:21 · 020 · D2 draft into preview · done
+- 2026-09-29 13:50:21 · 020 · D3 draft notice · started
+- 2026-09-29 13:52:22 · 020 · D3 draft notice · done
+- 2026-09-29 13:52:22 · 020 · verify · started
+- 2026-09-29 13:53:17 · 020 · verify · blocked: lint no-unsafe-assignment draft-as-published.ts
+- 2026-09-29 13:53:17 · 020 · fix lint draft-as-published · started
+- 2026-09-29 13:53:57 · 020 · fix lint draft-as-published · done
+- 2026-09-29 13:53:57 · 020 · verify · done
+- 2026-09-29 13:53:57 · 020 · review 1 · started
+- 2026-09-29 13:54:51 · 020 · review 1 · done
+- 2026-09-29 13:55:01 · 020 · story · done

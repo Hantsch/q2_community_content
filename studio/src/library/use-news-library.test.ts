@@ -214,4 +214,42 @@ describe('useNewsLibrary', () => {
 
     await waitFor(() => expect(readCount()).toBe(2))
   })
+
+  it("draftPreviewFor returns the draft's verdict from the same read and clock", async () => {
+    const base = readFromTree(buildNewsTreeFixture([]))
+    const read: ContentRepoRead = {
+      ...base,
+      drafts: [
+        {
+          path: 'news/draft-a.md',
+          text: [
+            '---',
+            'template: text',
+            'title: Draft A',
+            'order: 5',
+            'visibleUntil: 2026-09-20T00:00:00Z',
+            '---',
+            'Body.',
+          ].join('\n'),
+        },
+      ],
+    }
+    const descriptor = newsDescriptorFor(read)
+    const { result } = renderHook(() => useNewsLibrary(descriptor, NOW))
+
+    expect(result.current.draftPreviewFor('news/draft-a.md')).toBeUndefined()
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    const preview = result.current.draftPreviewFor('news/draft-a.md')
+    expect(preview?.entryId).toBe('news/draft-a.md')
+    expect(preview?.read.drafts).toHaveLength(0)
+    expect(
+      preview?.report.entries.find((entry) => entry.id === 'news/draft-a.md')?.delivered,
+    ).not.toBe('dropped')
+    // Visible only under the injected clock (2026-09-14); a fresh `new Date()` would call it expired.
+    expect(
+      preview?.report.entries.find((entry) => entry.id === 'news/draft-a.md')?.visibility.state,
+    ).toBe('published')
+    expect(result.current.draftPreviewFor('news/missing.md')).toBeUndefined()
+  })
 })

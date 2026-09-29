@@ -132,8 +132,8 @@ function DraftNotice({ selectedRow }: { readonly selectedRow: LibraryRow }): Rea
       <p className="font-medium">{selectedRow.title ?? selectedRow.file} is a draft.</p>
       <p>{selectedRow.file}</p>
       <p>
-        A draft is invisible to the launcher — it was never delivered, so there is no
-        launcher-facing verdict to report.
+        A draft is invisible to the launcher — it was never delivered. The preview shows the verdict
+        it would receive if published.
       </p>
     </div>
   )

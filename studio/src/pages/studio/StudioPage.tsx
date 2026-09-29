@@ -33,6 +33,7 @@ import { fetchMirrorProvenance } from '../../mirror-runtime/provenance-client'
 import type { MirrorProvenance } from '../../mirror/provenance'
 import { ContentTypeNav } from '../../organisms/ContentTypeNav'
 import { ContentTypeStateNotice } from '../../organisms/ContentTypeStateNotice'
+import { DraftPreviewNotice } from '../../organisms/preview/DraftPreviewNotice'
 import { SlidePreview } from '../../organisms/preview/SlidePreview'
 import { buildSlidePreviewModel } from '../../preview/preview-model'
 import { LibraryView } from '../../organisms/library/LibraryView'
@@ -59,8 +60,16 @@ function findRow(
  * current entry from context rather than page state (Decisions (Sprint)) — separated from
  * `StudioPage` only so it can sit beneath `CurrentEntryProvider` and call `useCurrentEntry()`. */
 function NewsLibrary({ descriptor }: { descriptor: ContentTypeDescriptor }): React.JSX.Element {
-  const { loading, model, read, report, repositoryFindings, thumbnailUrlFor, refresh } =
-    useNewsLibrary(descriptor)
+  const {
+    loading,
+    model,
+    read,
+    report,
+    repositoryFindings,
+    thumbnailUrlFor,
+    refresh,
+    draftPreviewFor,
+  } = useNewsLibrary(descriptor)
   const { currentEntryId, selectEntry } = useCurrentEntry()
   const [provenance, setProvenance] = useState<MirrorProvenance | undefined>(undefined)
 
@@ -73,7 +82,23 @@ function NewsLibrary({ descriptor }: { descriptor: ContentTypeDescriptor }): Rea
       ? buildPanelModel({ report, repositoryFindings, selectedEntryId: currentEntryId })
       : EMPTY_PANEL_MODEL
   const selectedRow = findRow(model, currentEntryId)
-  const previewModel = buildSlidePreviewModel({ read, report, entryId: currentEntryId })
+  // Story 020 D2: a selected draft feeds the same preview the synthetic read/report it would have
+  // as a published row; when that cannot be built the input stays the published one, which yields
+  // 018's own "not in index" state for the draft's id.
+  const draftPreview =
+    selectedRow?.status === 'draft' && currentEntryId !== null
+      ? draftPreviewFor(currentEntryId)
+      : undefined
+  const previewModel = buildSlidePreviewModel(
+    draftPreview ?? { read, report, entryId: currentEntryId },
+  )
+  const draftVerdict = draftPreview?.report?.entries.find(
+    (entry) => entry.id === draftPreview.entryId,
+  )
+  const deliveredCount =
+    draftPreview?.report?.entries.filter(
+      (entry) => entry.delivered !== 'dropped' && entry.delivered.position !== undefined,
+    ).length ?? 0
 
   const handleRecheck = (): void => {
     refresh()
@@ -82,6 +107,9 @@ function NewsLibrary({ descriptor }: { descriptor: ContentTypeDescriptor }): Rea
 
   return (
     <div className="flex min-w-0 flex-col gap-8">
+      {draftVerdict && (
+        <DraftPreviewNotice verdict={draftVerdict} deliveredCount={deliveredCount} />
+      )}
       <SlidePreview model={previewModel} />
       <div className="flex gap-8">
         <LibraryView

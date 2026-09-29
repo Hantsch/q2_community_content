@@ -25,7 +25,7 @@ Preview (was S05, read-only)
 
 - [x] 018 — Slide preview of the selected entry
 - [x] 019 — Preview width switcher
-- [ ] 020 — Preview a draft without publishing it
+- [x] 020 — Preview a draft without publishing it
 - [ ] 021 — Preview an entry outside its visibility window
 
 Authoring (was S06, the first writes)

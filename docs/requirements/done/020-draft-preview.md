@@ -1,7 +1,7 @@
 ---
 id: 020
 title: Preview a draft without publishing it
-status: ready # draft -> ready -> in-progress -> done
+status: done # draft -> ready -> in-progress -> done
 created: 2026-09-13
 ---
 
@@ -19,16 +19,16 @@ Concept: [Q2 Content Studio](../concepts/content-studio.md) — CS-18.
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — A `.md` file in `news/` with no row in `index.json` can be selected and previewed.
-- [ ] **AC2** — Previewing a draft writes nothing: `index.json` and every other repository file are
+- [x] **AC1** — A `.md` file in `news/` with no row in `index.json` can be selected and previewed.
+- [x] **AC2** — Previewing a draft writes nothing: `index.json` and every other repository file are
       byte-identical before and after.
-- [ ] **AC3** — The preview marks a draft as a draft, so it can never be mistaken for something the
+- [x] **AC3** — The preview marks a draft as a draft, so it can never be mistaken for something the
       launcher is already showing.
-- [ ] **AC4** — A draft receives the same verdict a published entry would: a draft `cover` with a
+- [x] **AC4** — A draft receives the same verdict a published entry would: a draft `cover` with a
       missing image previews as `text` and says so.
-- [ ] **AC5** — A draft with frontmatter that does not parse shows the same drop verdict the
+- [x] **AC5** — A draft with frontmatter that does not parse shows the same drop verdict the
       launcher would produce, not a studio-specific error.
-- [ ] **AC6** — The draft's position among the published entries is shown as it would be if it were
+- [x] **AC6** — The draft's position among the published entries is shown as it would be if it were
       published.
 
 ## Open Questions
@@ -101,7 +101,7 @@ preview host, a new organism, `ValidationPanel.tsx`, one e2e spec + fixture. No 
 
 ## Deliverables
 
-- [ ] **D1 — `withDraftAsPublished()`: a draft folded into an in-memory read.**
+- [x] **D1 — `withDraftAsPublished()`: a draft folded into an in-memory read.**
   New `studio/src/report/draft-as-published.ts` (+ `draft-as-published.test.ts`); mirror the
   pure, never-throws style of `studio/src/library/library-model.ts`.
   Signature: `withDraftAsPublished(read: ContentRepoRead, draftPath: string):
@@ -129,7 +129,7 @@ preview host, a new organism, `ValidationPanel.tsx`, one e2e spec + fixture. No 
     draft 20 → `position === 1`); "a draft without order sorts last with the pipeline's warning";
     "an unknown draft path or an unparsed index yields undefined".
 
-- [ ] **D2 — a selected draft is previewed through story 018's preview.**
+- [x] **D2 — a selected draft is previewed through story 018's preview.**
   Touches `studio/src/library/use-news-library.ts` (+ `use-news-library.test.ts`), the preview
   host story 018 added (the component that turns the selected library row into the iframe's input —
   locate it with `grep -rln "iframe" studio/src --include=*.tsx`, excluding `launcher-core/` and
@@ -162,7 +162,7 @@ preview host, a new organism, `ValidationPanel.tsx`, one e2e spec + fixture. No 
   - Unit test in `use-news-library.test.ts`: "draftPreviewFor returns the draft's verdict from
     the same read and clock".
 
-- [ ] **D3 — the draft notice above the preview, and the panel's wording.**
+- [x] **D3 — the draft notice above the preview, and the panel's wording.**
   New `studio/src/organisms/preview/DraftPreviewNotice.tsx` (+ `.test.tsx`) — props-in/JSX-out
   like `studio/src/organisms/ContentTypeStateNotice.tsx`; reuse
   `studio/src/molecules/status/EntryStatusBadge.tsx` with `status="draft"`; semantic tokens only
@@ -221,4 +221,17 @@ preview host, a new organism, `ValidationPanel.tsx`, one e2e spec + fixture. No 
 
 ## Done
 
-<Filled by `/build 020`.>
+Added `withDraftAsPublished()` (pure fold of a draft into an in-memory read with one synthetic index row), `useNewsLibrary().draftPreviewFor()` (same read and clock, unchanged `buildReport`), routed a selected draft through 018's preview in `StudioPage`, and a `DraftPreviewNotice` above the iframe (Draft badge, verdict if published, would-be position). Validation panel draft wording corrected.
+
+Commit message: `020: draft preview (draft folded in memory, draft notice, would-be position)`
+
+Verification (narrow gate): `npm run build`, `typecheck` green; `npm run test --workspace studio -- --changed HEAD` green (6 files, 39 tests); `npm run e2e --workspace studio -- e2e/draft-preview.spec.ts` 7/7 green (plus validation-panel and slide-preview specs green in the D agents' runs). Lint: one eslint error in `draft-as-published.ts` found and fixed; eslint and prettier clean on all touched files (repo-wide prettier failures on untouched files are pre-existing). Full gate not run (sprint's job). Review: default stage, PASS, 1 cycle.
+AC -> test as verified: AC1 e2e "a draft selected in the library..." passed; AC2 e2e "previewing a draft sends only reads..." + unit "folding a draft in leaves..." passed; AC3 e2e "a draft preview carries a draft marker..." passed; AC4 unit + two e2e passed; AC5 unit + e2e passed; AC6 two unit + e2e passed. No manual residue.
+
+Decisions:
+- Fixture cover draft has no `image:` line (plan said `img/missing.png`): the mirrored pipeline keeps `cover` when a declared image file is merely absent and only falls back to text for an unusable declared image; a declared-but-absent file is only a studio `declared-image-missing` finding. Comment in the fixture.
+- Dropped draft notice reads "If published: dropped — the launcher would not deliver it." (plan left it open).
+- Drafts are selected in the library region "Drafts" in e2e; the broken draft is labelled by file name.
+- Unfixed review nits (cosmetic): redundant `?.` on `report` in StudioPage, import order in use-news-library.ts; e2e byte-identical hash half is weak because the feed is stubbed (method check + frozen-input unit test carry AC2).
+
+tiers: D 3 / hard 0 · review default · cycles 1 · agents 7

@@ -19,6 +19,7 @@ import type { ContentSourceRead, ContentTypeDescriptor } from '../content-types/
 import { newsImageUrl } from '../mirror-runtime/newsImageUrl'
 import type { ContentReport } from '../report/report-types'
 import type { RepositoryFinding } from '../report/repository-findings'
+import { withDraftAsPublished } from '../report/draft-as-published'
 import { buildLibraryModel } from './library-model'
 import type { LibraryModel, LibraryRow } from './library-types'
 
@@ -44,6 +45,13 @@ export interface UseNewsLibraryResult {
   /** Story 017 D5: re-runs the same read-and-derive effect on demand, e.g. for a "re-check"
    * control — a real re-read through the bridge, not a client-side re-render of stale data. */
   readonly refresh: () => void
+  /** Story 020 D2: the draft at `draftId` (its repository path) folded into the SAME read as if it
+   * were the last index row and run through the same validators with the SAME clock the report was
+   * built with — the input shape story 018's preview takes for a published entry. `undefined` while
+   * loading, without a reader/validators, or when the draft cannot be folded in. */
+  readonly draftPreviewFor: (
+    draftId: string,
+  ) => { read: ContentSourceRead; report: ContentReport; entryId: string } | undefined
 }
 
 /** `row.image` is the declared reference exactly as authored (e.g. `img/picture.png`, per
@@ -90,6 +98,7 @@ export function useNewsLibrary(
     report: ContentReport | null
     read: ContentSourceRead | null
     repositoryFindings: readonly RepositoryFinding[] | null
+    builtAt: Date | null
   }>({
     descriptor,
     loading: true,
@@ -97,6 +106,7 @@ export function useNewsLibrary(
     report: null,
     read: null,
     repositoryFindings: null,
+    builtAt: null,
   })
 
   // Story 017 D5: a simple incrementing counter, included in the effect's dependency array below,
@@ -112,6 +122,7 @@ export function useNewsLibrary(
       report: null,
       read: null,
       repositoryFindings: null,
+      builtAt: null,
     })
   }
 
@@ -129,6 +140,7 @@ export function useNewsLibrary(
       report: ContentReport | null
       read: ContentSourceRead | null
       repositoryFindings: readonly RepositoryFinding[] | null
+      builtAt: Date | null
     }> =
       !reader || !validators
         ? Promise.resolve({
@@ -140,21 +152,24 @@ export function useNewsLibrary(
             report: null,
             read: null,
             repositoryFindings: null,
+            builtAt: null,
           })
         : reader().then((read) => {
-            const report = validators.buildReport(read, now())
+            const builtAt = now()
+            const report = validators.buildReport(read, builtAt)
             const repositoryFindings = validators.collectFindings(read)
             return {
               model: buildLibraryModel({ read, report, repositoryFindings }),
               report,
               read,
               repositoryFindings,
+              builtAt,
             }
           })
 
-    void result.then(({ model, report, read, repositoryFindings }) => {
+    void result.then(({ model, report, read, repositoryFindings, builtAt }) => {
       if (cancelled) return
-      setState({ descriptor, loading: false, model, report, read, repositoryFindings })
+      setState({ descriptor, loading: false, model, report, read, repositoryFindings, builtAt })
     })
 
     return () => {
@@ -171,6 +186,22 @@ export function useNewsLibrary(
     setRefreshNonce((nonce) => nonce + 1)
   }, [])
 
+  const { read: builtRead, builtAt } = state
+  const draftPreviewFor = useCallback(
+    (draftId: string) => {
+      const validators = descriptor.validators
+      if (!builtRead || !builtAt || !validators) return undefined
+      const synthetic = withDraftAsPublished(builtRead, draftId)
+      if (!synthetic) return undefined
+      return {
+        read: synthetic.read,
+        report: validators.buildReport(synthetic.read, builtAt),
+        entryId: synthetic.entryId,
+      }
+    },
+    [descriptor, builtRead, builtAt],
+  )
+
   return {
     loading: state.loading,
     model: state.model,
@@ -179,5 +210,6 @@ export function useNewsLibrary(
     repositoryFindings: state.repositoryFindings,
     thumbnailUrlFor,
     refresh,
+    draftPreviewFor,
   }
 }
