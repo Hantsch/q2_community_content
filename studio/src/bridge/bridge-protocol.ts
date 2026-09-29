@@ -29,6 +29,50 @@ export interface BridgeFileResponse {
  */
 export type BridgeProvenanceResponse = MirrorProvenance
 
+/** One file to write. `expected` is the LF-normalised disk text the edit was based on; `null` means
+ * the file must not exist yet. */
+export interface BridgeWriteItem {
+  readonly path: string
+  readonly text: string
+  readonly expected: string | null
+}
+
+/** `POST /__studio/fs/write` request body. */
+export interface BridgeWriteRequest {
+  readonly writes: readonly BridgeWriteItem[]
+}
+
+/** `200` answer: the repo-relative paths written, in request order. */
+export interface BridgeWriteResponse {
+  readonly written: readonly string[]
+}
+
+/** `409` answer: the disk text no longer matches `expected` for `path`; nothing was written. */
+export interface BridgeWriteConflictResponse extends BridgeErrorResponse {
+  readonly path: string
+  /** The current LF-normalised disk text, or `null` when the file does not exist. */
+  readonly current: string | null
+}
+
+/** `500` answer: an I/O failure part-way through; `written` succeeded before `failed` did. */
+export interface BridgeWriteFailureResponse extends BridgeErrorResponse {
+  readonly written: readonly string[]
+  readonly failed: string
+}
+
+/** What `client.write()` resolves to; it never throws. */
+export type BridgeWriteResult =
+  | { readonly ok: true; readonly written: readonly string[] }
+  | {
+      readonly ok: false
+      readonly status: number
+      readonly error: string
+      readonly path?: string
+      readonly current?: string | null
+      readonly written?: readonly string[]
+      readonly failed?: string
+    }
+
 /** The body of every non-2xx response a bridge route returns. */
 export interface BridgeErrorResponse {
   readonly error: string

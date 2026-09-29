@@ -88,3 +88,21 @@
 - 2026-09-29 14:30:45 · 023 · review 1 · started
 - 2026-09-29 14:32:49 · 023 · review 1 · done
 - 2026-09-29 14:35:15 · 023 · story · done
+- 2026-09-29 14:35:33 · 024 · build · started
+- 2026-09-29 14:35:53 · 024 · D1 entry-document writer · started
+- 2026-09-29 14:41:03 · 024 · D1 entry-document writer · done
+- 2026-09-29 14:41:03 · 024 · D2 index row writer · started
+- 2026-09-29 14:41:07 · 024 · D4 bridge write route · started
+- 2026-09-29 14:44:30 · 024 · D2 index row writer · done
+- 2026-09-29 14:44:30 · 024 · D4 bridge write route · done
+- 2026-09-29 14:44:30 · 024 · D3 save planner · started
+- 2026-09-29 14:44:30 · 024 · D5 e2e scratch harness · started
+- 2026-09-29 14:46:38 · 024 · D3 save planner · done
+- 2026-09-29 14:46:38 · 024 · D5 e2e scratch harness · done
+- 2026-09-29 14:46:38 · 024 · D6 save in editor · started
+- 2026-09-29 14:54:10 · 024 · D6 save in editor · done
+- 2026-09-29 14:54:10 · 024 · verify · started
+- 2026-09-29 14:56:19 · 024 · verify · done
+- 2026-09-29 14:56:19 · 024 · review 1 · started
+- 2026-09-29 14:58:50 · 024 · review 1 · done
+- 2026-09-29 14:59:01 · 024 · story · done

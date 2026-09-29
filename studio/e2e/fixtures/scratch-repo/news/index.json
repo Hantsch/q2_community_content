@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "id": "alpha",
+      "file": "2026-01-01-alpha.md",
+      "order": 10
+    },
+    {
+      "id": "beta",
+      "file": "2026-01-02-beta.md",
+      "order": 20
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 import type { Plugin } from 'vite'
 
-import { resolveRepoRoot } from '../content-repo/paths'
 import { createFileBridge } from './create-file-bridge'
+import { resolveBridgeRepoRoot } from './scratch-repo-root'
 
 /**
  * The slice of `content-types/registry.ts`'s return shape this plugin actually reads. Spelled out
@@ -16,7 +16,10 @@ import { createFileBridge } from './create-file-bridge'
  * `.map()` call below) if the registry's shape ever changes underneath it.
  */
 interface RegistryModule {
-  createContentTypeRegistry: () => ReadonlyArray<{ readonly directory: string }>
+  createContentTypeRegistry: () => ReadonlyArray<{
+    readonly directory: string
+    readonly state: string
+  }>
 }
 
 /**
@@ -49,9 +52,12 @@ export function fileBridgePlugin(): Plugin {
       const { createContentTypeRegistry } = (await server.ssrLoadModule(
         '/src/content-types/registry.ts',
       )) as RegistryModule
-      const repoRoot = resolveRepoRoot(server.config.root)
+      const repoRoot = resolveBridgeRepoRoot(server.config.root)
       const directories = createContentTypeRegistry().map((descriptor) => descriptor.directory)
-      server.middlewares.use(createFileBridge({ repoRoot, directories }))
+      const writableDirectories = createContentTypeRegistry()
+        .filter((descriptor) => descriptor.state === 'implemented')
+        .map((descriptor) => descriptor.directory)
+      server.middlewares.use(createFileBridge({ repoRoot, directories, writableDirectories }))
     },
   }
 }

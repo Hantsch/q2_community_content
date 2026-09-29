@@ -11,7 +11,19 @@
  * special-case "the source itself failed" from "the read succeeded but found nothing".
  */
 import type { ContentSourceRead, ContentTypeSource } from '../content-types/descriptor'
-import { BRIDGE_PREFIX, type BridgeErrorResponse, type BridgeReadResponse } from './bridge-protocol'
+import {
+  BRIDGE_PREFIX,
+  type BridgeErrorResponse,
+  type BridgeReadResponse,
+  type BridgeWriteItem,
+  type BridgeWriteResponse,
+  type BridgeWriteResult,
+} from './bridge-protocol'
+
+export interface BridgeClient extends ContentTypeSource {
+  /** `POST /__studio/fs/write`. Never throws: a failure resolves to `{ ok: false, ... }`. */
+  write(writes: readonly BridgeWriteItem[]): Promise<BridgeWriteResult>
+}
 
 function messageOf(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
@@ -51,7 +63,7 @@ async function errorBodyMessage(response: Response): Promise<string | undefined>
  * `fetchImpl` defaults to the global `fetch` and is injectable for tests, the same style
  * `read-content-repo.ts` injects `repoRoot`.
  */
-export function createBridgeClient(fetchImpl: typeof fetch = fetch): ContentTypeSource {
+export function createBridgeClient(fetchImpl: typeof fetch = fetch): BridgeClient {
   return {
     async read(directory: string): Promise<ContentSourceRead> {
       let response: Response
@@ -70,6 +82,41 @@ export function createBridgeClient(fetchImpl: typeof fetch = fetch): ContentType
         return (await response.json()) as BridgeReadResponse
       } catch (cause) {
         return fallbackRead(directory, messageOf(cause))
+      }
+    },
+
+    async write(writes: readonly BridgeWriteItem[]): Promise<BridgeWriteResult> {
+      let response: Response
+      try {
+        response = await fetchImpl(`${BRIDGE_PREFIX}write`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ writes }),
+        })
+      } catch (cause) {
+        return { ok: false, status: 0, error: messageOf(cause) }
+      }
+
+      let body: unknown
+      try {
+        body = await response.json()
+      } catch (cause) {
+        return {
+          ok: false,
+          status: response.status,
+          error: response.ok ? messageOf(cause) : `HTTP ${response.status}`,
+        }
+      }
+
+      if (response.ok) {
+        return { ok: true, written: (body as BridgeWriteResponse).written }
+      }
+      const failure = body as Partial<Extract<BridgeWriteResult, { ok: false }>>
+      return {
+        ...failure,
+        ok: false,
+        status: response.status,
+        error: typeof failure.error === 'string' ? failure.error : `HTTP ${response.status}`,
       }
     },
   }

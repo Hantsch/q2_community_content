@@ -1,7 +1,7 @@
 ---
 id: 024
 title: Saving an entry writes the document and its index row
-status: ready # draft -> ready -> in-progress -> done
+status: done # draft -> ready -> in-progress -> done
 created: 2026-09-13
 ---
 
@@ -19,20 +19,20 @@ Concept: [Q2 Content Studio](../concepts/content-studio.md) — CS-22, open poin
 
 ## Acceptance Criteria
 
-- [ ] **AC1** — Saving writes the entry's `.md` file with its frontmatter and body.
-- [ ] **AC2** — For a published entry, the matching row in `news/index.json` is updated to agree
+- [x] **AC1** — Saving writes the entry's `.md` file with its frontmatter and body.
+- [x] **AC2** — For a published entry, the matching row in `news/index.json` is updated to agree
       with the document.
-- [ ] **AC3** — Every file the save does not concern is byte-identical afterwards, including the
+- [x] **AC3** — Every file the save does not concern is byte-identical afterwards, including the
       other rows in `index.json`.
-- [ ] **AC4** — A round trip is lossless: saving an entry and reading it back yields the same entry,
+- [x] **AC4** — A round trip is lossless: saving an entry and reading it back yields the same entry,
       with no field silently dropped, reordered or reformatted.
-- [ ] **AC5** — A save that would produce an entry the launcher drops is not written silently — the
+- [x] **AC5** — A save that would produce an entry the launcher drops is not written silently — the
       author is told what will happen and confirms it deliberately.
-- [ ] **AC6** — A file that changed on disk since it was opened is not overwritten without the
+- [x] **AC6** — A file that changed on disk since it was opened is not overwritten without the
       author being told.
-- [ ] **AC7** — The save writes only inside the content type's declared directory, and the file
+- [x] **AC7** — The save writes only inside the content type's declared directory, and the file
       bridge refuses anything else.
-- [ ] **AC8** — No save ever performs a git operation or reaches the network.
+- [x] **AC8** — No save ever performs a git operation or reaches the network.
 
 ## Open Questions
 
@@ -440,4 +440,17 @@ AC8 D4+D6. No manual residue.
 
 ## Done
 
-<Filled by `/build 024`.>
+Saving now works end to end: pure writers (lossless frontmatter text patch, canonical `index.json` row writer, save planner with the launcher's drop verdict), a guarded `POST /__studio/fs/write` bridge route (loopback Origin, writable-dir confinement, conflict check, temp+rename, EOL/BOM restore), a scratch-repo e2e harness and a Save control in the editor with drop dialog and conflict notice.
+
+Commit message: `024: save entry (lossless frontmatter writer, canonical index row, guarded fs write route, scratch e2e harness, save controls)`
+
+Decisions (build):
+- Kept comments inside a replaced `buttons:` block are placed after the new entries, not directly after `buttons:` as planned: the parser ends the list at the first non-entry line, so the planned placement would drop every button. Pinned by a test in write-entry-document.test.ts.
+- `write-files.ts` is exempted from the "no fs write import" scan in `tests/file-bridge-server.test.ts` (commented); the AC8 import scan covers write-files.ts, client.ts and `src/authoring/**` (server files legitimately use node:http types).
+- `playwright.config.ts` has a global `workers: 1` (no per-project workers in Playwright); the chromium project ignores `e2e/authoring/`.
+- Unparseable index: refused only when its text mentions the entry's file, otherwise treated as unpublished. The conflict notice is inline (role=alert), the drop confirmation is the only modal. `order` is read-only in the form and never patched.
+- Unfixed review notes (low): Origin accepts any loopback port; ADS paths on Windows not specially refused; e2e AC2 alone would not catch rewriting the index on every save (unit tests do).
+
+Verification (narrow gate): build, typecheck green; `npm run test --workspace studio -- --changed HEAD` 12 files / 86 tests green; `npm run e2e --workspace studio -- e2e/authoring/save-entry.spec.ts e2e/authoring/scratch-harness.spec.ts` 6/6 green; lint eslint green, prettier failures only on untouched files (new fixture .md files were formatted). Real `news/` untouched (`git status`). AC1-AC8 mapped tests all ran and passed as listed in `## Acceptance Tests`; no manual residue. Clean-agent review (default): PASS, no blocking findings. Full gate pending (sprint's).
+
+tiers: D 6 / hard 1 · review default · cycles 0 · agents 12

@@ -22,12 +22,13 @@
  * through `useNewsLibrary()`'s own `refresh()`.
  */
 import { useEffect, useLayoutEffect, useState } from 'react'
-import { createBridgeClient } from '../../bridge/client'
+import { createBridgeClient, type BridgeClient } from '../../bridge/client'
 import type { ContentTypeDescriptor, ContentTypeSource } from '../../content-types/descriptor'
 import { createContentTypeRegistry } from '../../content-types/registry'
 import { CurrentEntryProvider, useCurrentEntry } from '../../context/current-entry-context'
 import { EntryDraftProvider, useEntryDraft } from '../../context/entry-draft-context'
 import { PreviewWidthProvider } from '../../context/preview-width-context'
+import { useSaveEntry } from '../../authoring/use-save-entry'
 import { documentFor } from '../../library/document-text'
 import { useNewsLibrary } from '../../library/use-news-library'
 import type { LibraryRow } from '../../library/library-types'
@@ -38,6 +39,7 @@ import { ContentTypeStateNotice } from '../../organisms/ContentTypeStateNotice'
 import { withBody } from '../../editor/body-document'
 import { BodyEditor } from '../../organisms/editor/BodyEditor'
 import { FrontmatterEditor } from '../../organisms/editor/FrontmatterEditor'
+import { SaveEntryControls } from '../../organisms/editor/SaveEntryControls'
 import { DraftPreviewNotice } from '../../organisms/preview/DraftPreviewNotice'
 import { SlidePreview } from '../../organisms/preview/SlidePreview'
 import { buildSlidePreviewModel } from '../../preview/preview-model'
@@ -51,6 +53,11 @@ const EMPTY_PANEL_MODEL: ValidationPanelModel = {
   entry: undefined,
   repositoryFindings: [],
   allClear: true,
+}
+
+/** Story 024 D6: the one path a save takes to disk. */
+function writeThroughBridge(writes: Parameters<BridgeClient['write']>[0]) {
+  return createBridgeClient().write(writes)
 }
 
 interface EditorSource {
@@ -97,7 +104,17 @@ function NewsLibrary({
     workingPreviewFor,
   } = useNewsLibrary(descriptor)
   const { currentEntryId, selectEntry: selectEntryUnguarded } = useCurrentEntry()
-  const { confirmDiscard, reset, body, bodyChanged } = useEntryDraft()
+  const { confirmDiscard, reset, body, bodyChanged, draft, isDirty, canSave } = useEntryDraft()
+  // Story 024 D6: saving goes only through the bridge; a successful save re-reads the library,
+  // whose new document text starts a clean draft.
+  const saveEntry = useSaveEntry({
+    read,
+    draft,
+    body,
+    canSave,
+    write: writeThroughBridge,
+    onSaved: refresh,
+  })
   const [provenance, setProvenance] = useState<MirrorProvenance | undefined>(undefined)
 
   useEffect(() => {
@@ -169,6 +186,17 @@ function NewsLibrary({
       <SlidePreview model={previewModel} />
       <FrontmatterEditor />
       <BodyPanel />
+      {draft !== null && !('unreadable' in draft) && (
+        <SaveEntryControls
+          state={saveEntry.state}
+          dirty={isDirty}
+          canSave={canSave}
+          onSave={saveEntry.save}
+          onConfirmDrop={saveEntry.confirmDrop}
+          onOverwrite={saveEntry.overwrite}
+          onCancel={saveEntry.cancel}
+        />
+      )}
       <div className="flex gap-8">
         <LibraryView
           model={model}

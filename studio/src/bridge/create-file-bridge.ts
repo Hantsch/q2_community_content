@@ -24,8 +24,16 @@ import { URL } from 'node:url'
 import { readContentRepo } from '../content-repo/read-content-repo'
 import { readMirrorProvenance } from '../mirror/read-provenance'
 import { NEWS_IMAGE_URL_PREFIX } from '../mirror-runtime/newsImageUrl'
-import { BRIDGE_PREFIX, type BridgeErrorResponse, type BridgeFileResponse } from './bridge-protocol'
+import {
+  BRIDGE_PREFIX,
+  type BridgeErrorResponse,
+  type BridgeFileResponse,
+  type BridgeWriteConflictResponse,
+  type BridgeWriteFailureResponse,
+  type BridgeWriteItem,
+} from './bridge-protocol'
 import { resolveBridgePath } from './resolve-bridge-path'
+import { writeFiles } from './write-files'
 
 /**
  * The image route (`GET /news-img/<filename>`, story 015 D3) deliberately keeps the URL prefix
@@ -50,7 +58,12 @@ export interface CreateFileBridgeOptions {
   readonly repoRoot: string
   /** Repository-relative directory names declared reachable, e.g. `['news']`. */
   readonly directories: readonly string[]
+  /** Directories `POST /__studio/fs/write` may write into; none by default (read-only bridge). */
+  readonly writableDirectories?: readonly string[]
 }
+
+/** Largest accepted `write` request body. */
+const MAX_WRITE_BODY_BYTES = 1024 * 1024
 
 export type FileBridgeMiddleware = (
   req: IncomingMessage,
@@ -95,6 +108,109 @@ function headerValue(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value
 }
 
+function isLoopbackOrigin(origin: string): boolean {
+  try {
+    const hostname = new URL(origin).hostname
+    return LOOPBACK_HOSTS.has(hostname) || LOOPBACK_HOSTS.has(`[${hostname}]`)
+  } catch {
+    return false
+  }
+}
+
+function isWriteItem(value: unknown): value is BridgeWriteItem {
+  if (typeof value !== 'object' || value === null) {
+    return false
+  }
+  const item = value as Record<string, unknown>
+  return (
+    typeof item.path === 'string' &&
+    typeof item.text === 'string' &&
+    (typeof item.expected === 'string' || item.expected === null)
+  )
+}
+
+/** `POST /__studio/fs/write`: Host was already checked; this adds Origin, media type and size. */
+function handleWrite(
+  req: IncomingMessage,
+  res: ServerResponse,
+  repoRoot: string,
+  writableDirectories: readonly string[],
+): void {
+  const origin = headerValue(req.headers.origin)
+  if (origin === undefined || !isLoopbackOrigin(origin)) {
+    sendError(res, 403, 'a loopback Origin header is required', 'POST')
+    return
+  }
+  const mediaType = (headerValue(req.headers['content-type']) ?? '').split(';')[0]?.trim()
+  if (mediaType?.toLowerCase() !== 'application/json') {
+    sendError(res, 415, 'Content-Type must be application/json', 'POST')
+    return
+  }
+  if (Number(headerValue(req.headers['content-length'])) > MAX_WRITE_BODY_BYTES) {
+    sendError(res, 413, 'request body too large', 'POST')
+    return
+  }
+
+  const chunks: Buffer[] = []
+  let size = 0
+  let refused = false
+  req.on('data', (chunk: Buffer) => {
+    if (refused) {
+      return
+    }
+    size += chunk.length
+    if (size > MAX_WRITE_BODY_BYTES) {
+      refused = true
+      chunks.length = 0
+      sendError(res, 413, 'request body too large', 'POST')
+      return
+    }
+    chunks.push(chunk)
+  })
+  req.on('error', () => undefined)
+  req.on('end', () => {
+    if (refused) {
+      return
+    }
+    let parsed: unknown
+    try {
+      parsed = JSON.parse(Buffer.concat(chunks).toString('utf8'))
+    } catch {
+      sendError(res, 400, 'body is not valid JSON', 'POST')
+      return
+    }
+    const writes = (parsed as { writes?: unknown } | null)?.writes
+    if (!Array.isArray(writes) || !writes.every(isWriteItem)) {
+      sendError(res, 400, 'body must be { writes: [{ path, text, expected }] }', 'POST')
+      return
+    }
+    try {
+      const result = writeFiles({ repoRoot, writableDirectories, writes })
+      if (result.ok) {
+        sendJson(res, 200, { written: result.written }, 'POST')
+      } else if (result.status === 409) {
+        const body: BridgeWriteConflictResponse = {
+          error: result.error,
+          path: result.path,
+          current: result.current,
+        }
+        sendJson(res, 409, body, 'POST')
+      } else if (result.status === 500) {
+        const body: BridgeWriteFailureResponse = {
+          error: result.error,
+          written: result.written,
+          failed: result.failed,
+        }
+        sendJson(res, 500, body, 'POST')
+      } else {
+        sendError(res, result.status, result.error, 'POST')
+      }
+    } catch (cause) {
+      sendError(res, 500, cause instanceof Error ? cause.message : String(cause), 'POST')
+    }
+  })
+}
+
 /**
  * Creates the file bridge's connect-style middleware. `repoRoot`/`directories` are bound once at
  * construction time; a `repoRoot`/`root` query parameter on any request is deliberately never
@@ -103,6 +219,7 @@ function headerValue(value: string | string[] | undefined): string | undefined {
 export function createFileBridge({
   repoRoot,
   directories,
+  writableDirectories = [],
 }: CreateFileBridgeOptions): FileBridgeMiddleware {
   return function fileBridgeMiddleware(req, res, next) {
     const rawUrl = req.url
@@ -113,9 +230,12 @@ export function createFileBridge({
       return
     }
 
-    // Read-only, checked before any routing: no bridge route ever accepts a write method.
+    // Checked before any routing: the only non-read request a bridge route accepts is `POST` on
+    // the `write` route; every other method/route pair is refused.
     const method = req.method ?? 'GET'
-    if (method !== 'GET' && method !== 'HEAD') {
+    const isWriteRoute =
+      isBridgeRoute && new URL(rawUrl, 'http://bridge.local').pathname === `${BRIDGE_PREFIX}write`
+    if (method !== 'GET' && method !== 'HEAD' && !(method === 'POST' && isWriteRoute)) {
       sendError(res, 405, 'method not allowed')
       return
     }
@@ -207,6 +327,15 @@ export function createFileBridge({
     }
 
     const route = url.pathname.slice(BRIDGE_PREFIX.length)
+
+    if (route === 'write') {
+      if (method !== 'POST') {
+        sendError(res, 405, 'method not allowed', method)
+        return
+      }
+      handleWrite(req, res, repoRoot, writableDirectories)
+      return
+    }
 
     if (route === 'read') {
       const type = url.searchParams.get('type')

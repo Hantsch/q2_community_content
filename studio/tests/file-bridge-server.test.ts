@@ -473,6 +473,10 @@ describe('no write API is imported under studio/src/bridge/', () => {
     expect(files.length).toBeGreaterThan(0)
 
     for (const file of files) {
+      // Story 024 D4: `write-files.ts` is the one sanctioned writer (behind `POST .../write`).
+      if (file.endsWith('write-files.ts')) {
+        continue
+      }
       const text = readFileSync(file, 'utf8')
       const importBlocks = text.match(/import[^;]*from\s+['"]node:fs(\/promises)?['"]/g) ?? []
       for (const block of importBlocks) {
