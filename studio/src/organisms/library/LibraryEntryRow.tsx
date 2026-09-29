@@ -15,7 +15,16 @@ export interface LibraryEntryRowProps {
   /** An already-resolved thumbnail URL, or absent — this component never resolves `row.image`
    * itself, it only decides how to render the result. */
   readonly thumbnailUrl?: string
+  /** Story 027 D6: shown on a draft row only; absent callback, absent button. */
+  readonly onPublish?: (draftPath: string) => void
+  /** Shown on an index row only, and only when the row knows its index position. */
+  readonly onUnpublish?: (indexPosition: number, id: string) => void
+  /** True while a publishing write is in flight. */
+  readonly busy?: boolean
 }
+
+const ACTION_CLASS =
+  'min-h-11 min-w-11 self-start rounded-md border border-muted-border px-4 font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-selected disabled:opacity-50'
 
 /** AC3: "visible from" for a scheduled row, "visible until" for an expired one. Which of the two
  * it is follows from `row.status`, matching `LibraryRow.visibilityDate`'s own doc comment. */
@@ -35,11 +44,15 @@ export function LibraryEntryRow({
   selected,
   onSelect,
   thumbnailUrl,
+  onPublish,
+  onUnpublish,
+  busy = false,
 }: LibraryEntryRowProps): React.JSX.Element {
   const title = titleOf(row)
+  const indexPosition = row.verdict?.indexPosition
 
   return (
-    <li>
+    <li className="flex flex-col gap-2">
       <button
         type="button"
         aria-current={selected ? 'true' : undefined}
@@ -93,6 +106,28 @@ export function LibraryEntryRow({
 
         <span className="sr-only">{selected ? ' (selected)' : ''}</span>
       </button>
+      {row.status === 'draft' && onPublish && (
+        <button
+          type="button"
+          disabled={busy}
+          aria-label={`Publish ${title}`}
+          onClick={() => onPublish(row.file)}
+          className={ACTION_CLASS}
+        >
+          Publish
+        </button>
+      )}
+      {row.status !== 'draft' && onUnpublish && indexPosition !== undefined && (
+        <button
+          type="button"
+          disabled={busy}
+          aria-label={`Unpublish ${title}`}
+          onClick={() => onUnpublish(indexPosition, row.id)}
+          className={ACTION_CLASS}
+        >
+          Unpublish
+        </button>
+      )}
     </li>
   )
 }

@@ -79,6 +79,69 @@ export type BridgeWriteResult =
       readonly failed?: string
     }
 
+/**
+ * Story 027 D2: `POST /__studio/fs/write-batch` request body. Every file is checked (confinement,
+ * content-path rule, `expected` against the disk) before any is written; `.md` files are written
+ * first and `index.json` last. A `200` answers `BridgeWriteResponse` in write order.
+ */
+export interface BridgeWriteBatchRequest {
+  readonly files: readonly BridgeWriteItem[]
+}
+
+/** One path a batch refused before writing anything, and why. */
+export interface BridgeBatchRefusal {
+  readonly path: string
+  readonly error: string
+}
+
+/** One path whose disk text no longer matches its `expected`. */
+export interface BridgeBatchConflict {
+  readonly path: string
+  /** The current LF-normalised disk text, or `null` when the file does not exist. */
+  readonly current: string | null
+}
+
+/** `400`/`403` batch answer: every refused path (empty for an empty batch); nothing was written. */
+export interface BridgeWriteBatchRefusedResponse extends BridgeErrorResponse {
+  readonly refused: readonly BridgeBatchRefusal[]
+}
+
+/** `409` batch answer: every conflicting path; nothing was written. */
+export interface BridgeWriteBatchConflictResponse extends BridgeErrorResponse {
+  readonly conflicts: readonly BridgeBatchConflict[]
+}
+
+/**
+ * What `client.writeBatch()` resolves to; it never throws. `refused` and `conflict` guarantee
+ * nothing was written (`refused` is empty when a request guard, e.g. Origin, refused the whole
+ * request); `failed` is an I/O failure part-way (`written` lists what reached disk) or no answer at
+ * all (`status` 0, `written` empty).
+ */
+export type BridgeWriteBatchResult =
+  | { readonly ok: true; readonly written: readonly string[] }
+  | {
+      readonly ok: false
+      readonly kind: 'refused'
+      readonly status: number
+      readonly error: string
+      readonly refused: readonly BridgeBatchRefusal[]
+    }
+  | {
+      readonly ok: false
+      readonly kind: 'conflict'
+      readonly status: 409
+      readonly error: string
+      readonly conflicts: readonly BridgeBatchConflict[]
+    }
+  | {
+      readonly ok: false
+      readonly kind: 'failed'
+      readonly status: number
+      readonly error: string
+      readonly written: readonly string[]
+      readonly failed?: string
+    }
+
 /** The body of every non-2xx response a bridge route returns. */
 export interface BridgeErrorResponse {
   readonly error: string

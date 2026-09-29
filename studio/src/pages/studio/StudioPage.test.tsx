@@ -89,7 +89,7 @@ test('the validation panel renders alongside the library and follows the current
 
   const region = await screen.findByRole('region', { name: 'Entries' })
   const row = within(region).getByRole('listitem')
-  const button = within(row).getByRole('button')
+  const button = within(row).getByRole('button', { name: /^(?!Unpublish)/ })
 
   // Before selection: nothing selected, no entry findings shown yet.
   expect(screen.getByText(/nothing selected/i)).toBeDefined()
@@ -133,7 +133,7 @@ test('the slide preview region renders beside the library', async () => {
   expect(screen.getByRole('region', { name: 'Slide preview' })).toBeDefined()
   expect(screen.getByText('Select an entry to preview it.')).toBeDefined()
 
-  fireEvent.click(within(region).getByRole('button'))
+  fireEvent.click(within(region).getByRole('button', { name: /^(?!Unpublish)/ }))
 
   await waitFor(() => expect(screen.queryByText('Select an entry to preview it.')).toBeNull())
   expect(screen.getByTitle('Slide preview')).toBeDefined()

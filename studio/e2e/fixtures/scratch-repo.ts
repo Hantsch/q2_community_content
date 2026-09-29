@@ -19,11 +19,12 @@ function confine(repoRelPath: string): string {
   return target
 }
 
-export const test = base.extend<{ scratch: Scratch }>({
+export const test = base.extend<{ scratch: Scratch; fixtureName: string }>({
+  /** Which `e2e/fixtures/<name>/news` seeds the scratch root; override with `test.use`. */
+  fixtureName: ['scratch-repo', { option: true }],
   // Playwright requires an object pattern as the first argument.
-  // eslint-disable-next-line no-empty-pattern
-  scratch: async ({}, use) => {
-    resetScratch()
+  scratch: async ({ fixtureName }, use) => {
+    resetScratch(SCRATCH_ROOT, fixtureName)
     await use({
       root: SCRATCH_ROOT,
       readFile: (repoRelPath) => readFileSync(confine(repoRelPath), 'utf8'),

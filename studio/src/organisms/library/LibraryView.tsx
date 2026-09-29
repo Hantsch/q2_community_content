@@ -24,6 +24,10 @@ export interface LibraryViewProps {
   readonly thumbnailUrlFor?: (row: LibraryRow) => string | undefined
   /** Story 025 D3: opens the new-entry dialog; the button is absent without it. */
   readonly onNewEntry?: () => void
+  /** Story 027 D6: publish a draft / unpublish an index row; rows show the button only with them. */
+  readonly onPublish?: (draftPath: string) => void
+  readonly onUnpublish?: (indexPosition: number, id: string) => void
+  readonly publishingBusy?: boolean
 }
 
 export function LibraryView({
@@ -33,6 +37,9 @@ export function LibraryView({
   onSelect,
   thumbnailUrlFor,
   onNewEntry,
+  onPublish,
+  onUnpublish,
+  publishingBusy,
 }: LibraryViewProps): React.JSX.Element {
   if (loading || !model) {
     return <LibraryStateNotice state="loading" />
@@ -63,6 +70,9 @@ export function LibraryView({
               selected={row.id === selectedId}
               onSelect={onSelect}
               thumbnailUrl={thumbnailUrlFor?.(row)}
+              onPublish={onPublish}
+              onUnpublish={onUnpublish}
+              busy={publishingBusy}
             />
           ))}
         </ul>
@@ -78,6 +88,9 @@ export function LibraryView({
               selected={row.id === selectedId}
               onSelect={onSelect}
               thumbnailUrl={thumbnailUrlFor?.(row)}
+              onPublish={onPublish}
+              onUnpublish={onUnpublish}
+              busy={publishingBusy}
             />
           ))}
         </ul>

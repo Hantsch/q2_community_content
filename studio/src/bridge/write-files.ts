@@ -7,13 +7,16 @@
  * and every `expected` must match the normalised disk text. Only then are the files written, in
  * request order, each through a hidden sibling temp file renamed over the target.
  *
+ * `writeBatch` (story 027 D2) is the multi-file sibling behind `POST /__studio/fs/write-batch`:
+ * the same per-file guard, every offender reported, `.md` files first and `index.json` last.
+ *
  * `createImageFile` (story 026 D1) is the binary sibling behind `POST /__studio/fs/image`.
  */
 import { lstatSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { basename, dirname, join, relative, resolve, sep } from 'node:path'
 
 import { normaliseText } from '../content-repo/text'
-import type { BridgeWriteItem } from './bridge-protocol'
+import type { BridgeBatchConflict, BridgeBatchRefusal, BridgeWriteItem } from './bridge-protocol'
 import { resolveBridgePath } from './resolve-bridge-path'
 
 const BOM = String.fromCharCode(0xfeff)
@@ -82,6 +85,56 @@ function restoreConventions(text: string, disk: string | null): string {
   return disk.startsWith(BOM) ? BOM + body : body
 }
 
+type PlanStep =
+  | { readonly ok: true; readonly planned: Planned; readonly relativePath: string }
+  | { readonly ok: false; readonly error: string }
+
+/** The per-file guard shared by `writeFiles` and `writeBatch`: confinement, content-path rule and
+ * the current disk text. Touches nothing; a refusal is always a 403. */
+function planWrite(
+  repoRoot: string,
+  realRoot: string,
+  writableDirectories: readonly string[],
+  item: BridgeWriteItem,
+): PlanStep {
+  const resolved = resolveBridgePath({
+    repoRoot,
+    directories: writableDirectories,
+    requestPath: item.path,
+  })
+  let absolutePath: string
+  let disk: string | null
+  if (resolved.ok) {
+    absolutePath = resolved.absolutePath
+    disk = readFileSync(absolutePath, 'utf8')
+  } else if (resolved.reason.endsWith(': not found')) {
+    // `resolveBridgePath` runs its containment checks before it looks for the file, so this
+    // refusal means "confined, but nothing there yet". A dangling symlink at the leaf is not
+    // "nothing there": `lstat` sees it and it is refused.
+    absolutePath = resolve(realRoot, item.path)
+    if (lstatSync(absolutePath, { throwIfNoEntry: false }) !== undefined) {
+      return { ok: false, error: `${item.path}: not a regular file` }
+    }
+    disk = null
+  } else {
+    return { ok: false, error: resolved.reason }
+  }
+
+  const relativePath = relative(realRoot, absolutePath).split(sep).join('/')
+  if (!isWritableContentPath(relativePath, writableDirectories)) {
+    return { ok: false, error: `${item.path}: not a writable content path` }
+  }
+  return { ok: true, planned: { item, absolutePath, disk }, relativePath }
+}
+
+/** The current LF-normalised disk text when it no longer matches `expected`, else `undefined`. */
+function conflictOf({ item, disk }: Planned): { current: string | null } | undefined {
+  const current = disk === null ? null : normaliseText(disk)
+  return current === item.expected ? undefined : { current }
+}
+
+const conflictMessage = (path: string): string => `${path}: changed on disk since it was read`
+
 export function writeFiles({
   repoRoot,
   writableDirectories,
@@ -97,53 +150,40 @@ export function writeFiles({
   const planned: Planned[] = []
   const seen = new Set<string>()
   for (const item of writes) {
-    const resolved = resolveBridgePath({
-      repoRoot,
-      directories: writableDirectories,
-      requestPath: item.path,
-    })
-    let absolutePath: string
-    let disk: string | null
-    if (resolved.ok) {
-      absolutePath = resolved.absolutePath
-      disk = readFileSync(absolutePath, 'utf8')
-    } else if (resolved.reason.endsWith(': not found')) {
-      // `resolveBridgePath` runs its containment checks before it looks for the file, so this
-      // refusal means "confined, but nothing there yet". A dangling symlink at the leaf is not
-      // "nothing there": `lstat` sees it and it is refused.
-      absolutePath = resolve(realRoot, item.path)
-      if (lstatSync(absolutePath, { throwIfNoEntry: false }) !== undefined) {
-        return { ok: false, status: 403, error: `${item.path}: not a regular file` }
-      }
-      disk = null
-    } else {
-      return { ok: false, status: 403, error: resolved.reason }
+    const step = planWrite(repoRoot, realRoot, writableDirectories, item)
+    if (!step.ok) {
+      return { ok: false, status: 403, error: step.error }
     }
-
-    const relativePath = relative(realRoot, absolutePath).split(sep).join('/')
-    if (!isWritableContentPath(relativePath, writableDirectories)) {
-      return { ok: false, status: 403, error: `${item.path}: not a writable content path` }
-    }
-    if (seen.has(relativePath.toLowerCase())) {
+    if (seen.has(step.relativePath.toLowerCase())) {
       return { ok: false, status: 400, error: `${item.path}: listed more than once` }
     }
-    seen.add(relativePath.toLowerCase())
-    planned.push({ item, absolutePath, disk })
+    seen.add(step.relativePath.toLowerCase())
+    planned.push(step.planned)
   }
 
-  for (const { item, disk } of planned) {
-    const current = disk === null ? null : normaliseText(disk)
-    if (current !== item.expected) {
+  for (const entry of planned) {
+    const conflict = conflictOf(entry)
+    if (conflict !== undefined) {
       return {
         ok: false,
         status: 409,
-        error: `${item.path}: changed on disk since it was read`,
-        path: item.path,
-        current,
+        error: conflictMessage(entry.item.path),
+        path: entry.item.path,
+        current: conflict.current,
       }
     }
   }
 
+  return commit(planned)
+}
+
+/** Writes each planned file through a hidden sibling temp file renamed over the target, in order;
+ * the first I/O failure stops the run and names what was already written. */
+function commit(
+  planned: readonly Planned[],
+):
+  | { readonly ok: true; readonly written: readonly string[] }
+  | Extract<WriteFilesResult, { status: 500 }> {
   const written: string[] = []
   for (const { item, absolutePath, disk } of planned) {
     const temp = join(dirname(absolutePath), `.${basename(absolutePath)}.${process.pid}.tmp`)
@@ -163,6 +203,107 @@ export function writeFiles({
     }
   }
   return { ok: true, written }
+}
+
+export interface WriteBatchOptions {
+  readonly repoRoot: string
+  readonly writableDirectories: readonly string[]
+  readonly files: readonly BridgeWriteItem[]
+}
+
+export type WriteBatchResult =
+  | { readonly ok: true; readonly written: readonly string[] }
+  | {
+      readonly ok: false
+      readonly status: 400 | 403
+      readonly error: string
+      readonly refused: readonly BridgeBatchRefusal[]
+    }
+  | {
+      readonly ok: false
+      readonly status: 409
+      readonly error: string
+      readonly conflicts: readonly BridgeBatchConflict[]
+    }
+  | Extract<WriteFilesResult, { status: 500 }>
+
+const isIndexPath = (relativePath: string): boolean =>
+  relativePath.toLowerCase().endsWith('/index.json')
+
+/**
+ * Story 027 D2: the guarded multi-file write behind `POST /__studio/fs/write-batch`. Every file
+ * passes `writeFiles`'s per-file guard and base-text comparison before the first byte is written;
+ * unlike `writeFiles` it collects every offending path instead of stopping at the first, refuses an
+ * empty batch, and always writes the `.md` files first and `index.json` last, so an I/O failure
+ * part-way never leaves an index row pointing at a file that was not written.
+ */
+export function writeBatch({
+  repoRoot,
+  writableDirectories,
+  files,
+}: WriteBatchOptions): WriteBatchResult {
+  if (files.length === 0) {
+    return { ok: false, status: 400, error: 'the batch is empty', refused: [] }
+  }
+  let realRoot: string
+  try {
+    realRoot = realpathSync(resolve(repoRoot))
+  } catch {
+    const error = `${repoRoot}: repository root could not be resolved`
+    return { ok: false, status: 403, error, refused: files.map(({ path }) => ({ path, error })) }
+  }
+
+  const refused: BridgeBatchRefusal[] = []
+  let confinementRefused = false
+  const markdown: Planned[] = []
+  const indexes: Planned[] = []
+  const seen = new Set<string>()
+  for (const item of files) {
+    const step = planWrite(repoRoot, realRoot, writableDirectories, item)
+    if (!step.ok) {
+      confinementRefused = true
+      refused.push({ path: item.path, error: step.error })
+      continue
+    }
+    const key = step.relativePath.toLowerCase()
+    if (seen.has(key)) {
+      refused.push({ path: item.path, error: `${item.path}: listed more than once` })
+      continue
+    }
+    seen.add(key)
+    if (isIndexPath(step.relativePath)) {
+      indexes.push(step.planned)
+    } else {
+      markdown.push(step.planned)
+    }
+  }
+  if (refused.length > 0) {
+    return {
+      ok: false,
+      status: confinementRefused ? 403 : 400,
+      error: `batch refused: ${refused.map(({ path }) => path).join(', ')}`,
+      refused,
+    }
+  }
+
+  const planned = [...markdown, ...indexes]
+  const conflicts: BridgeBatchConflict[] = []
+  for (const entry of planned) {
+    const conflict = conflictOf(entry)
+    if (conflict !== undefined) {
+      conflicts.push({ path: entry.item.path, current: conflict.current })
+    }
+  }
+  if (conflicts.length > 0) {
+    return {
+      ok: false,
+      status: 409,
+      error: conflicts.map(({ path }) => conflictMessage(path)).join('; '),
+      conflicts,
+    }
+  }
+
+  return commit(planned)
 }
 
 export interface CreateFileOptions {

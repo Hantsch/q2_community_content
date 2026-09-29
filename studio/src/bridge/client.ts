@@ -20,6 +20,10 @@ import {
   type BridgeImageRefusalResponse,
   type BridgeImageWriteResponse,
   type BridgeReadResponse,
+  type BridgeWriteBatchConflictResponse,
+  type BridgeWriteBatchRefusedResponse,
+  type BridgeWriteBatchResult,
+  type BridgeWriteFailureResponse,
   type BridgeWriteItem,
   type BridgeWriteResponse,
   type BridgeWriteResult,
@@ -28,6 +32,8 @@ import {
 export interface BridgeClient extends ContentTypeSource {
   /** `POST /__studio/fs/write`. Never throws: a failure resolves to `{ ok: false, ... }`. */
   write(writes: readonly BridgeWriteItem[]): Promise<BridgeWriteResult>
+  /** `POST /__studio/fs/write-batch`: all files or none. Never throws. */
+  writeBatch(files: readonly BridgeWriteItem[]): Promise<BridgeWriteBatchResult>
   /** Create-only `POST /__studio/fs/write`: never overwrites. Never throws. */
   createFile(path: string, text: string): Promise<BridgeCreateResult>
   /** `GET /__studio/fs/file`: one repository text file, or `undefined` when it cannot be read. */
@@ -163,6 +169,51 @@ export function createBridgeClient(fetchImpl: typeof fetch = fetch): BridgeClien
         ok: false,
         status: response.status,
         error: typeof failure.error === 'string' ? failure.error : `HTTP ${response.status}`,
+      }
+    },
+
+    async writeBatch(files: readonly BridgeWriteItem[]): Promise<BridgeWriteBatchResult> {
+      let response: Response
+      try {
+        response = await fetchImpl(`${BRIDGE_PREFIX}write-batch`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ files }),
+        })
+      } catch (cause) {
+        return { ok: false, kind: 'failed', status: 0, error: messageOf(cause), written: [] }
+      }
+
+      let body: Partial<
+        BridgeWriteResponse &
+          BridgeWriteBatchRefusedResponse &
+          BridgeWriteBatchConflictResponse &
+          BridgeWriteFailureResponse
+      >
+      try {
+        body = (await response.json()) as typeof body
+      } catch (cause) {
+        body = { error: response.ok ? messageOf(cause) : `HTTP ${response.status}` }
+      }
+      if (response.ok && Array.isArray(body.written)) {
+        return { ok: true, written: body.written }
+      }
+      const status = response.status
+      const error = typeof body.error === 'string' ? body.error : `HTTP ${status}`
+      if (status === 409 && Array.isArray(body.conflicts)) {
+        return { ok: false, kind: 'conflict', status, error, conflicts: body.conflicts }
+      }
+      if (status >= 400 && status < 500) {
+        const refused = Array.isArray(body.refused) ? body.refused : []
+        return { ok: false, kind: 'refused', status, error, refused }
+      }
+      return {
+        ok: false,
+        kind: 'failed',
+        status,
+        error,
+        written: Array.isArray(body.written) ? body.written : [],
+        ...(typeof body.failed === 'string' ? { failed: body.failed } : {}),
       }
     },
 

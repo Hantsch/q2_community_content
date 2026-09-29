@@ -56,6 +56,52 @@ test('a fetch rejection falls back to a well-formed empty read without throwing'
   expect(read.findings[0].message).toContain('network down')
 })
 
+test('writeBatch posts { files } to the write-batch route and answers the written paths', async () => {
+  const fetchImpl = vi.fn(
+    () => new Response(JSON.stringify({ written: ['news/a.md', 'news/index.json'] })),
+  )
+  const client = createBridgeClient(fetchImpl as unknown as typeof fetch)
+  const files = [{ path: 'news/index.json', text: '{}\n', expected: null }]
+
+  expect(await client.writeBatch(files)).toEqual({
+    ok: true,
+    written: ['news/a.md', 'news/index.json'],
+  })
+  expect(fetchImpl).toHaveBeenCalledWith('/__studio/fs/write-batch', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ files }),
+  })
+})
+
+test('writeBatch resolves a 500 to failed with the written paths, a bare 403 to refused', async () => {
+  const failure = {
+    error: 'news/index.json: EIO',
+    written: ['news/a.md'],
+    failed: 'news/index.json',
+  }
+  const failing = createBridgeClient(
+    vi.fn(() => new Response(JSON.stringify(failure), { status: 500 })) as unknown as typeof fetch,
+  )
+  expect(await failing.writeBatch([])).toEqual({
+    ok: false,
+    kind: 'failed',
+    status: 500,
+    ...failure,
+  })
+
+  const guarded = createBridgeClient(
+    vi.fn(() => new Response('not json', { status: 403 })) as unknown as typeof fetch,
+  )
+  expect(await guarded.writeBatch([])).toEqual({
+    ok: false,
+    kind: 'refused',
+    status: 403,
+    error: 'HTTP 403',
+    refused: [],
+  })
+})
+
 test('addNewsImage posts the raw bytes as octet-stream and answers the image field value', async () => {
   const fetchImpl = vi.fn(
     () =>

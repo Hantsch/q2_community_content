@@ -146,3 +146,67 @@ test('an unselected row carries no aria-current', () => {
 
   expect(screen.getByRole('button').getAttribute('aria-current')).toBeNull()
 })
+
+const DRAFT_ROW: LibraryRow = {
+  id: 'news/draft.md',
+  file: 'news/draft.md',
+  title: 'A draft',
+  templatesDiffer: false,
+  status: 'draft',
+}
+
+const INDEXED_ROW = {
+  ...BASE_ROW,
+  verdict: { indexPosition: 2 },
+} as unknown as LibraryRow
+
+test('a draft row offers Publish, never Unpublish, and passes its path', () => {
+  const onPublish = vi.fn()
+  const onUnpublish = vi.fn()
+  render(
+    <LibraryEntryRow
+      row={DRAFT_ROW}
+      selected={false}
+      onSelect={() => {}}
+      onPublish={onPublish}
+      onUnpublish={onUnpublish}
+    />,
+  )
+
+  expect(screen.queryByRole('button', { name: /^Unpublish/ })).toBeNull()
+  fireEvent.click(screen.getByRole('button', { name: 'Publish A draft' }))
+  expect(onPublish).toHaveBeenCalledWith('news/draft.md')
+})
+
+test('an index row offers Unpublish, never Publish, and passes position and id', () => {
+  const onPublish = vi.fn()
+  const onUnpublish = vi.fn()
+  render(
+    <LibraryEntryRow
+      row={INDEXED_ROW}
+      selected={false}
+      onSelect={() => {}}
+      onPublish={onPublish}
+      onUnpublish={onUnpublish}
+    />,
+  )
+
+  expect(screen.queryByRole('button', { name: /^Publish/ })).toBeNull()
+  fireEvent.click(screen.getByRole('button', { name: 'Unpublish A published entry' }))
+  expect(onUnpublish).toHaveBeenCalledWith(2, 'entry-1')
+})
+
+test('the publish button is disabled while busy', () => {
+  render(
+    <LibraryEntryRow
+      row={DRAFT_ROW}
+      selected={false}
+      onSelect={() => {}}
+      onPublish={() => {}}
+      busy
+    />,
+  )
+
+  const button = screen.getByRole<HTMLButtonElement>('button', { name: 'Publish A draft' })
+  expect(button.disabled).toBe(true)
+})

@@ -133,3 +133,27 @@
 - 2026-09-29 15:33:16 · 026 · review 1 · started
 - 2026-09-29 15:35:14 · 026 · review 1 · done
 - 2026-09-29 15:36:09 · 026 · story · done
+- 2026-09-29 15:36:31 · 027 · build · started
+- 2026-09-29 15:37:51 · 027 · D1 order/publish/unpublish plans · started
+- 2026-09-29 15:40:11 · 027 · D1 order/publish/unpublish plans · done
+- 2026-09-29 15:40:14 · 027 · D2 bridge batch write · started
+- 2026-09-29 15:45:58 · 027 · D2 bridge batch write · done
+- 2026-09-29 15:46:03 · 027 · D4 shared fixture tree + harness smoke · started
+- 2026-09-29 15:47:12 · 027 · D4 shared fixture tree + harness smoke · done
+- 2026-09-29 15:47:16 · 027 · D3 apply plan and re-read · started
+- 2026-09-29 15:50:21 · 027 · D3 apply plan and re-read · done
+- 2026-09-29 15:50:26 · 027 · D5 reorder UI · started
+- 2026-09-29 15:53:03 · 027 · D5 reorder UI · done
+- 2026-09-29 15:53:06 · 027 · D6 publish/unpublish UI · started
+- 2026-09-29 15:55:56 · 027 · D6 publish/unpublish UI · done
+- 2026-09-29 15:56:00 · 027 · verify · started
+- 2026-09-29 15:57:10 · 027 · verify · blocked: eslint 4 no-unnecessary-type-assertion errors in own files
+- 2026-09-29 15:57:14 · 027 · fix lint + test helper · started
+- 2026-09-29 15:58:27 · 027 · fix lint + test helper · done
+- 2026-09-29 15:58:31 · 027 · verify 2 · started
+- 2026-09-29 15:59:35 · 027 · verify 2 · done
+- 2026-09-29 15:59:40 · 027 · review 1 · started
+- 2026-09-29 16:01:08 · 027 · review 1 · done
+- 2026-09-29 16:01:12 · 027 · review fixes 1 · started
+- 2026-09-29 16:03:34 · 027 · review fixes 1 · done
+- 2026-09-29 16:03:39 · 027 · story · done

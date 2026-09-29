@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    { "id": "a", "file": "2026-09-01-a.md", "order": 10 },
+    { "id": "b", "file": "2026-09-02-b.md", "order": 20 },
+    { "id": "c", "file": "2026-09-03-c.md", "order": 21 },
+    { "id": "d", "file": "2026-09-04-d.md", "order": 40 }
+  ]
+}

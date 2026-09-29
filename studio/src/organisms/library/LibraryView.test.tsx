@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, within } from '@testing-library/react'
-import { afterEach, expect, test } from 'vitest'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { afterEach, expect, test, vi } from 'vitest'
 import type { LibraryModel, LibraryRow } from '../../library/library-types'
 import { LibraryView } from './LibraryView'
 
@@ -128,4 +128,32 @@ test('the selected row carries the selection state and others do not', () => {
 
   expect(first?.getAttribute('aria-current')).toBeNull()
   expect(second?.getAttribute('aria-current')).toBe('true')
+})
+
+test('Publish appears only in Drafts and Unpublish only in Entries, with the right arguments', () => {
+  const onPublish = vi.fn()
+  const onUnpublish = vi.fn()
+  const entry = { ...row('a', 'Entry A'), verdict: { indexPosition: 1 } } as unknown as LibraryRow
+  const draft = row('news/d.md', 'Draft D', { status: 'draft', file: 'news/d.md' })
+
+  render(
+    <LibraryView
+      model={readyModel([entry], [draft])}
+      loading={false}
+      selectedId={null}
+      onSelect={() => {}}
+      onPublish={onPublish}
+      onUnpublish={onUnpublish}
+    />,
+  )
+
+  const entries = within(screen.getByLabelText('Entries'))
+  const drafts = within(screen.getByLabelText('Drafts'))
+  expect(entries.queryByRole('button', { name: /^Publish/ })).toBeNull()
+  expect(drafts.queryByRole('button', { name: /^Unpublish/ })).toBeNull()
+
+  fireEvent.click(entries.getByRole('button', { name: 'Unpublish Entry A' }))
+  fireEvent.click(drafts.getByRole('button', { name: 'Publish Draft D' }))
+  expect(onUnpublish).toHaveBeenCalledWith(1, 'a')
+  expect(onPublish).toHaveBeenCalledWith('news/d.md')
 })

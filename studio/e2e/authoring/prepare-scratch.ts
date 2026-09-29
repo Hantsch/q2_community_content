@@ -12,10 +12,19 @@ export const SCRATCH_ROOT = join(realpathSync(tmpdir()), 'q2-studio-e2e')
 const MARKER = '.q2-studio-e2e-scratch'
 /** The real kit, read-only source: the scratch copy is made per reset, so no second copy is kept. */
 const KIT_TEMPLATES = join(studioDir, '../news/_templates')
-const FIXTURE_NEWS = join(here, '../fixtures/scratch-repo/news')
+const FIXTURES = join(here, '../fixtures')
+const DEFAULT_FIXTURE = 'scratch-repo'
 
-/** Wipes the scratch `news/` and re-copies the fixture. Refuses any root but `SCRATCH_ROOT`. */
-export function resetScratch(root: string = SCRATCH_ROOT): void {
+/** Fixture name for the reorder-and-publish specs; its `news/` is `REORDER_PUBLISH_NEWS`. */
+export const REORDER_PUBLISH_FIXTURE = 'reorder-publish-tree'
+/** Absolute path of the reorder-and-publish fixture's `news/`, for specs and unit tests. */
+export const REORDER_PUBLISH_NEWS = join(FIXTURES, REORDER_PUBLISH_FIXTURE, 'news')
+
+/**
+ * Wipes the scratch `news/` and re-copies the named fixture (`e2e/fixtures/<fixture>/news`).
+ * Refuses any root but `SCRATCH_ROOT`.
+ */
+export function resetScratch(root: string = SCRATCH_ROOT, fixture: string = DEFAULT_FIXTURE): void {
   if (resolve(root) !== SCRATCH_ROOT) {
     throw new Error(`resetScratch refuses ${root}: only ${SCRATCH_ROOT} may be reset`)
   }
@@ -23,7 +32,7 @@ export function resetScratch(root: string = SCRATCH_ROOT): void {
   writeFileSync(join(root, MARKER), '')
   cpSync(join(studioDir, 'launcher-core.lock.json'), join(root, 'studio/launcher-core.lock.json'))
   rmSync(join(root, 'news'), { recursive: true, force: true })
-  cpSync(FIXTURE_NEWS, join(root, 'news'), { recursive: true })
+  cpSync(join(FIXTURES, fixture, 'news'), join(root, 'news'), { recursive: true })
   // The image route never creates directories; the real repository always has `news/img/`.
   mkdirSync(join(root, 'news/img'), { recursive: true })
   cpSync(KIT_TEMPLATES, join(root, 'news/_templates'), { recursive: true })

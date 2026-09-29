@@ -35,7 +35,7 @@ Authoring (was S06, the first writes)
 - [x] 024 — Saving an entry writes the document and its index row
 - [x] 025 — New entry from the templates kit
 - [x] 026 — Adding an image to an entry
-- [ ] 027 — Reordering entries and publishing a draft
+- [x] 027 — Reordering entries and publishing a draft
 
 v1 (was S07)
 

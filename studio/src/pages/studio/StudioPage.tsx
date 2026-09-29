@@ -21,7 +21,10 @@
  * is fetched once on mount and again whenever the re-check control fires, alongside a real re-read
  * through `useNewsLibrary()`'s own `refresh()`.
  */
-import { useEffect, useLayoutEffect, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react'
+import { buildOrderSequence } from '../../publishing/order-plan'
+import { usePublishing } from '../../publishing/use-publishing'
+import { OrderList } from '../../organisms/library/OrderList'
 import { createBridgeClient, type BridgeClient } from '../../bridge/client'
 import type { ContentTypeDescriptor, ContentTypeSource } from '../../content-types/descriptor'
 import { createContentTypeRegistry } from '../../content-types/registry'
@@ -182,6 +185,19 @@ function NewsLibrary({
   }
 
   const newEntry = useNewEntry({ client: bridge, refresh, selectEntry })
+  const writeBatch = useCallback(
+    (files: Parameters<BridgeClient['writeBatch']>[0]) => bridge.writeBatch(files),
+    [bridge],
+  )
+  const publishing = usePublishing({ read, writeBatch, refresh })
+  const orderItems = (read === null ? [] : buildOrderSequence(read)).map((item) => ({
+    id: item.id,
+    order: item.order,
+    title:
+      model?.entries.find((row) => row.id === item.id)?.title ??
+      model?.entries.find((row) => row.id === item.id)?.file ??
+      item.id,
+  }))
 
   const handleRecheck = (): void => {
     if (!confirmDiscard()) return
@@ -218,6 +234,15 @@ function NewsLibrary({
           onCancel={newEntry.closeDialog}
         />
       )}
+      <OrderList
+        items={orderItems}
+        busy={publishing.busy}
+        pending={publishing.pending}
+        result={publishing.result}
+        onMove={publishing.move}
+        onConfirm={publishing.confirm}
+        onCancel={publishing.cancel}
+      />
       <div className="flex gap-8">
         <LibraryView
           model={model}
@@ -226,6 +251,9 @@ function NewsLibrary({
           onSelect={selectEntry}
           thumbnailUrlFor={thumbnailUrlFor}
           onNewEntry={newEntry.openDialog}
+          onPublish={publishing.publish}
+          onUnpublish={publishing.unpublish}
+          publishingBusy={publishing.busy}
         />
         <div className="flex flex-col gap-4">
           <button type="button" onClick={handleRecheck} className="self-start">

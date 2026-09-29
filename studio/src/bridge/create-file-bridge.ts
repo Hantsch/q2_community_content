@@ -31,13 +31,16 @@ import {
   type BridgeFileResponse,
   type BridgeImageRefusalResponse,
   type BridgeImageWriteResponse,
+  type BridgeWriteBatchConflictResponse,
+  type BridgeWriteBatchRefusedResponse,
   type BridgeWriteConflictResponse,
   type BridgeWriteFailureResponse,
   type BridgeWriteItem,
+  type BridgeWriteResponse,
   type ImageRefusalRule,
 } from './bridge-protocol'
 import { resolveBridgePath } from './resolve-bridge-path'
-import { createFile, createImageFile, writeFiles } from './write-files'
+import { createFile, createImageFile, writeBatch, writeFiles } from './write-files'
 
 /**
  * The image route (`GET /news-img/<filename>`, story 015 D3) deliberately keeps the URL prefix
@@ -62,7 +65,8 @@ export interface CreateFileBridgeOptions {
   readonly repoRoot: string
   /** Repository-relative directory names declared reachable, e.g. `['news']`. */
   readonly directories: readonly string[]
-  /** Directories `POST /__studio/fs/write` may write into; none by default (read-only bridge). */
+  /** Directories `POST /__studio/fs/write` and `/write-batch` may write into; none by default
+   * (read-only bridge). */
   readonly writableDirectories?: readonly string[]
   /** The launcher's image-name rules `POST /__studio/fs/image` checks a file name against. */
   readonly imageRules: ImageRules
@@ -146,12 +150,15 @@ function isWriteItem(value: unknown): value is BridgeWriteItem {
   )
 }
 
-/** `POST /__studio/fs/write`: Host was already checked; this adds Origin, media type and size. */
-function handleWrite(
+/**
+ * The request guard both JSON write routes share: Host was already checked; this adds a required
+ * loopback Origin, the JSON media type and the body size cap, then hands the parsed body on.
+ * Every refusal is answered here and `onBody` is not called.
+ */
+function readJsonWriteBody(
   req: IncomingMessage,
   res: ServerResponse,
-  repoRoot: string,
-  writableDirectories: readonly string[],
+  onBody: (parsed: unknown) => void,
 ): void {
   const origin = headerValue(req.headers.origin)
   if (origin === undefined || !isLoopbackOrigin(origin)) {
@@ -196,6 +203,18 @@ function handleWrite(
       sendError(res, 400, 'body is not valid JSON', 'POST')
       return
     }
+    onBody(parsed)
+  })
+}
+
+/** `POST /__studio/fs/write` (story 024). */
+function handleWrite(
+  req: IncomingMessage,
+  res: ServerResponse,
+  repoRoot: string,
+  writableDirectories: readonly string[],
+): void {
+  readJsonWriteBody(req, res, (parsed) => {
     const writes = (parsed as { writes?: unknown } | null)?.writes
     if (!Array.isArray(writes) || !writes.every(isWriteItem)) {
       sendError(res, 400, 'body must be { writes: [{ path, text, expected }] }', 'POST')
@@ -244,6 +263,53 @@ function handleWrite(
         sendJson(res, 500, body, 'POST')
       } else {
         sendError(res, result.status, result.error, 'POST')
+      }
+    } catch (cause) {
+      sendError(res, 500, cause instanceof Error ? cause.message : String(cause), 'POST')
+    }
+  })
+}
+
+/**
+ * `POST /__studio/fs/write-batch` (story 027 D2): the same request guard as `/write`, then
+ * `writeBatch`, which checks every file before writing any and names every offending path.
+ */
+function handleWriteBatch(
+  req: IncomingMessage,
+  res: ServerResponse,
+  repoRoot: string,
+  writableDirectories: readonly string[],
+): void {
+  readJsonWriteBody(req, res, (parsed) => {
+    const files = (parsed as { files?: unknown } | null)?.files
+    if (!Array.isArray(files) || !files.every(isWriteItem)) {
+      sendError(res, 400, 'body must be { files: [{ path, text, expected }] }', 'POST')
+      return
+    }
+    try {
+      const result = writeBatch({ repoRoot, writableDirectories, files })
+      if (result.ok) {
+        const body: BridgeWriteResponse = { written: result.written }
+        sendJson(res, 200, body, 'POST')
+      } else if (result.status === 409) {
+        const body: BridgeWriteBatchConflictResponse = {
+          error: result.error,
+          conflicts: result.conflicts,
+        }
+        sendJson(res, 409, body, 'POST')
+      } else if (result.status === 500) {
+        const body: BridgeWriteFailureResponse = {
+          error: result.error,
+          written: result.written,
+          failed: result.failed,
+        }
+        sendJson(res, 500, body, 'POST')
+      } else {
+        const body: BridgeWriteBatchRefusedResponse = {
+          error: result.error,
+          refused: result.refused,
+        }
+        sendJson(res, result.status, body, 'POST')
       }
     } catch (cause) {
       sendError(res, 500, cause instanceof Error ? cause.message : String(cause), 'POST')
@@ -364,11 +430,13 @@ export function createFileBridge({
     }
 
     // Checked before any routing: the only non-read requests a bridge route accepts are `POST` on
-    // the `write` and `image` routes; every other method/route pair is refused.
+    // the `write`, `write-batch` and `image` routes; every other method/route pair is refused.
     const method = req.method ?? 'GET'
     const bridgePathname = isBridgeRoute ? new URL(rawUrl, 'http://bridge.local').pathname : ''
     const acceptsPost =
-      bridgePathname === `${BRIDGE_PREFIX}write` || bridgePathname === `${BRIDGE_PREFIX}image`
+      bridgePathname === `${BRIDGE_PREFIX}write` ||
+      bridgePathname === `${BRIDGE_PREFIX}write-batch` ||
+      bridgePathname === `${BRIDGE_PREFIX}image`
     if (method !== 'GET' && method !== 'HEAD' && !(method === 'POST' && acceptsPost)) {
       sendError(res, 405, 'method not allowed')
       return
@@ -468,6 +536,15 @@ export function createFileBridge({
         return
       }
       handleWrite(req, res, repoRoot, writableDirectories)
+      return
+    }
+
+    if (route === 'write-batch') {
+      if (method !== 'POST') {
+        sendError(res, 405, 'method not allowed', method)
+        return
+      }
+      handleWriteBatch(req, res, repoRoot, writableDirectories)
       return
     }
 
