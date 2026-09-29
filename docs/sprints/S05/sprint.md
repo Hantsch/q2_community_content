@@ -1,6 +1,6 @@
 ---
 sprint: S05
-status: in-progress
+status: done
 branch: sprint/S05
 milestone: M5 — Preview, M6 — Authoring, M7 — v1
 ---
@@ -68,3 +68,24 @@ v1 (was S07)
 - Anything a walk-through finds after this sprint becomes a new story. Concept open points 1, 5 and
   6 (zero-install variant, `engines`/`gamedata` manifest validation, fully offline) are the obvious
   candidates after v1.
+
+## Regression gate
+
+Run on `38cf6ea` (the last story commit) after all 13 stories.
+
+| Command | Minutes | Result |
+| --- | --- | --- |
+| `npm run build` | ~0 | green |
+| `npm run test` | ~0.1 | 546 passed, 6 failed (all pre-existing, see below) |
+| `npm run e2e` | ~1.4 | 55 of 109 failed, fixed in `ffbcedd`; 109/109 green afterwards |
+
+`e2e-all` is `none`. `npm run lint` fails on prettier for ~165 untouched files (CRLF), pre-existing
+across the whole sprint.
+
+| Failure | Verdict | Outcome |
+| --- | --- | --- |
+| drift-provenance, launcher-core-unmodified, mirror-set, mirrorDrift (`check:drift`) | pre-existing: `launcher-core.lock.json` hashes vs. CRLF checkout; fails at the merge-base too | left; story proposal in the review |
+| repo-contract "profile records the e2e command and requires UI acceptance" | pre-existing, fails at the merge-base. The profile line is fine; the test's `split('## Acceptance')` matches the text `## Acceptance Tests` in a Verify comment first | left; noted in the review |
+| repo-contract AC6 (gitignore) | flaky: timed out at 5 s once, passed on rerun | none |
+| e2e, 55 specs: entry-select queries matched 2 buttons | story 027 (`f60ff13`) added Publish/Unpublish/thumbnail buttons inside each entry row | fixed in `ffbcedd`: locators tightened in 11 specs with `.filter({ hasNotText: /^(Un)?publish$/i })`, no assertion touched |
+| boundary "news contract is unchanged" and repo-contract AC7 | story 028 (`a3b6ac3`) edited `news/_templates/README.md` | fixed in `752c5b2`: file restored to the merge-base, 028 AC4 reworded (root README links the quickstart, the quickstart links the templates README) |

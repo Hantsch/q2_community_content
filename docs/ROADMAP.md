@@ -1,23 +1,19 @@
 # Roadmap
 
-As of: 2026-09-14 (S04). One screen: where the project stands, what was done recently, what comes
+As of: 2026-09-29 (S05). One screen: where the project stands, what was done recently, what comes
 next. Detail lives where it is produced — sprint reviews, story files, concepts — and this file
 links to it. Maintained by `/sprint`, `/concept` and `/roadmap`; the rules are in
 `.claude/commands/roadmap.md`.
 
 ## Where we stand
 
-- Sprint S04 is done: the studio opens on a content-type registry driven navigation, a library
-  view of the news feed in delivered order, and a validation panel next to it that shares one
-  composition function with `npm run validate` — see [S04 review](sprints/S04/review.md).
-- A dev-server-only, read-only file bridge (story 015) now lets the browser read the repository
-  through a narrow, path-guarded, localhost-only surface; its confinement rules are what the
-  writing stories in S05 (024 onward) will build on.
-- Next step: `/sprint S05` — the former S05–S07 bundled into one sprint (13 stories: preview,
-  authoring, v1).
-- Waiting on the user: the launcher-side change from story 004's handoff spec, the
-  `index.json` formatting policy that blocks story 024, and merging `sprint/S04` into
-  `feature/studio`.
+- Sprint S05 is done (13 stories, M5-M7): preview at every width, drafts and visibility override,
+  authoring (edit, save, new entry, image, reorder, publish), quickstart, extension guide and the
+  end-to-end flow — see [S05 review](sprints/S05/review.md).
+- Next step: plan a follow-up sprint; candidates are the mirror hash / CRLF fix and concept open
+  points 1, 5 and 6.
+- Waiting on the user: merging `sprint/S05` into `feature/studio`, and the launcher-side change
+  from story 004's handoff spec.
 
 ## Phase overview
 
@@ -35,9 +31,9 @@ Concept: [Q2 Content Studio](concepts/content-studio.md).
 | M2 | The launcher mirror | done 2026-09-14 | [S02 review](sprints/S02/review.md) | Provenance UI still open, planned for M4/S04. |
 | M3 | Validation | done 2026-09-14 | [S03 review](sprints/S03/review.md) | `npm run validate`'s repository-findings count stays 0 until a follow-up wires story 013's findings into the CLI. |
 | M4 | The studio shows the repository | done 2026-09-14 | [S04 review](sprints/S04/review.md) | Library and validation panel, driven by a content-type registry. |
-| M5 | Preview | planned | [S05](sprints/S05/sprint.md) | The post as the launcher renders it, at 940/1280/1920, drafts included. |
-| M6 | Authoring | planned | [S05](sprints/S05/sprint.md) | Create, edit, illustrate, order and publish — the first writes to the repository. |
-| M7 | v1 | planned | [S05](sprints/S05/sprint.md) | Quickstart, extension guide and one end-to-end proof of the whole flow. |
+| M5 | Preview | done 2026-09-29 | [S05 review](sprints/S05/review.md) | The post as the launcher renders it, at 940/1280/1920, drafts included. |
+| M6 | Authoring | done 2026-09-29 | [S05 review](sprints/S05/review.md) | Create, edit, illustrate, order and publish — the first writes to the repository. |
+| M7 | v1 | done 2026-09-29 | [S05 review](sprints/S05/review.md) | Quickstart, extension guide and the end-to-end flow; its mirror-integrity criterion was dropped. |
 
 ## Open / unprioritised
 
@@ -60,10 +56,20 @@ Ideas and concepts that need a decision before they become work. One line each.
   repeatedly on unrelated pre-existing files — every S02 and S03 story had to re-confirm the noise
   wasn't theirs. A `.gitattributes` line-ending policy would fix it once instead of per-story.
   [S02 review](sprints/S02/review.md)
-- Four `launcher-core/` mirror-hash-drift tests fail on this Windows checkout independently of any
-  story's changes (confirmed on the base branch via `git stash` in every S03 and S04 story) —
-  worth a one-time investigation into whether it's a line-ending or hashing issue specific to this
-  checkout. [S04 review](sprints/S04/review.md)
+- Four `launcher-core/` mirror-hash-drift tests (and `check:drift`) fail on Windows CRLF checkouts:
+  `launcher-core.lock.json` hashes LF bytes. Cause found in S05 (it blocked story 030's mirror
+  guard); worth a story that hashes line-ending-normalised content and/or pins line endings.
+  [S05 review](sprints/S05/review.md)
+- The `repo-contract` test "profile records the e2e command and requires UI acceptance" fails
+  because its `split('## Acceptance')` hits the text `## Acceptance Tests` in a Verify comment of
+  `.claude/ai-scrum.md`; anchor it on the heading line. [S05 review](sprints/S05/review.md)
+- Older e2e specs select entries by fragile locators (story 027's row buttons broke 11 of them); a
+  shared select-entry helper would prevent a repeat. [S05 review](sprints/S05/review.md)
+- Small hardening left from S05 reviews: the bridge Origin check accepts any loopback port (024),
+  the delete/rename source scan misses aliased imports (026), a cancelled unsaved-changes prompt
+  leaves a created entry unselected (025). [S05 review](sprints/S05/review.md)
+- The empty-body message says the launcher drops the entry, but it only drops entries with neither
+  title nor body (023). [S05 review](sprints/S05/review.md)
 - Vite's built-in `/@fs/` dev-server route serves arbitrary repository files unguarded by story
   015's bridge allowlist/Host/Origin checks. Stock Vite behaviour, not a regression story 015
   introduced, but worth closing via `server.fs` hardening if the bridge's confinement guarantee is

@@ -202,3 +202,6 @@
 - 2026-09-29 16:46:10 · 030 · verify · started
 - 2026-09-29 16:47:03 · 030 · verify · done
 - 2026-09-29 16:47:28 · 030 · story · done
+- 2026-09-29 16:47:49 · gate · short suites · started
+- 2026-09-29 16:56:25 · gate · fixes committed · re-verify
+- 2026-09-29 16:59:38 · sprint · review done
