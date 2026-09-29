@@ -2,6 +2,7 @@
   "schemaVersion": 1,
   "entries": [
     {
+<<<<<<< HEAD
       "id": "r1q2-in-the-bootstrap-wizard",
       "file": "2026-09-10-r1q2-in-the-bootstrap-wizard.md",
       "order": 10
@@ -23,3 +24,11 @@
     }
   ]
 }
+=======
+      "id": "welcome-to-the-community",
+      "file": "2026-09-12-welcome-to-the-community.md",
+      "order": 10
+    }
+  ]
+}
+>>>>>>> origin/main
