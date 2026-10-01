@@ -1,0 +1,383 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "id": "action",
+      "gamedir": "action",
+      "name": "AQtion (Action Quake 2)",
+      "description": "The modern standalone continuation of Action Quake 2: realistic weapons, bandaging and teamplay, with the TNG game library and the AQtion maps, models and sounds.",
+      "license": "GPL-2.0",
+      "projectUrl": "https://github.com/actionquake/distrib",
+      "sourceUrl": "https://github.com/actionquake/aq2-tng",
+      "pinned": "v1.3.8",
+      "versions": [
+        {
+          "version": "v1.3.8",
+          "prerelease": false,
+          "variants": [
+            {
+              "platform": "win32",
+              "arch": "x86",
+              "packages": [
+                {
+                  "id": "aq2-tng-282af79-win32-x86",
+                  "version": "282af79",
+                  "url": "https://github.com/actionquake/aq2-tng/releases/download/282af79/tng-win-32.zip",
+                  "mirrors": [],
+                  "sizeBytes": 567610,
+                  "sha256": "6a2e3c1907e03e9666ec8c6b0c60c11cdedff3345488c437ebfcda5657391cf5",
+                  "contents": [{ "from": ".", "to": "gamedir" }]
+                },
+                {
+                  "id": "aqtion-v1.3.8-content",
+                  "version": "v1.3.8",
+                  "url": "https://github.com/actionquake/distrib/releases/download/v1.3.8/aqtion-v1.3.8-content-only.zip",
+                  "mirrors": [],
+                  "sizeBytes": 496778732,
+                  "sha256": "43eba1e44e2b512b8c1eb207c15baa5b0393a00d4148020d7c0cd70a7e6c48c8",
+                  "contents": [
+                    { "from": "aqtion/action", "to": "gamedir" },
+                    { "from": "aqtion/baseaq", "to": "gamedir" }
+                  ]
+                }
+              ]
+            },
+            {
+              "platform": "win32",
+              "arch": "x64",
+              "packages": [
+                {
+                  "id": "aq2-tng-282af79-win32-x64",
+                  "version": "282af79",
+                  "url": "https://github.com/actionquake/aq2-tng/releases/download/282af79/tng-win-64.zip",
+                  "mirrors": [],
+                  "sizeBytes": 582309,
+                  "sha256": "0359abd48dc7c2ffbed1106b48d664e92f23edbb25032c92f83a16671885bce1",
+                  "contents": [{ "from": ".", "to": "gamedir" }]
+                },
+                {
+                  "id": "aqtion-v1.3.8-content",
+                  "version": "v1.3.8",
+                  "url": "https://github.com/actionquake/distrib/releases/download/v1.3.8/aqtion-v1.3.8-content-only.zip",
+                  "mirrors": [],
+                  "sizeBytes": 496778732,
+                  "sha256": "43eba1e44e2b512b8c1eb207c15baa5b0393a00d4148020d7c0cd70a7e6c48c8",
+                  "contents": [
+                    { "from": "aqtion/action", "to": "gamedir" },
+                    { "from": "aqtion/baseaq", "to": "gamedir" }
+                  ]
+                }
+              ]
+            },
+            {
+              "platform": "linux",
+              "arch": "x64",
+              "packages": [
+                {
+                  "id": "aq2-tng-282af79-linux-x64",
+                  "version": "282af79",
+                  "url": "https://github.com/actionquake/aq2-tng/releases/download/282af79/tng-lin-x86_64.zip",
+                  "mirrors": [],
+                  "sizeBytes": 417226,
+                  "sha256": "f7dd9e7b0f96aabc5cd718942e94964ac72cee92f43e49607cccdb9dcd494ca5",
+                  "contents": [{ "from": ".", "to": "gamedir" }]
+                },
+                {
+                  "id": "aqtion-v1.3.8-content",
+                  "version": "v1.3.8",
+                  "url": "https://github.com/actionquake/distrib/releases/download/v1.3.8/aqtion-v1.3.8-content-only.zip",
+                  "mirrors": [],
+                  "sizeBytes": 496778732,
+                  "sha256": "43eba1e44e2b512b8c1eb207c15baa5b0393a00d4148020d7c0cd70a7e6c48c8",
+                  "contents": [
+                    { "from": "aqtion/action", "to": "gamedir" },
+                    { "from": "aqtion/baseaq", "to": "gamedir" }
+                  ]
+                }
+              ]
+            },
+            {
+              "platform": "linux",
+              "arch": "arm64",
+              "packages": [
+                {
+                  "id": "aq2-tng-282af79-linux-arm64",
+                  "version": "282af79",
+                  "url": "https://github.com/actionquake/aq2-tng/releases/download/282af79/tng-lin-arm64.zip",
+                  "mirrors": [],
+                  "sizeBytes": 413135,
+                  "sha256": "37fc6a66fddce47b09080bd0a481722384ec304a2ec1765ee381556d3413e922",
+                  "contents": [{ "from": ".", "to": "gamedir" }]
+                },
+                {
+                  "id": "aqtion-v1.3.8-content",
+                  "version": "v1.3.8",
+                  "url": "https://github.com/actionquake/distrib/releases/download/v1.3.8/aqtion-v1.3.8-content-only.zip",
+                  "mirrors": [],
+                  "sizeBytes": 496778732,
+                  "sha256": "43eba1e44e2b512b8c1eb207c15baa5b0393a00d4148020d7c0cd70a7e6c48c8",
+                  "contents": [
+                    { "from": "aqtion/action", "to": "gamedir" },
+                    { "from": "aqtion/baseaq", "to": "gamedir" }
+                  ]
+                }
+              ]
+            }
+          ],
+          "contentOnly": {
+            "packages": [
+              {
+                "id": "aqtion-v1.3.8-content",
+                "version": "v1.3.8",
+                "url": "https://github.com/actionquake/distrib/releases/download/v1.3.8/aqtion-v1.3.8-content-only.zip",
+                "mirrors": [],
+                "sizeBytes": 496778732,
+                "sha256": "43eba1e44e2b512b8c1eb207c15baa5b0393a00d4148020d7c0cd70a7e6c48c8",
+                "contents": [
+                  { "from": "aqtion/action", "to": "gamedir" },
+                  { "from": "aqtion/baseaq", "to": "gamedir" }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "version": "v1.4.0-rc1",
+          "prerelease": true,
+          "variants": [
+            {
+              "platform": "win32",
+              "arch": "x86",
+              "packages": [
+                {
+                  "id": "aq2-tng-282af79-win32-x86",
+                  "version": "282af79",
+                  "url": "https://github.com/actionquake/aq2-tng/releases/download/282af79/tng-win-32.zip",
+                  "mirrors": [],
+                  "sizeBytes": 567610,
+                  "sha256": "6a2e3c1907e03e9666ec8c6b0c60c11cdedff3345488c437ebfcda5657391cf5",
+                  "contents": [{ "from": ".", "to": "gamedir" }]
+                },
+                {
+                  "id": "aqtion-v1.4.0-rc1-content",
+                  "version": "v1.4.0-rc1",
+                  "url": "https://github.com/actionquake/distrib/releases/download/v1.4.0-rc1/aqtion-v1.4.0-rc1-content-only.zip",
+                  "mirrors": [],
+                  "sizeBytes": 496752878,
+                  "sha256": "09535bb1347372f8e16e66c52c3525c3f958c6ff01da17a15e0d9a598ef5289b",
+                  "contents": [
+                    { "from": "aqtion/action", "to": "gamedir" },
+                    { "from": "aqtion/baseaq", "to": "gamedir" }
+                  ]
+                }
+              ]
+            },
+            {
+              "platform": "win32",
+              "arch": "x64",
+              "packages": [
+                {
+                  "id": "aq2-tng-282af79-win32-x64",
+                  "version": "282af79",
+                  "url": "https://github.com/actionquake/aq2-tng/releases/download/282af79/tng-win-64.zip",
+                  "mirrors": [],
+                  "sizeBytes": 582309,
+                  "sha256": "0359abd48dc7c2ffbed1106b48d664e92f23edbb25032c92f83a16671885bce1",
+                  "contents": [{ "from": ".", "to": "gamedir" }]
+                },
+                {
+                  "id": "aqtion-v1.4.0-rc1-content",
+                  "version": "v1.4.0-rc1",
+                  "url": "https://github.com/actionquake/distrib/releases/download/v1.4.0-rc1/aqtion-v1.4.0-rc1-content-only.zip",
+                  "mirrors": [],
+                  "sizeBytes": 496752878,
+                  "sha256": "09535bb1347372f8e16e66c52c3525c3f958c6ff01da17a15e0d9a598ef5289b",
+                  "contents": [
+                    { "from": "aqtion/action", "to": "gamedir" },
+                    { "from": "aqtion/baseaq", "to": "gamedir" }
+                  ]
+                }
+              ]
+            },
+            {
+              "platform": "linux",
+              "arch": "x64",
+              "packages": [
+                {
+                  "id": "aq2-tng-282af79-linux-x64",
+                  "version": "282af79",
+                  "url": "https://github.com/actionquake/aq2-tng/releases/download/282af79/tng-lin-x86_64.zip",
+                  "mirrors": [],
+                  "sizeBytes": 417226,
+                  "sha256": "f7dd9e7b0f96aabc5cd718942e94964ac72cee92f43e49607cccdb9dcd494ca5",
+                  "contents": [{ "from": ".", "to": "gamedir" }]
+                },
+                {
+                  "id": "aqtion-v1.4.0-rc1-content",
+                  "version": "v1.4.0-rc1",
+                  "url": "https://github.com/actionquake/distrib/releases/download/v1.4.0-rc1/aqtion-v1.4.0-rc1-content-only.zip",
+                  "mirrors": [],
+                  "sizeBytes": 496752878,
+                  "sha256": "09535bb1347372f8e16e66c52c3525c3f958c6ff01da17a15e0d9a598ef5289b",
+                  "contents": [
+                    { "from": "aqtion/action", "to": "gamedir" },
+                    { "from": "aqtion/baseaq", "to": "gamedir" }
+                  ]
+                }
+              ]
+            },
+            {
+              "platform": "linux",
+              "arch": "arm64",
+              "packages": [
+                {
+                  "id": "aq2-tng-282af79-linux-arm64",
+                  "version": "282af79",
+                  "url": "https://github.com/actionquake/aq2-tng/releases/download/282af79/tng-lin-arm64.zip",
+                  "mirrors": [],
+                  "sizeBytes": 413135,
+                  "sha256": "37fc6a66fddce47b09080bd0a481722384ec304a2ec1765ee381556d3413e922",
+                  "contents": [{ "from": ".", "to": "gamedir" }]
+                },
+                {
+                  "id": "aqtion-v1.4.0-rc1-content",
+                  "version": "v1.4.0-rc1",
+                  "url": "https://github.com/actionquake/distrib/releases/download/v1.4.0-rc1/aqtion-v1.4.0-rc1-content-only.zip",
+                  "mirrors": [],
+                  "sizeBytes": 496752878,
+                  "sha256": "09535bb1347372f8e16e66c52c3525c3f958c6ff01da17a15e0d9a598ef5289b",
+                  "contents": [
+                    { "from": "aqtion/action", "to": "gamedir" },
+                    { "from": "aqtion/baseaq", "to": "gamedir" }
+                  ]
+                }
+              ]
+            }
+          ],
+          "contentOnly": {
+            "packages": [
+              {
+                "id": "aqtion-v1.4.0-rc1-content",
+                "version": "v1.4.0-rc1",
+                "url": "https://github.com/actionquake/distrib/releases/download/v1.4.0-rc1/aqtion-v1.4.0-rc1-content-only.zip",
+                "mirrors": [],
+                "sizeBytes": 496752878,
+                "sha256": "09535bb1347372f8e16e66c52c3525c3f958c6ff01da17a15e0d9a598ef5289b",
+                "contents": [
+                  { "from": "aqtion/action", "to": "gamedir" },
+                  { "from": "aqtion/baseaq", "to": "gamedir" }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "opentdm",
+      "gamedir": "opentdm",
+      "name": "OpenTDM",
+      "description": "A team deathmatch and duel game library for competitive Quake II: match setup, voting, timeouts, ready-up and stats, played on the standard Quake II maps.",
+      "license": "GPL-2.0",
+      "projectUrl": "https://github.com/packetflinger/opentdm",
+      "sourceUrl": "https://github.com/packetflinger/opentdm",
+      "pinned": "r388",
+      "versions": [
+        {
+          "version": "r388",
+          "prerelease": false,
+          "variants": [
+            {
+              "platform": "win32",
+              "arch": "x86",
+              "packages": [
+                {
+                  "id": "opentdm-r388-win32-x86",
+                  "version": "r388",
+                  "url": "https://github.com/packetflinger/opentdm/releases/download/r388/opentdm-r388-win32.zip",
+                  "mirrors": [],
+                  "sizeBytes": 2580683,
+                  "sha256": "0a9e24afb2e926ccdb27773f1c994cda6d5bff175e15ab3c4f83cd38fce1851f",
+                  "contents": [
+                    { "from": "gamex86-opentdm-r388~add8f3c.dll", "to": "gamedir" },
+                    { "from": "example-opentdm.cfg", "to": "gamedir" }
+                  ]
+                }
+              ]
+            },
+            {
+              "platform": "linux",
+              "arch": "x64",
+              "packages": [
+                {
+                  "id": "opentdm-r388-linux-x64",
+                  "version": "r388",
+                  "url": "https://github.com/packetflinger/opentdm/releases/download/r388/opentdm-r388-linux-x86_64.tar.gz",
+                  "mirrors": [],
+                  "sizeBytes": 3200064,
+                  "sha256": "0bd2d752f19917b25ea875c7f205f8de02b10d3054d0eb1d89993420fae55a33",
+                  "contents": [
+                    { "from": "gamex86_64-opentdm-r388~add8f3c.so", "to": "gamedir" },
+                    { "from": "example-opentdm.cfg", "to": "gamedir" }
+                  ]
+                }
+              ]
+            }
+          ],
+          "contentOnly": { "packages": [] }
+        }
+      ]
+    },
+    {
+      "id": "ctf",
+      "gamedir": "ctf",
+      "name": "Capture The Flag (ThreeWave CTF)",
+      "description": "id Software's official Capture The Flag for Quake II: two teams, two flags, the grappling hook and runes, with its own maps. Taken from the original 3.20 point release.",
+      "license": "GPL-2.0",
+      "projectUrl": "https://github.com/yquake2/ctf",
+      "sourceUrl": "https://github.com/yquake2/ctf",
+      "pinned": "3.20",
+      "versions": [
+        {
+          "version": "3.20",
+          "prerelease": false,
+          "variants": [
+            {
+              "platform": "win32",
+              "arch": "x86",
+              "packages": [
+                {
+                  "id": "ctf-320-x86-full",
+                  "version": "3.20",
+                  "url": "https://deponie.yamagi.org/quake2/idstuff/q2-3.20-x86-full-ctf.exe",
+                  "mirrors": [],
+                  "sizeBytes": 19267584,
+                  "sha256": "f82197c8c8089202a4b3a85d8833b0c2e827a709d205c760369407c212488baa",
+                  "contents": [{ "from": "ctf", "to": "gamedir" }]
+                }
+              ]
+            }
+          ],
+          "contentOnly": {
+            "packages": [
+              {
+                "id": "ctf-320-x86-content",
+                "version": "3.20",
+                "url": "https://deponie.yamagi.org/quake2/idstuff/q2-3.20-x86-full-ctf.exe",
+                "mirrors": [],
+                "sizeBytes": 19267584,
+                "sha256": "f82197c8c8089202a4b3a85d8833b0c2e827a709d205c760369407c212488baa",
+                "contents": [
+                  { "from": "ctf/pak0.pak", "to": "gamedir" },
+                  { "from": "ctf/server.cfg", "to": "gamedir" },
+                  { "from": "ctf/readme.txt", "to": "gamedir" },
+                  { "from": "ctf/ctf2.ico", "to": "gamedir" }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
